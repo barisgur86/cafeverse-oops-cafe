@@ -1,0 +1,77 @@
+/* Self-contained device-only beta engine. No login, network, real payments or real player trades. */
+(function(global){
+'use strict';
+const C=global.CafeTestCatalog;
+function createOfflineCafe(storage,clock=()=>Date.now()){
+ const KEY='cafeverse-device-beta-v1'+(global.CafeAccountID?':'+global.CafeAccountID:'');
+ const initial=()=>({code:global.CafeAccountID?'USER-'+global.CafeAccountID:'OFFLINETST',name:'Test Kafesi',character:0,coins:500,served:0,claimed:false,reputation:0,attracted:0,nextCall:0,version:0,pantry:{milk:4,coffee:4,berry:6,ice:0,vanilla:0,cream:0,cocoa:3,star:2,syrup:0},found:[],trades:{},owned:['plant'],decor:'plant',wardrobe:['chef','pink','none'],look:{head:'chef',face:'none',apron:'pink'},bought:[],preparations:[],receipts:{},calls:[],history:[]});
+ let s;try{s=JSON.parse(storage.getItem(KEY))}catch{}if(!s)s=initial();
+ const persist=()=>storage.setItem(KEY,JSON.stringify(s));
+ const progress=()=>{const level=Math.min(10,1+Math.floor(s.served/3));return {xp:s.served*35,level,levelStart:(level-1)*105,nextXP:level===10?null:level*105,upgrades:s.bought,capacity:1+C.upgrades.filter(u=>s.bought.includes(u.id)).reduce((n,u)=>n+(u.capacity||0),0),catalog:C.upgrades,recipeLevels:C.recipeLevels}};
+ const snapshot=()=>structuredClone({...s,progression:progress(),now:clock(),preparations:undefined,receipts:undefined,calls:undefined,history:undefined,bought:undefined});
+ const failure=(message,status=400)=>{throw Object.assign(Error(message),{status})};
+ const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
+ const debit=cost=>{if(s.coins<cost)failure('Yeterli coin yok.',409);s.coins-=cost};
+ function route(path,body){
+  const stateResult=extra=>({state:snapshot(),...extra});
+  if(path==='/api/me'){const queue=s.preparations.filter(p=>p.status==='ready'&&p.recipe>=0);return stateResult({preparations:queue,preparation:queue[0]||null})}
+  if(path==='/api/coin-shop')return stateResult({demo:true,packs:C.coinPacks,history:s.history.slice(-5).reverse()});
+  if(path==='/api/trades'&&!body)return stateResult({trades:[]});
+  if(path.startsWith('/api/cafes')||path.startsWith('/api/trades'))failure('Bu beta çevrimdışı. Gerçek oyuncularla takas bu sürümde kapalı.',503);
+  if(!body)failure('İşlem bulunamadı.',404);
+  const rid=body.request_id;if(typeof rid!=='string'||!/^[a-f0-9-]{36}$/i.test(rid))failure('Geçersiz işlem kimliği.');
+  const fingerprint=JSON.stringify([path,Object.fromEntries(Object.entries(body).filter(([k])=>k!=='request_id').sort(([a],[b])=>a.localeCompare(b)))]);
+  if(s.receipts[rid]){if(s.receipts[rid].fingerprint!==fingerprint)failure('İşlem kimliği başka bir işlem için kullanılmış.',409);return stateResult(s.receipts[rid].extra)}
+  let extra={};
+  if(path==='/api/ios-store-credit'){
+   if(!global.CafeNativeStore||!global.CafeAccountID)failure('Native Apple doğrulaması gerekli.',403);
+   const tx=body.transaction,packs={'com.cafeverse.oopscafe.coins250':250,'com.cafeverse.oopscafe.coins750':750,'com.cafeverse.oopscafe.coins2000':2000};
+   if(!tx||!/^\d{1,32}$/.test(tx.transactionID)||!packs[tx.productID]||tx.coins!==packs[tx.productID]||!['Sandbox','Production','Xcode'].includes(tx.environment))failure('Satın alma verisi geçersiz.');
+   s.storePurchases??={};const key=tx.environment+':'+tx.transactionID,old=s.storePurchases[key];
+   if(old){if(old.productID!==tx.productID)failure('İşlem başka ürüne ait.',409);extra.purchase={...old,duplicate:true}}
+   else{const purchase={id:tx.transactionID,productID:tx.productID,coins:packs[tx.productID],environment:tx.environment};s.coins+=purchase.coins;s.storePurchases[key]=purchase;extra.purchase=purchase;}
+  }
+  else if(path==='/api/profile'){const name=String(body.name||'').trim();if(!name||name.length>24||!integer(body.character,0,5))failure('Geçerli bir ad ve karakter seç.');s.name=name;s.character=body.character}
+  else if(path==='/api/stock'){if(!C.PRICE[body.item])failure('Malzeme bulunamadı.');debit(C.PRICE[body.item]);s.pantry[body.item]=(s.pantry[body.item]||0)+1}
+  else if(path==='/api/outfit'){const item=C.outfits[body.item];if(!item)failure('Kıyafet bulunamadı.');if(!s.wardrobe.includes(body.item)){debit(item[0]);s.wardrobe.push(body.item)}s.look[item[1]]=body.item}
+  else if(path==='/api/decor'){const price=C.decor[body.decor];if(price===undefined)failure('Dekor bulunamadı.');if(!s.owned.includes(body.decor)){debit(price);s.owned.push(body.decor)}s.decor=body.decor}
+  else if(path==='/api/upgrades'){const u=C.upgrades.find(u=>u.id===body.upgrade);if(!u)failure('Geliştirme bulunamadı.');if(progress().level<u.level)failure('Bu geliştirme '+u.level+'. seviyede açılıyor.',403);if(!s.bought.includes(u.id)){debit(u.cost);s.bought.push(u.id)}}
+  else if(path==='/api/npc-trade'){const o=C.NPC[body.offer];if(!o||(s.trades[body.offer]||0)>=o[4])failure('Teklif tükendi.');if((s.pantry[o[0]]||0)<o[1])failure('Depoda yeterli malzeme yok.',409);s.pantry[o[0]]-=o[1];s.pantry[o[2]]=(s.pantry[o[2]]||0)+o[3];s.trades[body.offer]=(s.trades[body.offer]||0)+1}
+  else if(path==='/api/demo-purchases'){if(global.CafeNativeStore)failure('Demo satın alma bu uygulamada kapalı.',403);const pack=C.coinPacks.find(p=>p.id===body.pack_id);if(!pack)failure('Coin paketi bulunamadı.');s.coins+=pack.coins;extra.purchase={id:rid,pack_id:pack.id,coins:pack.coins,demo:true};s.history.push({...extra.purchase,name:pack.name})}
+  else if(path==='/api/preparations'){
+   if(!body.amounts||typeof body.amounts!=='object'||Array.isArray(body.amounts))failure('Malzemeler eksik.');
+   const amounts=Object.fromEntries(Object.entries(body.amounts).filter(([,n])=>n!==0));if(!Object.keys(amounts).length||Object.entries(amounts).some(([k,n])=>!C.ITEMS.includes(k)||!integer(n,1,6)))failure('Malzeme ölçüleri geçersiz.');
+   if(s.preparations.filter(p=>p.status==='ready'&&p.recipe>=0).length>=progress().capacity*4)failure('Servis kapasitesi dolu. Önce servis et.',409);
+   const recipe=C.FORMULAS.findIndex(f=>C.ITEMS.every(k=>(f[k]||0)===(amounts[k]||0)));if(recipe>=0&&progress().level<C.recipeLevels[recipe])failure('Bu tarif '+C.recipeLevels[recipe]+'. seviyede açılıyor.',403);
+   const stock={},cost=Object.entries(amounts).reduce((sum,[k,n])=>{stock[k]=Math.min(s.pantry[k]||0,n);return sum+(n-stock[k])*C.PRICE[k]},0);debit(cost);for(const [k,n] of Object.entries(stock))s.pantry[k]-=n;
+   const duration=s.bought.includes(C.FORMULAS[recipe]?.coffee?'espresso2':'blender2')?4250:5000;
+   const preparation={id:rid,recipe,stock,cost,duration,ready_at:(clock()+duration)/1000,status:'ready'};s.preparations.push(preparation);if(recipe>=0&&!s.found.includes(recipe))s.found.push(recipe);extra.preparation=preparation;
+  }else if(path==='/api/service-batches/serve'){
+   const ids=body.preparations;if(!Array.isArray(ids)||ids.length<1||ids.length>4||new Set(ids).size!==ids.length||ids.some(x=>typeof x!=='string'))failure('Servis tepsisi geçersiz.');
+   const ps=ids.map(id=>s.preparations.find(p=>p.id===id));if(ps.some(p=>!p))failure('Sipariş bulunamadı.',404);
+   if(!ps.every(p=>p.status==='served')){
+    if(ps.some(p=>p.status!=='ready'||p.recipe<0||p.ready_at>clock()/1000))failure('Tüm ürünler hazır olmadan birlikte servis edilemez.',409);
+    for(const prep of ps){const before=progress().level;prep.status='served';s.served++;s.coins+=35;if(s.served>=3&&!s.claimed){s.coins+=50;s.claimed=true}if(progress().level>before)s.coins+=50}s.trades={};
+   }
+  }else if(/^\/api\/preparations\/[^/]+\/serve$/.test(path)){
+   const prep=s.preparations.find(p=>p.id===path.split('/')[3]);if(!prep)failure('Sipariş bulunamadı.',404);
+   if(prep.status!=='served'){if(prep.recipe<0||prep.ready_at>clock()/1000)failure('İçecek henüz hazır değil.',409);const before=progress().level;prep.status='served';s.served++;s.coins+=35;if(s.served>=3&&!s.claimed){s.coins+=50;s.claimed=true}if(progress().level>before)s.coins+=50;s.trades={}}
+  }else if(path==='/api/calls/start'){
+   if(clock()<s.nextCall)failure('Yeniden çağırmak için biraz bekle.',409);
+   let round=s.calls.find(c=>c.status==='active'&&clock()-c.started<120000);if(!round){round={id:rid,started:clock(),taps:0,hits:0,status:'active'};s.calls.push(round)}extra.round=round;
+  }else if(/^\/api\/calls\/[^/]+\/tap$/.test(path)){
+   const round=s.calls.find(c=>c.id===path.split('/')[3]);if(!round||round.status!=='active'||clock()-round.started>120000)failure('Çağrı turu sona erdi.',409);
+   const value=(Math.sin((clock()-round.started)/480)+1)/2,hit=value>=.3&&value<=.7;round.taps++;round.hits+=hit?1:0;
+   if(round.taps===3){round.status='finished';s.reputation=Math.min(100,s.reputation+4+round.hits*4);s.attracted+=1+round.hits;s.nextCall=clock()+60000}extra={round,hit};
+  }else failure('Bu işlem çevrimdışı testte kullanılamıyor.',404);
+  s.version++;s.receipts[rid]={fingerprint,extra:structuredClone(extra)};persist();return stateResult(extra);
+ }
+ function handle(path,body){const before=structuredClone(s);try{return {status:200,...route(path,body)}}catch(e){s=before;return {status:e.status||500,error:e.status?e.message:'Kayıt tamamlanamadı; tekrar dene.'}}}
+ persist();return {handle,snapshot};
+}
+global.CafeOfflineFactory=createOfflineCafe;
+if(global.__CAFE_TEST_NODE__)return;
+const engine=createOfflineCafe(global.localStorage);
+sessionStorage.setItem('cafeverse-local-player','device-test');
+global.fetch=async function(input,options={}){const path=String(input);if(path.startsWith('/api/')){let body;try{body=options.body?JSON.parse(options.body):undefined}catch{return Response.json({error:'Geçersiz istek.'},{status:400})}const d=engine.handle(path,body);const {status,...payload}=d;return Response.json(payload,{status})}const asset=path.split('/').pop();if(global.CafeTestSVG?.[asset])return new Response(global.CafeTestSVG[asset],{headers:{'Content-Type':'image/svg+xml'}});return Response.json({error:'Bu test sürümünde ağ bağlantısı kapalı.'},{status:503})};
+})(globalThis);
