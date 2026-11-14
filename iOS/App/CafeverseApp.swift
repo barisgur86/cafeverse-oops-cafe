@@ -184,6 +184,7 @@ private enum AccountKeychain {
     @Published var busy = false
     @Published var message = ""
     @Published var awaitingNewPassword = false
+    @Published var confirmationEmail: String?
     private var recoveryAccessToken: String?
     private var pendingNonce: String?
     private var base: URL? {
@@ -208,7 +209,19 @@ private enum AccountKeychain {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-            let text = code == 429 ? "Çok fazla deneme. Biraz sonra tekrar dene." : "İşlem doğrulanamadı. Bilgilerini ve e-posta doğrulamasını kontrol et."
+            let payload = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            let reason = payload?["error_code"] as? String ?? payload?["code"] as? String ?? ""
+            let text: String
+            switch reason {
+            case "invalid_credentials": text = "E-posta veya şifre doğru değil. Şifreni yenileyebilir ya da yeni hesap oluşturabilirsin."
+            case "email_not_confirmed": text = "Önce e-postana gelen doğrulama bağlantısını aç, ardından giriş yap."
+            case "email_address_invalid", "validation_failed": text = "Geçerli bir e-posta adresi gir."
+            case "email_address_not_authorized", "email_send_failed": text = "Doğrulama e-postası şu anda gönderilemiyor. Apple ile giriş yapabilir veya daha sonra tekrar deneyebilirsin."
+            case "weak_password": text = "Daha güçlü bir şifre seç. En az 8 karakter kullan."
+            case "signup_disabled": text = "Yeni hesap oluşturma şu anda kapalı. Mevcut hesabınla giriş yap."
+            case "over_email_send_rate_limit", "over_request_rate_limit": text = "Çok fazla deneme yapıldı. Biraz sonra tekrar dene."
+            default: text = code == 429 ? "Çok fazla deneme yapıldı. Biraz sonra tekrar dene." : "Giriş tamamlanamadı. İnternet bağlantını kontrol edip tekrar dene."
+            }
             throw NSError(domain: "CafeAuth", code: code, userInfo: [NSLocalizedDescriptionKey: text])
         }
         return data
@@ -227,10 +240,13 @@ private enum AccountKeychain {
         } catch { session = nil; message = "Oturum doğrulanamadı. İnternetini kontrol edip yeniden giriş yap." }
     }
     func password(email: String, password: String, username: String, register: Bool) async {
-        guard !busy else { return }; busy = true; message = ""; defer { busy = false }
+        guard !busy else { return }; busy = true; message = ""; confirmationEmail = nil; defer { busy = false }
+        let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard address.contains("@"), address.split(separator: "@").count == 2,
+              !address.contains(" "), address.split(separator: "@").last?.contains(".") == true else { message = "Geçerli bir e-posta adresi gir."; return }
         do {
             if register {
-                guard username.count >= 3, password.count >= 8 else {
+                guard username.trimmingCharacters(in: .whitespacesAndNewlines).count >= 3, password.count >= 8 else {
                     message = "Kullanıcı adı en az 3, şifre en az 8 karakter olmalı."; return
                 }
                 var bytes = [UInt8](repeating: 0, count: 32)
@@ -238,9 +254,20 @@ private enum AccountKeychain {
                 let verifier = Data(bytes).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
                 let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
                 _ = try AccountKeychain.verifier(verifier)
-                _ = try await request("signup?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": email.trimmingCharacters(in: .whitespacesAndNewlines), "password": password, "data": ["username": username], "code_challenge": challenge, "code_challenge_method": "s256"])
-                // Always require a separate login, including email confirmation when configured.
-                message = "Hesap isteğin alındı. E-postana gelen doğrulama bağlantısını açıp giriş yap."
+                let response = try await request("signup?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": email.trimmingCharacters(in: .whitespacesAndNewlines), "password": password, "data": ["username": username], "code_challenge": challenge, "code_challenge_method": "s256"])
+                if (try? JSONDecoder().decode(CafeSession.self, from: response)) != nil {
+                    try accept(response)
+                } else {
+                    let payload = (try? JSONSerialization.jsonObject(with: response)) as? [String: Any]
+                    let user = payload?["user"] as? [String: Any] ?? payload
+                    if let identities = user?["identities"] as? [Any], identities.isEmpty {
+                        confirmationEmail = nil
+                        message = "Bu adresle zaten hesabın varsa giriş yap veya Şifremi unuttum seçeneğini kullan."
+                    } else {
+                        confirmationEmail = address
+                        message = "Doğrulama bağlantısını " + address + " adresinde kontrol et. Bağlantıyı açtıktan sonra giriş yap."
+                    }
+                }
             } else {
                 try accept(try await request("token?grant_type=password", body: ["email": email.trimmingCharacters(in: .whitespacesAndNewlines), "password": password]))
             }
@@ -317,7 +344,12 @@ private enum AccountKeychain {
             // Supabase verifies Apple's signature, audience, expiry and nonce before issuing our session.
             try accept(try await request("token?grant_type=id_token", body: ["provider": "apple", "id_token": idToken, "nonce": nonce]))
         } catch {
-            if (error as? ASAuthorizationError)?.code != .canceled { message = "Apple girişi tamamlanamadı. " + error.localizedDescription }
+            if let apple = error as? ASAuthorizationError, apple.code == .canceled { return }
+            #if targetEnvironment(simulator)
+            message = "Apple girişi tamamlanamadı. Simülatörün Ayarlar uygulamasında Apple hesabına giriş yap veya e-posta ile devam et."
+            #else
+            message = "Apple girişi tamamlanamadı. Apple hesabını ve internet bağlantını kontrol edip tekrar dene."
+            #endif
         }
     }
     func logout() async {
@@ -334,6 +366,21 @@ private struct AccountGate: View {
     @State private var username = ""
     @State private var register = false
     @State private var forgotPassword = false
+    @State private var showPassword = false
+    private let ink = Color(red: 0.29, green: 0.10, blue: 0.31)
+    private let pink = Color(red: 0.86, green: 0.10, blue: 0.55)
+    private var title: String { auth.awaitingNewPassword ? "Yeni şifren" : forgotPassword ? "Şifreni yenile" : register ? "Kafeni oluşturalım" : "Kafene hoş geldin!" }
+    private var hero: UIImage? {
+        guard let url = Bundle.main.url(forResource: "cafe-interior", withExtension: "png", subdirectory: "Web/assets") else { return nil }
+        return UIImage(contentsOfFile: url.path)
+    }
+    private func entry(_ icon: String, @ViewBuilder content: () -> some View) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).foregroundStyle(pink).frame(width: 22)
+            content().font(.system(size: 18)).foregroundStyle(ink)
+        }.padding(15).background(Color.white).clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.91, green: 0.77, blue: 0.87), lineWidth: 1))
+    }
     var body: some View {
         Group {
             if let session = auth.session {
@@ -341,43 +388,78 @@ private struct AccountGate: View {
                     .id(session.user.id)
             } else {
                 ScrollView {
-                    VStack(spacing: 18) {
-                        Text("Cafeverse ☕").font(.largeTitle.bold())
-                        Text(auth.awaitingNewPassword ? "Yeni şifre belirle" : forgotPassword ? "Şifreni yenile" : register ? "Kendi hesabını oluştur" : "Kafene hoş geldin").font(.title2.bold())
-                        if register && !forgotPassword && !auth.awaitingNewPassword {
-                            TextField("Kullanıcı adı", text: $username).textContentType(.username).textInputAutocapitalization(.never)
-                        }
-                        if !auth.awaitingNewPassword { TextField("E-posta", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled() }
-                        if !forgotPassword || auth.awaitingNewPassword { SecureField(auth.awaitingNewPassword ? "Yeni şifre" : "Şifre", text: $password) .textContentType(register || auth.awaitingNewPassword ? .newPassword : .password) }
-                        Button(auth.awaitingNewPassword ? "Şifreyi kaydet" : forgotPassword ? "Yenileme bağlantısı gönder" : register ? "Hesap oluştur" : "Giriş yap") {
-                            let secret = password; password = ""
-                            Task {
-                                if auth.awaitingNewPassword { await auth.changePassword(secret) }
-                                else if forgotPassword { await auth.sendPasswordReset(email: email) }
-                                else { await auth.password(email: email, password: secret, username: username, register: register) }
+                    VStack(spacing: 0) {
+                        ZStack(alignment: .bottomLeading) {
+                            if let hero { Image(uiImage: hero).resizable().scaledToFill().frame(height: 205).clipped() }
+                            else { LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing).frame(height: 205) }
+                            LinearGradient(colors: [.clear, Color.black.opacity(0.35)], startPoint: .center, endPoint: .bottom)
+                            Text("Küçük bir kafe, kocaman bir dünya.").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white).shadow(radius: 3).padding(20)
+                        }.frame(height: 205).accessibilityLabel("Cafeverse OOPS Café")
+                        VStack(spacing: 18) {
+                            VStack(spacing: 7) {
+                                Text(title).font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(ink)
+                                Text(auth.awaitingNewPassword ? "En az 8 karakterle güvenli bir şifre belirle." : forgotPassword ? "Hesabına dönmen için sana bir bağlantı gönderelim." : register ? "Bir hesap oluştur, kafenle yolculuğa başla." : "Siparişlerin ve tatlı dostların seni bekliyor.")
+                                    .font(.system(size: 16)).foregroundStyle(ink.opacity(0.75)).multilineTextAlignment(.center)
                             }
-                        }.buttonStyle(.borderedProminent).controlSize(.large)
-                        if !auth.awaitingNewPassword {
-                            Button(forgotPassword ? "Giriş ekranına dön" : register ? "Hesabım var · Giriş yap" : "Yeni hesap oluştur") {
-                                if forgotPassword { forgotPassword = false } else { register.toggle() }
-                                password = ""; auth.message = ""
+                            if !forgotPassword && !auth.awaitingNewPassword {
+                                Picker("Hesap işlemi", selection: $register) {
+                                    Text("Giriş yap").tag(false); Text("Hesap oluştur").tag(true)
+                                }.pickerStyle(.segmented).onChange(of: register) { _ in password = ""; auth.message = ""; auth.confirmationEmail = nil }
                             }
-                            if !register && !forgotPassword {
-                                Button("Şifremi unuttum") { forgotPassword = true; auth.message = "" }
+                            if register && !forgotPassword && !auth.awaitingNewPassword {
+                                entry("person") { TextField("Kullanıcı adı", text: $username).textContentType(.username).textInputAutocapitalization(.never).autocorrectionDisabled() }
                             }
-                        }
-                        if !forgotPassword && !auth.awaitingNewPassword {
-                        Text("veya").foregroundStyle(.secondary)
-                        SignInWithAppleButton(.signIn, onRequest: auth.prepareApple) { result in
-                            Task { await auth.completeApple(result) }
-                        }.signInWithAppleButtonStyle(.black).frame(maxWidth: 375).frame(height: 54)
-                        }
-                        if auth.busy { ProgressView("Hesabın doğrulanıyor…") }
-                        Text(auth.message).font(.body).accessibilityIdentifier("auth-status")
-                        Text("Hesabına giriş için internet gerekir.").font(.footnote).foregroundStyle(.secondary)
-                    }.textFieldStyle(.roundedBorder).padding(28).frame(maxWidth: 480)
-                        .disabled(auth.busy).frame(maxWidth: .infinity)
-                }.background(Color(red: 0.99, green: 0.92, blue: 0.97))
+                            if !auth.awaitingNewPassword {
+                                entry("envelope") { TextField("E-posta", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("login-email") }
+                            }
+                            if !forgotPassword || auth.awaitingNewPassword {
+                                entry("lock") {
+                                    Group {
+                                        if showPassword { TextField(auth.awaitingNewPassword ? "Yeni şifre" : "Şifre", text: $password) }
+                                        else { SecureField(auth.awaitingNewPassword ? "Yeni şifre" : "Şifre", text: $password) }
+                                    }.textContentType(register || auth.awaitingNewPassword ? .newPassword : .password).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("login-password")
+                                    Button { showPassword.toggle() } label: { Image(systemName: showPassword ? "eye.slash" : "eye").foregroundStyle(ink.opacity(0.65)) }.accessibilityLabel(showPassword ? "Şifreyi gizle" : "Şifreyi göster")
+                                }
+                            }
+                            if !register && !forgotPassword && !auth.awaitingNewPassword {
+                                HStack { Spacer(); Button("Şifremi unuttum") { forgotPassword = true; auth.message = "" }.font(.system(size: 16, weight: .semibold)).foregroundStyle(pink) }
+                            }
+                            if !auth.message.isEmpty {
+                                Label(auth.message, systemImage: auth.confirmationEmail == nil ? "info.circle" : "envelope.badge")
+                                    .font(.system(size: 16)).foregroundStyle(ink).padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.white.opacity(0.85)).clipShape(RoundedRectangle(cornerRadius: 14)).accessibilityIdentifier("auth-status")
+                            }
+                            Button {
+                                Task {
+                                    if auth.awaitingNewPassword { await auth.changePassword(password) }
+                                    else if forgotPassword { await auth.sendPasswordReset(email: email) }
+                                    else { await auth.password(email: email, password: password, username: username, register: register) }
+                                    if auth.session != nil || auth.confirmationEmail != nil { password = "" }
+                                }
+                            } label: {
+                                HStack(spacing: 10) {
+                                    if auth.busy { ProgressView().tint(.white) }
+                                    Text(auth.busy ? "Bir saniye…" : auth.awaitingNewPassword ? "Şifreyi kaydet" : forgotPassword ? "Yenileme bağlantısı gönder" : register ? "Kafemi oluştur" : "Kafeme gir")
+                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    if !auth.busy { Image(systemName: "arrow.right") }
+                                }.foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 17)
+                                    .background(LinearGradient(colors: [Color(red: 0.97, green: 0.35, blue: 0.68), pink], startPoint: .top, endPoint: .bottom))
+                                    .clipShape(RoundedRectangle(cornerRadius: 18)).shadow(color: pink.opacity(0.22), radius: 8, y: 4)
+                            }.accessibilityIdentifier("login-submit")
+                            if !forgotPassword && !auth.awaitingNewPassword {
+                                HStack { Rectangle().frame(height: 1); Text("veya").font(.system(size: 15)); Rectangle().frame(height: 1) }.foregroundStyle(ink.opacity(0.3))
+                                SignInWithAppleButton(.signIn, onRequest: auth.prepareApple) { result in
+                                    Task { await auth.completeApple(result) }
+                                }.signInWithAppleButtonStyle(.black).frame(height: 54).clipShape(RoundedRectangle(cornerRadius: 14))
+                            }
+                            if forgotPassword {
+                                Button("Giriş ekranına dön") { forgotPassword = false; auth.message = ""; password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
+                            }
+                            Text("Kafeni hesabınla koru, kaldığın yerden devam et.").font(.system(size: 14)).foregroundStyle(ink.opacity(0.6)).multilineTextAlignment(.center)
+                        }.padding(24).frame(maxWidth: 480).frame(maxWidth: .infinity)
+                            .disabled(auth.busy)
+                    }.frame(maxWidth: 640).frame(maxWidth: .infinity)
+                }.scrollDismissesKeyboard(.interactively).background(Color(red: 1, green: 0.93, blue: 0.97))
             }
         }.task { await auth.restore() }.onOpenURL { url in Task { await auth.emailCallback(url) } }
     }
