@@ -91,31 +91,50 @@ private struct DeviceCafe: UIViewRepresentable {
 
 // Supabase RPC calls stay in native Swift; WebKit never receives bearer tokens.
 @MainActor private final class CafeCloud {
-    let session: CafeSession
+    private var session: CafeSession
     init(session: CafeSession) { self.session = session }
     func handle(_ body: [String: Any]) async throws -> [String: Any] {
+        try await send(body, canRefresh: true)
+    }
+    private func send(_ body: [String: Any], canRefresh: Bool) async throws -> [String: Any] {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "CafeAuthURL") as? String,
               let base = URL(string: raw), base.scheme == "https", base.host != nil,
               let key = Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String,
               !key.isEmpty else { throw URLError(.badURL) }
-        guard let action = body["action"] as? String, action == "pull" || action == "push" else {
-            throw URLError(.badURL)
-        }
+        guard let action = body["action"] as? String, action == "pull" || action == "push" else { throw URLError(.badURL) }
         var request = URLRequest(url: base.appendingPathComponent("rest/v1/rpc/cafe_cloud_" + action))
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "apikey")
         request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if action == "push" {
-            guard let save = body["save"] as? [String: Any],
-                  let revision = body["expectedVersion"] as? Int, revision >= 0 else { throw URLError(.badURL) }
+            guard let save = body["save"] as? [String: Any], let revision = body["expectedVersion"] as? Int, revision >= 0 else { throw URLError(.badURL) }
             request.httpBody = try JSONSerialization.data(withJSONObject: ["expected_version": revision, "next_save": save])
         } else { request.httpBody = Data("{}".utf8) }
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
-              let value = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw NSError(domain: "CafeCloud", code: (response as? HTTPURLResponse)?.statusCode ?? 0,
-                          userInfo: [NSLocalizedDescriptionKey: "Bulut kaydı eşitlenemedi; yerel kayıt korundu."])
+        guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+        if http.statusCode == 401 && canRefresh {
+            var refresh = URLRequest(url: base.appendingPathComponent("auth/v1/token"))
+            var parts = URLComponents(url: refresh.url!, resolvingAgainstBaseURL: false)!
+            parts.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]; refresh.url = parts.url
+            refresh.httpMethod = "POST"; refresh.setValue(key, forHTTPHeaderField: "apikey")
+            refresh.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            refresh.httpBody = try JSONSerialization.data(withJSONObject: ["refresh_token": session.refresh_token])
+            let (renewed, result) = try await URLSession.shared.data(for: refresh)
+            guard let status = result as? HTTPURLResponse, (200..<300).contains(status.statusCode) else { throw URLError(.userAuthenticationRequired) }
+            let next = try JSONDecoder().decode(CafeSession.self, from: renewed)
+            guard next.user.id == session.user.id else { throw URLError(.userAuthenticationRequired) }
+            if let current = AccountKeychain.read(), let stored = try? JSONDecoder().decode(CafeSession.self, from: current), stored.user.id == next.user.id {
+                try AccountKeychain.save(try JSONEncoder().encode(next))
+            }
+            session = next
+            return try await send(body, canRefresh: false)
+        }
+        let value = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        guard (200..<300).contains(http.statusCode), let value else {
+            let code = value?["code"] as? String ?? String(http.statusCode)
+            throw NSError(domain: "CafeCloud", code: http.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: "[\(code)] Bulut kaydı eşitlenemedi; yerel kayıt korundu."])
         }
         return value
     }
