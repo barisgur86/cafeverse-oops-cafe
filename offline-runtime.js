@@ -6,7 +6,12 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
  const KEY='cafeverse-device-beta-v1'+(global.CafeAccountID?':'+global.CafeAccountID:'');
  const initial=()=>({code:global.CafeAccountID?'USER-'+global.CafeAccountID:'OFFLINETST',name:'Test Kafesi',character:0,coins:500,served:0,claimed:false,reputation:0,attracted:0,nextCall:0,version:0,pantry:{milk:4,coffee:4,berry:6,ice:0,vanilla:0,cream:0,cocoa:3,star:2,syrup:0},found:[],trades:{},owned:['plant'],decor:'plant',wardrobe:['chef','pink','none'],look:{head:'chef',face:'none',apron:'pink'},bought:[],preparations:[],receipts:{},calls:[],history:[]});
  let s;try{s=JSON.parse(storage.getItem(KEY))}catch{}if(!s)s=initial();
- const persist=()=>storage.setItem(KEY,JSON.stringify(s));
+ const persist=()=>{storage.setItem(KEY,JSON.stringify(s));if(!global.__CAFE_TEST_NODE__)global.dispatchEvent?.(new Event('cafeverse-local-save'));};
+ const exportSave=()=>structuredClone(s);
+ const importSave=(candidate)=>{
+  if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!Number.isSafeInteger(candidate.version)||candidate.version<0||!Number.isSafeInteger(candidate.coins)||candidate.coins<0||!Number.isSafeInteger(candidate.served)||candidate.served<0||!Array.isArray(candidate.wardrobe)||!Array.isArray(candidate.owned)||!Array.isArray(candidate.preparations)||!candidate.receipts||typeof candidate.receipts!=='object'||Array.isArray(candidate.receipts))throw Error('Bulut kaydı geçersiz.');
+  const before=s;s=structuredClone(candidate);try{persist()}catch(e){s=before;throw e}return snapshot();
+ };
  const progress=()=>{const level=Math.min(10,1+Math.floor(s.served/3));return {xp:s.served*35,level,levelStart:(level-1)*105,nextXP:level===10?null:level*105,upgrades:s.bought,capacity:1+C.upgrades.filter(u=>s.bought.includes(u.id)).reduce((n,u)=>n+(u.capacity||0),0),catalog:C.upgrades,recipeLevels:C.recipeLevels}};
  const snapshot=()=>structuredClone({...s,progression:progress(),now:clock(),preparations:undefined,receipts:undefined,calls:undefined,history:undefined,bought:undefined});
  const failure=(message,status=400)=>{throw Object.assign(Error(message),{status})};
@@ -67,11 +72,12 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
   s.version++;s.receipts[rid]={fingerprint,extra:structuredClone(extra)};persist();return stateResult(extra);
  }
  function handle(path,body){const before=structuredClone(s);try{return {status:200,...route(path,body)}}catch(e){s=before;return {status:e.status||500,error:e.status?e.message:'Kayıt tamamlanamadı; tekrar dene.'}}}
- persist();return {handle,snapshot};
+ persist();return {handle,snapshot,exportSave,importSave};
 }
 global.CafeOfflineFactory=createOfflineCafe;
 if(global.__CAFE_TEST_NODE__)return;
 const engine=createOfflineCafe(global.localStorage);
+global.CafeCloudEngine=engine;
 sessionStorage.setItem('cafeverse-local-player','device-test');
 global.fetch=async function(input,options={}){const path=String(input);if(path.startsWith('/api/')){let body;try{body=options.body?JSON.parse(options.body):undefined}catch{return Response.json({error:'Geçersiz istek.'},{status:400})}const d=engine.handle(path,body);const {status,...payload}=d;return Response.json(payload,{status})}const asset=path.split('/').pop();if(global.CafeTestSVG?.[asset])return new Response(global.CafeTestSVG[asset],{headers:{'Content-Type':'image/svg+xml'}});return Response.json({error:'Bu test sürümünde ağ bağlantısı kapalı.'},{status:503})};
 })(globalThis);
