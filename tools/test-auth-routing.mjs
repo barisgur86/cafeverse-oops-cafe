@@ -1,0 +1,6 @@
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';import {fileURLToPath} from 'node:url';
+if(process.platform!=='darwin')throw Error('Native recovery checks require macOS and Xcode.');
+const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),swift=fs.readFileSync(path.join(root,'iOS/App/CafeverseApp.swift'),'utf8');
+const start=swift.indexOf('private struct CafeSession'),end=swift.indexOf('private struct AccountGate');if(start<0||end<start)throw Error('Auth source boundaries not found');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'cafeverse-recovery-'));
+try{const file=path.join(dir,'RecoveryChecks.swift'),binary=path.join(dir,'RecoveryChecks');fs.writeFileSync(file,'import Foundation\nimport Combine\nimport CryptoKit\nimport Security\nimport AuthenticationServices\n'+swift.slice(start,end)+fs.readFileSync(path.join(root,'tests/native-recovery.fixture.swift'),'utf8'));execFileSync('swiftc',['-parse-as-library','-module-cache-path',path.join(dir,'modules'),file,'-o',binary],{stdio:'inherit'});execFileSync(binary,[],{stdio:'inherit'});}finally{fs.rmSync(dir,{recursive:true,force:true})}
