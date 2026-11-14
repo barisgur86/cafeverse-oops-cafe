@@ -1,7 +1,7 @@
 {
   "name": "cafeverse-oops-cafe",
   "private": true,
-  "version": "0.3.6",
+  "version": "0.3.7",
   "type": "module",
   "scripts": {
     "build": "node tools/build.mjs",

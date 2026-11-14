@@ -18,3 +18,11 @@ Native iOS account screen supports Supabase email/password registration, confirm
 - Verify invalid/expired links, rate limits, and offline errors.
 
 `npm test` tests JavaScript and backend only. Swift compilation and real Supabase/Apple device verification require a signed iOS build and are **not** asserted here.
+
+## 0.3.7 login correction — 2026-11-14
+
+- Native iPhone 17e build and launch passed. Empty-email validation and invalid-credentials handling were exercised in the simulator against the live server; no account was created.
+- Sign-up now accepts a returned authenticated session where supported. Obfuscated duplicate OAuth sign-up responses no longer claim that a confirmation email was sent.
+- Failed login keeps the entered password so it can be corrected. Server error codes have specific Turkish feedback. Apple simulator errors explain the Apple-account requirement.
+- The existing owner account is listed with Apple as its provider. Adding a password to that same account requires the owner's recovery/sign-in flow and password entry; it was not done by the agent.
+- Custom SMTP is still absent. General-user email delivery and a successful owner login are not asserted. The owner was asked for authorization to send one recovery message to the existing account address.
