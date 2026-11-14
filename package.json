@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node tools/build.mjs",
-    "test": "node tools/build.mjs && node tests/offline.mjs && node tests/preparation-controls.mjs && node tests/recipe-catalog.mjs && node tests/store-delivery.mjs && node tests/cloud-save.mjs && node tests/cloud-sync.mjs"
+    "test": "node tools/build.mjs && node tests/offline.mjs && node tests/preparation-controls.mjs && node tests/recipe-catalog.mjs && node tests/store-delivery.mjs && node tests/cloud-save.mjs && node tests/cloud-sync.mjs",
+    "test:auth-routing": "node tools/test-auth-routing.mjs"
   }
 }

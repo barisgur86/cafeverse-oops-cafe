@@ -26,3 +26,9 @@ Native iOS account screen supports Supabase email/password registration, confirm
 - Failed login keeps the entered password so it can be corrected. Server error codes have specific Turkish feedback. Apple simulator errors explain the Apple-account requirement.
 - The existing owner account is listed with Apple as its provider. Adding a password to that same account requires the owner's recovery/sign-in flow and password entry; it was not done by the agent.
 - Custom SMTP is still absent. General-user email delivery and a successful owner login are not asserted. The owner was asked for authorization to send one recovery message to the existing account address.
+
+## Recovery presentation fix
+
+Recovery now takes precedence over an existing signed-in session. A callback arriving during session restoration is queued and replayed. PKCE recovery responses open password entry instead of accepting a game session. Successful password change clears the old local session and returns to login. Cancel preserves an existing account session.
+
+macOS `npm run test:auth-routing` compiles the actual CafeAuth implementation with native routing fixtures. Passed: existing session recovery, busy restore callback, short password rejection, cancel preservation and unrelated URL rejection. Tests use synthetic tokens, make no network calls and write no credentials. The signed iOS simulator build also passed. The owner must still set their password in the updated app; no password has been assigned by the agent.
