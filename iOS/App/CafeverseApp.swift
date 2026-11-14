@@ -19,12 +19,14 @@ struct CafeverseApp: App {
 // Native server-verified authentication gates the bundled game.
 private struct DeviceCafe: UIViewRepresentable {
     let userID: String
+    let session: CafeSession
     let onLogout: () -> Void
-    func makeCoordinator() -> Coordinator { Coordinator(userID: userID, onLogout: onLogout) }
+    func makeCoordinator() -> Coordinator { Coordinator(userID: userID, session: session, onLogout: onLogout) }
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.userContentController.add(context.coordinator, name: "cafeLogout")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeCloud")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeStore")
         let encoded = String(data: try! JSONEncoder().encode(userID), encoding: .utf8)!
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeAccountID = " + encoded + ";globalThis.CafeNativeStore = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -47,8 +49,22 @@ private struct DeviceCafe: UIViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKScriptMessageHandlerWithReply {
         let onLogout: () -> Void
         let store: CafeStore
-        init(userID: String, onLogout: @escaping () -> Void) { self.onLogout = onLogout; self.store = CafeStore(userID: userID) }
+        let cloud: CafeCloud
+        init(userID: String, session: CafeSession, onLogout: @escaping () -> Void) { self.onLogout = onLogout; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+            if message.name == "cafeCloud" {
+                guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
+                      url.isFileURL, let root,
+                      url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
+                      let body = message.body as? [String: Any] else {
+                    replyHandler(nil, "Geçersiz bulut isteği."); return
+                }
+                Task { @MainActor in
+                    do { replyHandler(try await cloud.handle(body), nil) }
+                    catch { replyHandler(nil, error.localizedDescription) }
+                }
+                return
+            }
             guard message.name == "cafeStore", message.frameInfo.isMainFrame,
                   let url = message.frameInfo.request.url, url.isFileURL, let root,
                   url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
@@ -70,6 +86,38 @@ private struct DeviceCafe: UIViewRepresentable {
             let base = root.standardizedFileURL.path + "/"
             decisionHandler(url.standardizedFileURL.path.hasPrefix(base) ? .allow : .cancel)
         }
+    }
+}
+
+// Supabase RPC calls stay in native Swift; WebKit never receives bearer tokens.
+@MainActor private final class CafeCloud {
+    let session: CafeSession
+    init(session: CafeSession) { self.session = session }
+    func handle(_ body: [String: Any]) async throws -> [String: Any] {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "CafeAuthURL") as? String,
+              let base = URL(string: raw), base.scheme == "https", base.host != nil,
+              let key = Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String,
+              !key.isEmpty else { throw URLError(.badURL) }
+        guard let action = body["action"] as? String, action == "pull" || action == "push" else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: base.appendingPathComponent("rest/v1/rpc/cafe_cloud_" + action))
+        request.httpMethod = "POST"
+        request.setValue(key, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if action == "push" {
+            guard let save = body["save"] as? [String: Any],
+                  let revision = body["expectedVersion"] as? Int, revision >= 0 else { throw URLError(.badURL) }
+            request.httpBody = try JSONSerialization.data(withJSONObject: ["expected_version": revision, "next_save": save])
+        } else { request.httpBody = Data("{}".utf8) }
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+              let value = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw NSError(domain: "CafeCloud", code: (response as? HTTPURLResponse)?.statusCode ?? 0,
+                          userInfo: [NSLocalizedDescriptionKey: "Bulut kaydı eşitlenemedi; yerel kayıt korundu."])
+        }
+        return value
     }
 }
 
@@ -116,6 +164,8 @@ private enum AccountKeychain {
     @Published var session: CafeSession?
     @Published var busy = false
     @Published var message = ""
+    @Published var awaitingNewPassword = false
+    private var recoveryAccessToken: String?
     private var pendingNonce: String?
     private var base: URL? {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "CafeAuthURL") as? String,
@@ -123,7 +173,7 @@ private enum AccountKeychain {
         return url
     }
     private var apiKey: String { Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String ?? "" }
-    private func request(_ path: String, body: [String: Any]? = nil, token: String? = nil) async throws -> Data {
+    private func request(_ path: String, body: [String: Any]? = nil, token: String? = nil, method: String? = nil) async throws -> Data {
         guard let base, !apiKey.isEmpty else {
             throw NSError(domain: "CafeAuth", code: 1, userInfo: [NSLocalizedDescriptionKey: "Gerçek hesap sunucusunun bağlantısı henüz yapılandırılmadı."])
         }
@@ -131,7 +181,7 @@ private enum AccountKeychain {
         if let query = path.components(separatedBy: "?").dropFirst().first {
             var parts = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!; parts.percentEncodedQuery = query; request.url = parts.url
         }
-        request.httpMethod = body == nil ? "GET" : "POST"
+        request.httpMethod = method ?? (body == nil ? "GET" : "POST")
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue("Bearer " + token, forHTTPHeaderField: "Authorization") }
@@ -177,7 +227,50 @@ private enum AccountKeychain {
             }
         } catch { message = error.localizedDescription }
     }
+    func sendPasswordReset(email: String) async {
+        guard !busy else { return }
+        let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard address.contains("@"), address.contains(".") else { message = "Geçerli bir e-posta adresi gir."; return }
+        busy = true; defer { busy = false }
+        do {
+            _ = try await request("recover?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": address])
+            message = "Bu adres kayıtlıysa şifre yenileme bağlantısı gönderildi. E-postanı kontrol et."
+        } catch { message = error.localizedDescription }
+    }
+    func changePassword(_ password: String) async {
+        guard !busy, awaitingNewPassword, let token = recoveryAccessToken else { return }
+        guard password.count >= 8 else { message = "Yeni şifre en az 8 karakter olmalı."; return }
+        busy = true; defer { busy = false }
+        do {
+            _ = try await request("user", body: ["password": password], token: token, method: "PUT")
+            awaitingNewPassword = false; recoveryAccessToken = nil
+            message = "Şifren değiştirildi. Yeni şifrenle giriş yap."
+        } catch { message = error.localizedDescription }
+    }
     func emailCallback(_ url: URL) async {
+        guard url.scheme == "cafeverse", url.host == "auth-callback", !busy else { return }
+        // Recovery redirects may return a fragment containing a short-lived access token.
+        if let fragment = url.fragment,
+           let parts = URLComponents(string: "https://callback.invalid/?" + fragment),
+           parts.queryItems?.first(where: { $0.name == "type" })?.value == "recovery",
+           let token = parts.queryItems?.first(where: { $0.name == "access_token" })?.value, !token.isEmpty {
+            recoveryAccessToken = token; awaitingNewPassword = true
+            message = "Yeni şifreni belirle."; return
+        }
+        // Token-hash recovery links are supported when the Supabase email template uses token_hash.
+        if let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           parts.queryItems?.first(where: { $0.name == "type" })?.value == "recovery",
+           let hash = parts.queryItems?.first(where: { $0.name == "token_hash" })?.value {
+            busy = true; defer { busy = false }
+            do {
+                let data = try await request("verify", body: ["token_hash": hash, "type": "recovery"])
+                let response = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                guard let token = response?["access_token"] as? String else { throw URLError(.badServerResponse) }
+                recoveryAccessToken = token; awaitingNewPassword = true
+                message = "Yeni şifreni belirle."
+            } catch { message = "Şifre yenileme bağlantısı geçersiz veya süresi dolmuş." }
+            return
+        }
         guard url.scheme == "cafeverse", url.host == "auth-callback", !busy else { return }
         guard let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "code" })?.value,
               let verifier = try? AccountKeychain.verifier() else {
@@ -221,30 +314,45 @@ private struct AccountGate: View {
     @State private var password = ""
     @State private var username = ""
     @State private var register = false
+    @State private var forgotPassword = false
     var body: some View {
         Group {
             if let session = auth.session {
-                DeviceCafe(userID: session.user.id, onLogout: { Task { await auth.logout() } })
+                DeviceCafe(userID: session.user.id, session: session, onLogout: { Task { await auth.logout() } })
                     .id(session.user.id)
             } else {
                 ScrollView {
                     VStack(spacing: 18) {
                         Text("Cafeverse ☕").font(.largeTitle.bold())
-                        Text(register ? "Kendi hesabını oluştur" : "Kafene hoş geldin").font(.title2.bold())
-                        if register {
+                        Text(auth.awaitingNewPassword ? "Yeni şifre belirle" : forgotPassword ? "Şifreni yenile" : register ? "Kendi hesabını oluştur" : "Kafene hoş geldin").font(.title2.bold())
+                        if register && !forgotPassword && !auth.awaitingNewPassword {
                             TextField("Kullanıcı adı", text: $username).textContentType(.username).textInputAutocapitalization(.never)
                         }
-                        TextField("E-posta", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                        SecureField("Şifre", text: $password).textContentType(register ? .newPassword : .password)
-                        Button(register ? "Hesap oluştur" : "Giriş yap") {
+                        if !auth.awaitingNewPassword { TextField("E-posta", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled() }
+                        if !forgotPassword || auth.awaitingNewPassword { SecureField(auth.awaitingNewPassword ? "Yeni şifre" : "Şifre", text: $password) .textContentType(register || auth.awaitingNewPassword ? .newPassword : .password) }
+                        Button(auth.awaitingNewPassword ? "Şifreyi kaydet" : forgotPassword ? "Yenileme bağlantısı gönder" : register ? "Hesap oluştur" : "Giriş yap") {
                             let secret = password; password = ""
-                            Task { await auth.password(email: email, password: secret, username: username, register: register) }
+                            Task {
+                                if auth.awaitingNewPassword { await auth.changePassword(secret) }
+                                else if forgotPassword { await auth.sendPasswordReset(email: email) }
+                                else { await auth.password(email: email, password: secret, username: username, register: register) }
+                            }
                         }.buttonStyle(.borderedProminent).controlSize(.large)
-                        Button(register ? "Hesabım var · Giriş yap" : "Yeni hesap oluştur") { register.toggle(); password = ""; auth.message = "" }
+                        if !auth.awaitingNewPassword {
+                            Button(forgotPassword ? "Giriş ekranına dön" : register ? "Hesabım var · Giriş yap" : "Yeni hesap oluştur") {
+                                if forgotPassword { forgotPassword = false } else { register.toggle() }
+                                password = ""; auth.message = ""
+                            }
+                            if !register && !forgotPassword {
+                                Button("Şifremi unuttum") { forgotPassword = true; auth.message = "" }
+                            }
+                        }
+                        if !forgotPassword && !auth.awaitingNewPassword {
                         Text("veya").foregroundStyle(.secondary)
                         SignInWithAppleButton(.signIn, onRequest: auth.prepareApple) { result in
                             Task { await auth.completeApple(result) }
                         }.signInWithAppleButtonStyle(.black).frame(maxWidth: 375).frame(height: 54)
+                        }
                         if auth.busy { ProgressView("Hesabın doğrulanıyor…") }
                         Text(auth.message).font(.body).accessibilityIdentifier("auth-status")
                         Text("Hesabına giriş için internet gerekir.").font(.footnote).foregroundStyle(.secondary)
