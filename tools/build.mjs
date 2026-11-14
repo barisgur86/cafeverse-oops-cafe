@@ -19,6 +19,6 @@ const prefix=script('globalThis.CafeTestCatalog='+JSON.stringify(catalog)+';glob
 html=html.replace('<title>',prefix+'<title>');
 const cloudScript=script(fs.readFileSync(path.join(root,'source/public/cloud-sync.js'),'utf8'));
 html=html.replace('</html>',cloudScript+'</html>');
-const patch=script(`const deviceRender=render;render=function(){deviceRender();const exit=document.querySelector('main > .secondary');if(exit)exit.onclick=()=>globalThis.webkit?.messageHandlers?.cafeLogout?.postMessage('logout');const status=$('online-status');if(status)status.textContent='Çevrimdışı iPhone beta · Sunucu gerekmez';};render();`);
+const patch=script(`const deviceRender=render;render=function(){deviceRender();const exit=document.querySelector('main > .secondary');if(exit)exit.onclick=()=>globalThis.webkit?.messageHandlers?.cafeLogout?.postMessage('logout');const status=$('online-status');if(status)status.textContent=globalThis.CafeCloudStatus||'Bulut kayıt kontrol ediliyor…';};render();`);
 html=html.replace('</html>',patch+'<style>html,body{user-select:none;-webkit-user-select:none}input,textarea{user-select:text;-webkit-user-select:text}.screen-app>header{padding-top:calc(9px + env(safe-area-inset-top))}.screen-app .screen-app{height:100dvh}</style></html>');
 fs.writeFileSync(path.join(web,'index.html'),html);console.log('Bundled current game, device-only engine and '+Object.keys(svg).length+' SVG assets; no localhost or external fonts.');
