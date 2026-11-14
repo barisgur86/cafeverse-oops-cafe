@@ -187,6 +187,15 @@ private enum AccountKeychain {
     @Published var confirmationEmail: String?
     private var recoveryAccessToken: String?
     private var pendingNonce: String?
+    private var deferredCallback: URL?
+    private var recoveryRequested = false
+    private func finishRequest() {
+        busy = false
+        if let callback = deferredCallback {
+            deferredCallback = nil
+            Task { await self.emailCallback(callback) }
+        }
+    }
     private var base: URL? {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "CafeAuthURL") as? String,
               let url = URL(string: raw), url.scheme == "https", url.host != nil else { return nil }
@@ -232,15 +241,15 @@ private enum AccountKeychain {
         try AccountKeychain.save(try JSONEncoder().encode(candidate)); session = candidate
     }
     func restore() async {
-        guard let data = AccountKeychain.read(), let saved = try? JSONDecoder().decode(CafeSession.self, from: data) else { return }
-        busy = true; defer { busy = false }
+        guard !busy, !awaitingNewPassword, let data = AccountKeychain.read(), let saved = try? JSONDecoder().decode(CafeSession.self, from: data) else { return }
+        busy = true; defer { finishRequest() }
         do {
             // Server refresh validates the session; a local token never unlocks the game by itself.
             try accept(try await request("token?grant_type=refresh_token", body: ["refresh_token": saved.refresh_token]))
         } catch { session = nil; message = "Oturum doğrulanamadı. İnternetini kontrol edip yeniden giriş yap." }
     }
     func password(email: String, password: String, username: String, register: Bool) async {
-        guard !busy else { return }; busy = true; message = ""; confirmationEmail = nil; defer { busy = false }
+        guard !busy else { return }; busy = true; message = ""; confirmationEmail = nil; defer { finishRequest() }
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard address.contains("@"), address.split(separator: "@").count == 2,
               !address.contains(" "), address.split(separator: "@").last?.contains(".") == true else { message = "Geçerli bir e-posta adresi gir."; return }
@@ -277,24 +286,30 @@ private enum AccountKeychain {
         guard !busy else { return }
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard address.contains("@"), address.contains(".") else { message = "Geçerli bir e-posta adresi gir."; return }
-        busy = true; defer { busy = false }
+        busy = true; defer { finishRequest() }
         do {
             _ = try await request("recover?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": address])
+            recoveryRequested = true
             message = "Bu adres kayıtlıysa şifre yenileme bağlantısı gönderildi. E-postanı kontrol et."
         } catch { message = error.localizedDescription }
     }
     func changePassword(_ password: String) async {
         guard !busy, awaitingNewPassword, let token = recoveryAccessToken else { return }
         guard password.count >= 8 else { message = "Yeni şifre en az 8 karakter olmalı."; return }
-        busy = true; defer { busy = false }
+        busy = true; defer { finishRequest() }
         do {
             _ = try await request("user", body: ["password": password], token: token, method: "PUT")
-            awaitingNewPassword = false; recoveryAccessToken = nil
+            awaitingNewPassword = false; recoveryAccessToken = nil; recoveryRequested = false
+            session = nil; AccountKeychain.clear()
             message = "Şifren değiştirildi. Yeni şifrenle giriş yap."
         } catch { message = error.localizedDescription }
     }
+    func cancelPasswordRecovery() {
+        recoveryAccessToken = nil; recoveryRequested = false; awaitingNewPassword = false; message = ""
+    }
     func emailCallback(_ url: URL) async {
-        guard url.scheme == "cafeverse", url.host == "auth-callback", !busy else { return }
+        guard url.scheme == "cafeverse", url.host == "auth-callback" else { return }
+        if busy { deferredCallback = url; return }
         // Recovery redirects may return a fragment containing a short-lived access token.
         if let fragment = url.fragment,
            let parts = URLComponents(string: "https://callback.invalid/?" + fragment),
@@ -307,7 +322,7 @@ private enum AccountKeychain {
         if let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
            parts.queryItems?.first(where: { $0.name == "type" })?.value == "recovery",
            let hash = parts.queryItems?.first(where: { $0.name == "token_hash" })?.value {
-            busy = true; defer { busy = false }
+            busy = true; defer { finishRequest() }
             do {
                 let data = try await request("verify", body: ["token_hash": hash, "type": "recovery"])
                 let response = try JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -322,8 +337,18 @@ private enum AccountKeychain {
               let verifier = try? AccountKeychain.verifier() else {
             message = "E-posta doğrulamasından sonra e-posta ve şifrenle giriş yap."; return
         }
-        busy = true; defer { busy = false }
-        do { try accept(try await request("token?grant_type=pkce", body: ["auth_code": code, "code_verifier": verifier])) }
+        busy = true; defer { finishRequest() }
+        do {
+            let data = try await request("token?grant_type=pkce", body: ["auth_code": code, "code_verifier": verifier])
+            let type = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "type" })?.value
+            if recoveryRequested || type == "recovery" {
+                let candidate = try JSONDecoder().decode(CafeSession.self, from: data)
+                recoveryAccessToken = candidate.access_token
+                awaitingNewPassword = true
+                recoveryRequested = false
+                message = "Yeni şifreni belirle."
+            } else { try accept(data) }
+        }
         catch { message = "Doğrulama bağlantısı kullanılamadı. E-posta ve şifrenle giriş yap." }
     }
     func prepareApple(_ request: ASAuthorizationAppleIDRequest) {
@@ -336,7 +361,7 @@ private enum AccountKeychain {
         request.requestedScopes = [.fullName, .email]
     }
     func completeApple(_ result: Result<ASAuthorization, Error>) async {
-        guard !busy else { return }; busy = true; message = ""; defer { busy = false; pendingNonce = nil }
+        guard !busy else { return }; busy = true; message = ""; defer { finishRequest(); pendingNonce = nil }
         do {
             let authorization = try result.get()
             guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
@@ -383,7 +408,7 @@ private struct AccountGate: View {
     }
     var body: some View {
         Group {
-            if let session = auth.session {
+            if let session = auth.session, !auth.awaitingNewPassword {
                 DeviceCafe(userID: session.user.id, session: session, onLogout: { Task { await auth.logout() } })
                     .id(session.user.id)
             } else {
@@ -451,6 +476,9 @@ private struct AccountGate: View {
                                 SignInWithAppleButton(.signIn, onRequest: auth.prepareApple) { result in
                                     Task { await auth.completeApple(result) }
                                 }.signInWithAppleButtonStyle(.black).frame(height: 54).clipShape(RoundedRectangle(cornerRadius: 14))
+                            }
+                            if auth.awaitingNewPassword {
+                                Button("Şifre yenilemeyi iptal et") { auth.cancelPasswordRecovery(); password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
                             }
                             if forgotPassword {
                                 Button("Giriş ekranına dön") { forgotPassword = false; auth.message = ""; password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
