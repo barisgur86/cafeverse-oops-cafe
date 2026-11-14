@@ -1,4 +1,4 @@
-CAFَEVERSE 0.3.5 — KALAN İŞLER
+CAFَEVERSE 0.3.6 — KALAN İŞLER
 
 1. Gerçek coin satışı: Apple ürün ayarları, banka/vergi adımları, cihazda satın alma ve teslim testi.
 2. Hesap sistemi: Gerçek iPhone Apple girişi doğrulaması; e-posta doğrulama, SMTP ve şifre sıfırlama.
@@ -8,7 +8,9 @@ CAFَEVERSE 0.3.5 — KALAN İŞLER
 6. Son mobil kontrol: Okunabilirlik, hizalama, masa ve paket servis akışları.
 
 PAKET
-Kaynak sürümü: 0.3.5 (2026111304).
+Kaynak sürümü: 0.3.6 (2026111304).
 Node.js 24 ile npm test; ardından Xcode ile iOS/Cafeverse.xcodeproj açılır.
 İmzalama sertifikaları ve özel anahtarlar pakette yoktur. Bu ZIP kurulabilir IPA değildir.
 TestFlight yüklemesi tamamlandı; son kontrol sırasında Apple Processing durumundaydı.
+
+14 Kasım güncellemesi: Canlı Supabase bulut şeması kuruldu. Hesap izolasyonu ve çakışma testleri geçti. Çakışma seçim ekranı ve çevrimdışı senkronizasyon eklendi. İki fiziksel cihaz ve gerçek ödeme testi açık.

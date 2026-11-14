@@ -1,6 +1,6 @@
 # Cafeverse · OOPS! Café
 
-iPhone ve iPad için SwiftUI kabuğu ve uygulamaya gömülü JavaScript oyun motoru. Bu depo güncel 0.3.5 geliştirme kaynaklarını içerir; TestFlight yayımlama durumu değildir.
+iPhone ve iPad için SwiftUI kabuğu ve uygulamaya gömülü JavaScript oyun motoru. Bu depo güncel 0.3.6 geliştirme kaynaklarını içerir; TestFlight yayımlama durumu değildir.
 
 ## Geliştirme
 
@@ -22,4 +22,6 @@ Node.js 24 ile `npm test` çalıştırın. Bağımlılık kurulumu gerekmez. `np
 
 Değişiklikleri ayrı dalda hazırlayın, `npm test` sonucunu kontrol edin ve pull request açın. iOS derleme/imzalama/dağıtım Mac ve Xcode gerektirir. Sertifikalar, özel anahtarlar ve sunucu sırları depoya eklenmez. Info.plist içindeki Supabase anahtarı yalnızca herkese açık istemci anahtarıdır.
 
-0.3.5: Kullanıcının masa hazır, masa teslim ve paket servis görselleri; canlı bakiye ve gerçek sipariş bilgileri.
+0.3.6: Kullanıcının masa hazır, masa teslim ve paket servis görselleri; canlı bakiye ve gerçek sipariş bilgileri.
+
+0.3.6: Canlı bulut kayıt şeması, hesap ayrımı kontrolü, çevrimdışı kayıtları koruma, çakışmada açık seçim ve yerel kurtarma kopyası. Fiziksel cihaz testi ayrıca tamamlanmalıdır. Ayrıntılar: CLOUD_SETUP.md.

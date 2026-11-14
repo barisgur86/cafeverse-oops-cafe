@@ -1,7 +1,7 @@
-# Bulut kayıt (beta) – kurulum ve güvenlik
+# Bulut kayıt beta — 0.3.6
 
-Bu sürüm Supabase üzerinde hesap bazlı bulut yedeği için istemci entegrasyonu ve veritabanı şeması ekler. `supabase/cloud_save.sql` dosyasını Supabase SQL Editor'da çalıştırmadan bulut kayıt çalışmaz. Native iOS derlemesi ve iki cihaz testi henüz yapılmamıştır.
+14 Kasım 2026: cafe_cloud_saves tablosu, RLS ve pull/push işlevleri Cafeverse Supabase projesine kuruldu. Canlı SQL testi hesap ayrımı, kendi kaydını okuma/yazma ve eski sürümle yazmayı reddetme kontrollerini geçti; geçici test verileri ROLLBACK ile geri alındı. Doğrulama sorgusu supabase/verify_cloud_save.sql içindedir.
 
-**ÖNEMLİ:** Bu bir beta yedekleme akışıdır; oyun ekonomisi sunucu otoritesine taşınmadığı için coin ve StoreKit teslimini üretimde güvenilir bir cüzdan olarak kullanmayın. Gerçek coin satışından önce sunucuda doğrulanmış satın alma, tek seferlik teslim ve sunucu tarafında ekonomi işlemleri gerekir.
+İstemci son eşitlenen kaydı izler. Çevrimdışı yerel değişiklikler, bulut değişmemişse yeniden açılışta korunup yüklenir. İki kayıt da değişmişse oyuncu açıkça birini seçer; yerelin yerine bulut alınmadan önce yerel kurtarma kopyası cihazda saklanır. Coinler birleştirilmez. Masa siparişleri de yedeğe dahil edilir.
 
-İlk girişte mevcut bulut kaydı varsa cihazın yerel kaydının yerine alınır; bulut kaydı yoksa yerel oyun durumu ilk değişiklikte yüklenir. Çakışan sürümler sessizce üzerine yazılmaz. İnternet yoksa yerel kayıt korunur. Aynı anda iki cihazda oynamak henüz otomatik birleştirilmez; çakışma kullanıcı müdahalesi gerektirir.
+Gerçek iPhone ve iki fiziksel cihazla uçtan uca test henüz tamamlanmadı. 0.3.6 (2026111401) native simülatör uygulaması derlendi; oyun içindeki canlı senkronizasyon sonucu kullanıcı doğrulaması bekliyor. Bu bir hesap yedeğidir; sunucunun doğruladığı bir ödeme cüzdanı değildir.
