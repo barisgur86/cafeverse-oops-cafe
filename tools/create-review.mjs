@@ -1,7 +1,7 @@
 // Git credential-helper output remains in memory and is never printed.
 import {execFileSync} from 'node:child_process';import fs from 'node:fs';
 const helper='!"/Applications/GitHub Desktop.app/Contents/Resources/app/git/libexec/git-core/git-credential-manager"';
-const credentials=execFileSync('git',['-c','credential.helper=','-c','credential.helper='+helper,'credential','fill'],{input:'protocol=https\nhost=github.com\n\n',encoding:'utf8',stdio:['pipe','pipe','pipe']});
+let credentials;try{credentials=execFileSync('git',['-c','credential.helper=','-c','credential.helper='+helper,'credential','fill'],{input:'protocol=https\nhost=github.com\n\n',encoding:'utf8',stdio:['pipe','pipe','pipe']});}catch{throw Error('GitHub credential helper could not authenticate; no credential output is logged');}
 const token=credentials.split('\n').find(line=>line.startsWith('password='))?.slice(9);if(!token)throw Error('GitHub authentication required');
 const branch=execFileSync('git',['branch','--show-current'],{encoding:'utf8'}).trim(),sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 if(branch!=='feature/secure-store-trades-062')throw Error('Unexpected branch');
