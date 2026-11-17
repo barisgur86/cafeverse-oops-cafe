@@ -8,14 +8,17 @@ const shopNav=document.createElement('button');shopNav.dataset.tab='shop';shopNa
 const storeAvailable=()=>!!globalThis.CafeNativeStore&&!!globalThis.webkit?.messageHandlers?.cafeStore;
 const nativeStore=body=>{if(!storeAvailable())return Promise.reject(Error('Coin satın alma iPhone ve iPad uygulamasında kullanılabilir.'));return globalThis.webkit.messageHandlers.cafeStore.postMessage(body)};
 shopDialog.addEventListener('cancel',e=>{if(shopBusy)e.preventDefault()});
-function shopShell(content){shopDialog.innerHTML=`<div class="shop-heading"><div><small>CAFÉVERSE · COIN MAĞAZASI</small><h2>Biraz daha sihir 🪙</h2></div><button class="shop-close" aria-label="Coin mağazasını kapat" ${shopBusy?'disabled':''}>×</button></div><p class="shop-demo-note">Satın alma Apple onay ekranında tamamlanır. Coinler bu cihazdaki oyun kaydına eklenir.</p><div class="shop-balance">Bakiyen: <strong>${state.coins} coin</strong></div>${content}<p id="shop-error" role="status" aria-live="polite">${safe(storeNotice)}</p>`;shopDialog.querySelector('.shop-close').onclick=()=>shopDialog.close()}
+function shopShell(content){shopDialog.innerHTML=`<div class="shop-heading"><div><small>CAFÉVERSE · COIN MAĞAZASI</small><h2>Biraz daha sihir 🪙</h2></div><button class="shop-close" aria-label="Coin mağazasını kapat" ${shopBusy?'disabled':''}>×</button></div><p class="shop-demo-note">Satın alma Apple onay ekranında tamamlanır. Coinler hesabındaki kafeye eklenir.</p><div class="shop-balance">Bakiyen: <strong>${state.coins} coin</strong></div>${content}<p id="shop-error" role="status" aria-live="polite">${safe(storeNotice)}</p>`;shopDialog.querySelector('.shop-close').onclick=()=>shopDialog.close()}
 const storeDeliveries=new Map();
 function deliverNativeTransaction(transaction){
  // Purchase completion and Transaction.updates may report the same transaction together.
  const key=transaction.environment+':'+transaction.transactionID;
  if(storeDeliveries.has(key))return storeDeliveries.get(key);
  const delivery=(async()=>{
+  pendingStoreProducts.add(transaction.productID);localStorage.setItem(pendingStoreKey,JSON.stringify([...pendingStoreProducts]));
   const d=await api('/api/ios-store-credit',{transaction});hydrate(d.state);
+  if(globalThis.CafeCloudSync?.ensurePurchaseSaved)await globalThis.CafeCloudSync.ensurePurchaseSaved(transaction);
+  else if(globalThis.webkit?.messageHandlers?.cafeCloud)throw Error('Satın alma buluta kaydedilemedi. Bağlantını kontrol edip yeniden dene.');
   await nativeStore({action:'finish',transactionID:transaction.transactionID});
   pendingStoreProducts.delete(transaction.productID);localStorage.setItem(pendingStoreKey,JSON.stringify([...pendingStoreProducts]));
   render();return d;

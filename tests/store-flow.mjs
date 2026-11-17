@@ -6,4 +6,7 @@ vm.createContext(ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/
 releaseCredit={};const a=deliver(tx),b=deliver(tx);assert.equal(a,b);assert.equal(events.filter(x=>x==='credit').length,1);releaseCredit.resolve();await Promise.all([a,b]);releaseCredit=null;assert.equal(finishes,1);assert.deepEqual(events,['credit','finish']);
 failCredit=true;await assert.rejects(deliver({...tx,transactionID:'124'}),/disk full/);assert.equal(finishes,1);failCredit=false;await deliver({...tx,transactionID:'124'});assert.equal(finishes,2);
 failFinish=true;await assert.rejects(deliver({...tx,transactionID:'125'}),/finish unavailable/);failFinish=false;await deliver({...tx,transactionID:'125'});assert.equal(finishes,4);
-console.log('PASS store flow: concurrent purchase/update delivery is serialized, credit precedes finish, failed credit never finishes, and failures remain retryable. Apple payment itself requires a device test.');
+let acknowledged=false;ctx.CafeCloudSync={ensurePurchaseSaved:async()=>{events.push('cloud');if(!acknowledged)throw Error('cloud unavailable')}};
+const beforeCloud=finishes;await assert.rejects(deliver({...tx,transactionID:'126'}),/cloud unavailable/);assert.equal(finishes,beforeCloud);
+acknowledged=true;await deliver({...tx,transactionID:'126'});assert.equal(finishes,beforeCloud+1);assert.deepEqual(events.slice(-3),['credit','cloud','finish']);
+console.log('PASS store flow: concurrent purchase/update delivery is serialized, credit precedes finish, failed credit never finishes, and failures remain retryable, and native finish waits for cloud acknowledgement. Apple payment itself requires a device test.');
