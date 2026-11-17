@@ -13,3 +13,12 @@ const serving=action();await action();await serving;assert.equal(ctx.state.serve
 // Continue through the same real APIs for one takeaway order.
 let b=buttons.find(b=>b.dataset.act==='call');await b.onclick();for(let i=0;i<3;i++)await b.onclick();assert.equal(ctx.state.coins,balance);assert.ok(ctx.state.attracted>0);selectors[1].onclick();await action();assert.equal(board.tickets[0].mode,'takeaway');assert.equal(board.tickets[0].items.length,1);await action();await action();assert.equal(ctx.state.served,5);assert.equal(board.tickets.length,0);
 console.log('PASS simulation: four guests, live machine/tray route, atomic batch, rapid double tap guard, durable rewards, no scene-changing dialog, takeaway and customer-only calls.');
+
+// Purchasing more tables must render every table and its selector immediately.
+ctx.tableCount=()=>3;ctx.render();
+assert.ok(frames.at(-1).includes('data-scene-table="3"'));
+assert.ok(frames.at(-1).includes('data-select="3"'));
+ctx.tableCount=()=>4;ctx.render();
+assert.ok(frames.at(-1).includes('data-scene-table="4"'));
+assert.ok(frames.at(-1).includes('data-select="4"'));
+console.log('PASS expanded cafe: third and fourth tables and selectors render after purchase.');
