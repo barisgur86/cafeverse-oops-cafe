@@ -2,7 +2,7 @@
 let serviceMode='table',activeTicket=null,activeTicketSlot=null,serviceBoards={};
 const tableCount=()=>1+['table2','table3','table4'].filter(id=>state.progression?.upgrades.includes(id)).length;
 function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}return serviceBoards[key]}
-function saveBoard(){localStorage.setItem('cafe-service-board:'+(state.cafeCode||'device-test'),JSON.stringify(serviceBoard()));globalThis.dispatchEvent(new Event('cafeverse-local-save'))}
+function saveBoard(){localStorage.setItem('cafe-service-board:'+(state.cafeCode||'device-test'),JSON.stringify(serviceBoard()));globalThis.dispatchEvent(new Event('cafeverse-local-save'));globalThis.dispatchEvent(new Event('cafeverse-board-save'))}
 const waitingCustomers=()=>Math.max(0,4+(state.attracted||0)-serviceBoard().admitted);
 function ticketReady(t){return t.items.every(i=>i.preparation&&i.readyAt<=Date.now())}
 function ticketName(t){return t.mode==='table'?'Masa '+t.table:'Paket #'+t.number}

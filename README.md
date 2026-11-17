@@ -1,3 +1,7 @@
+# Secure economy candidate 0.6.2
+
+See [SECURE_ECONOMY_SETUP.md](SECURE_ECONOMY_SETUP.md) for server deployment, migration/cutover, Apple verification, trade rules and release gates. This candidate is not yet deployed or certified on real devices.
+
 # Cafeverse · OOPS! Café
 
 iPhone ve iPad için SwiftUI kabuğu ve uygulamaya gömülü JavaScript oyun motoru. Bu depo 0.5.1 (2026111701) kaynaklarını içerir. Bu paket 17 Kasım 2026 tarihinde TestFlight iç test için Apple’a başarıyla yüklendi; test kullanılabilirliği Apple’ın işleme ve grup dağıtımı durumuna bağlıdır.

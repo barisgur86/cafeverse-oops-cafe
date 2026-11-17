@@ -1,3 +1,7 @@
+# 0.6.2 server migration notice
+
+The following describes the legacy backup. The authoritative economy candidate is documented in [SECURE_ECONOMY_SETUP.md](SECURE_ECONOMY_SETUP.md). Do not run the legacy SQL over the new migration: it would re-enable client wallet writes.
+
 # Bulut kayıt — 0.5.5
 
 14 Kasım 2026: cafe_cloud_saves tablosu, RLS ve pull/push işlevleri Cafeverse Supabase projesine kuruldu. Canlı SQL testi hesap ayrımı, kendi kaydını okuma/yazma ve eski sürümle yazmayı reddetme kontrollerini geçti; geçici test verileri ROLLBACK ile geri alındı. Doğrulama sorgusu supabase/verify_cloud_save.sql içindedir.

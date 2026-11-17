@@ -27,7 +27,8 @@ const divergent=device(legacy.storage);await settle();assert.equal(divergent.syn
 // An Apple transaction must reach the cloud before the native purchase may finish.
 server.save=null;server.version=0;factory.CafeNativeStore=true;factory.CafeAccountID='test';
 const paid=device();await settle();const tx={transactionID:'123456',productID:'com.cafeverse.oopscafe.coins250',coins:250,environment:'Sandbox'};
-assert.equal(paid.engine.handle('/api/ios-store-credit',{request_id:crypto.randomUUID(),transaction:tx}).status,200);
+// Fixture represents an already verified server snapshot; device credit is disabled.
+const verifiedSave=paid.engine.exportSave();verifiedSave.coins=750;verifiedSave.storePurchases={[tx.environment+':'+tx.transactionID]:tx};paid.engine.importSave(verifiedSave);
 paid.offline=true;await assert.rejects(paid.sync.ensurePurchaseSaved(tx),/buluta/);assert.equal(server.save,null);
 paid.offline=false;await paid.sync.ensurePurchaseSaved(tx);assert.equal(server.save.coins,750);assert.equal(server.save.storePurchases['Sandbox:123456'].coins,250);
 await paid.sync.ensurePurchaseSaved(tx);assert.equal(server.save.coins,750);

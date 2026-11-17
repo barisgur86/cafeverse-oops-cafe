@@ -1,0 +1,10 @@
+import vm from 'node:vm';import fs from 'node:fs';import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../source/public/secure-client.js',import.meta.url),'utf8');
+let imported=0,calls=[],fail=false;const listeners={},values=new Map();
+const context={CafeServerEnabled:true,CafeCloudEngine:{importSave(){imported++;}},webkit:{messageHandlers:{cafeGame:{async postMessage(request){calls.push(request);if(fail)throw Error('offline');return {save:{coins:750},revision:3,state:{code:'ABCDEF1234',coins:750}};}}}},fetch(){throw Error('local fallback forbidden');},Response,localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)},setTimeout(){},clearTimeout(){},addEventListener:(name,fn)=>listeners[name]=fn,state:{cafeCode:'ABCDEF1234'}};
+vm.createContext(context);vm.runInContext(source,context);
+const result=await context.fetch('/api/me');assert.equal((await result.json()).state.coins,750);assert.equal(imported,1);assert.equal(context.CafeCloudSync.getStatus().initialized,true);
+fail=true;assert.equal((await context.fetch('/api/stock',{body:JSON.stringify({item:'milk'})})).status,503);assert.equal(imported,1);fail=false;
+await context.fetch('/api/ios-store-credit',{body:JSON.stringify({transaction:{signedTransaction:'jws'}})});assert.equal(calls.at(-1).body.transaction.signedTransaction,'jws');
+values.set('cafe-service-board:ABCDEF1234',JSON.stringify({tickets:[]}));listeners['cafeverse-board-save']();await context.CafeCloudSync.push();assert.equal(calls.at(-1).path,'/api/board');assert.equal(calls.at(-1).body.expectedRevision,3);assert.equal(calls.at(-1).body.save,undefined);
+console.log('PASS secure client: authenticated bridge, server snapshot hydration, no offline economic fallback, JWS delivery, metadata-only board sync.');

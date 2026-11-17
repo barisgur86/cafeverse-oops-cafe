@@ -17,8 +17,8 @@ function deliverNativeTransaction(transaction){
  const delivery=(async()=>{
   pendingStoreProducts.add(transaction.productID);localStorage.setItem(pendingStoreKey,JSON.stringify([...pendingStoreProducts]));
   const d=await api('/api/ios-store-credit',{transaction});hydrate(d.state);
-  if(globalThis.CafeCloudSync?.ensurePurchaseSaved)await globalThis.CafeCloudSync.ensurePurchaseSaved(transaction);
-  else if(globalThis.webkit?.messageHandlers?.cafeCloud)throw Error('Satın alma buluta kaydedilemedi. Bağlantını kontrol edip yeniden dene.');
+  if(!globalThis.CafeServerEnabled&&globalThis.CafeCloudSync?.ensurePurchaseSaved)await globalThis.CafeCloudSync.ensurePurchaseSaved(transaction);
+  else if(!globalThis.CafeServerEnabled&&globalThis.webkit?.messageHandlers?.cafeCloud)throw Error('Satın alma buluta kaydedilemedi. Bağlantını kontrol edip yeniden dene.');
   await nativeStore({action:'finish',transactionID:transaction.transactionID});
   pendingStoreProducts.delete(transaction.productID);localStorage.setItem(pendingStoreKey,JSON.stringify([...pendingStoreProducts]));
   render();return d;

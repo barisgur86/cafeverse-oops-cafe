@@ -31,14 +31,7 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
   const fingerprint=JSON.stringify([path,Object.fromEntries(Object.entries(body).filter(([k])=>k!=='request_id').sort(([a],[b])=>a.localeCompare(b)))]);
   if(s.receipts[rid]){if(s.receipts[rid].fingerprint!==fingerprint)failure('İşlem kimliği başka bir işlem için kullanılmış.',409);return stateResult(s.receipts[rid].extra)}
   let extra={};
-  if(path==='/api/ios-store-credit'){
-   if(!global.CafeNativeStore||!global.CafeAccountID)failure('Native Apple doğrulaması gerekli.',403);
-   const tx=body.transaction,packs={'com.cafeverse.oopscafe.coins250':250,'com.cafeverse.oopscafe.coins750':750,'com.cafeverse.oopscafe.coins2000':2000};
-   if(!tx||!/^\d{1,32}$/.test(tx.transactionID)||!packs[tx.productID]||tx.coins!==packs[tx.productID]||!['Sandbox','Production','Xcode'].includes(tx.environment))failure('Satın alma verisi geçersiz.');
-   s.storePurchases??={};const key=tx.environment+':'+tx.transactionID,old=s.storePurchases[key];
-   if(old){if(old.productID!==tx.productID)failure('İşlem başka ürüne ait.',409);extra.purchase={...old,duplicate:true}}
-   else{const purchase={id:tx.transactionID,productID:tx.productID,coins:packs[tx.productID],environment:tx.environment};s.coins+=purchase.coins;s.storePurchases[key]=purchase;extra.purchase=purchase;}
-  }
+  if(path==='/api/ios-store-credit')failure('Satın alma sunucusu gerekli. Coin teslimi cihazda yapılamaz.',503);
   else if(path==='/api/profile'){const name=String(body.name||'').trim();if(!name||name.length>24||!integer(body.character,0,5))failure('Geçerli bir ad ve karakter seç.');s.name=name;s.character=body.character}
   else if(path==='/api/stock'){if(!C.PRICE[body.item])failure('Malzeme bulunamadı.');debit(C.PRICE[body.item]);s.pantry[body.item]=(s.pantry[body.item]||0)+1}
   else if(path==='/api/outfit'){const weekly=C.weekly?.find(i=>i.id===body.item);if(weekly&&clock()<weekly.release&&!s.wardrobe.includes(body.item))failure('Bu koleksiyon henüz açılmadı.',403);const item=C.outfits[body.item];if(!item)failure('Kıyafet bulunamadı.');if(!s.wardrobe.includes(body.item)){debit(item[0]);s.wardrobe.push(body.item)}s.look[item[1]]=body.item}

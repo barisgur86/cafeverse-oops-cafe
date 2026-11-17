@@ -42,6 +42,9 @@ private struct DeviceCafe: UIViewRepresentable {
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeLanguage = " + languageJSON + ";", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeCloud")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeStore")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeGame")
+        let serverEnabled = (Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String)?.hasPrefix("https://") == true
+        configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeServerEnabled = \(serverEnabled ? "true" : "false");", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let encoded = String(data: try! JSONEncoder().encode(userID), encoding: .utf8)!
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeAccountID = " + encoded + ";globalThis.CafeNativeStore = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let view = WKWebView(frame: .zero, configuration: configuration)
@@ -67,7 +70,7 @@ private struct DeviceCafe: UIViewRepresentable {
         let cloud: CafeCloud
         init(userID: String, session: CafeSession, onLogout: @escaping () -> Void) { self.onLogout = onLogout; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
-            if message.name == "cafeCloud" {
+            if message.name == "cafeCloud" || message.name == "cafeGame" {
                 guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
                       url.isFileURL, let root,
                       url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
@@ -75,7 +78,14 @@ private struct DeviceCafe: UIViewRepresentable {
                     replyHandler(nil, "Geçersiz bulut isteği."); return
                 }
                 Task { @MainActor in
-                    do { replyHandler(try await cloud.handle(body), nil) }
+                    do {
+                        let result = try await cloud.handle(body)
+                        if body["action"] as? String == "game", body["path"] as? String == "/api/ios-store-credit",
+                           let purchase = result["purchase"] as? [String: Any], let id = purchase["id"] as? String {
+                            store.confirmDelivery(id)
+                        }
+                        replyHandler(result, nil)
+                    }
                     catch { replyHandler(nil, error.localizedDescription) }
                 }
                 return
@@ -130,13 +140,31 @@ private struct DeviceCafe: UIViewRepresentable {
               let base = URL(string: raw), base.scheme == "https", base.host != nil,
               let key = Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String,
               !key.isEmpty else { throw URLError(.badURL) }
-        guard let action = body["action"] as? String, action == "pull" || action == "push" else { throw URLError(.badURL) }
-        var request = URLRequest(url: base.appendingPathComponent("rest/v1/rpc/cafe_cloud_" + action))
+        guard let action = body["action"] as? String else { throw URLError(.badURL) }
+        let gameRequest = action == "game"
+        let target: URL
+        if gameRequest {
+            guard let rawServer = Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String,
+                  let server = URL(string: rawServer), server.scheme == "https", server.host != nil,
+                  let path = body["path"] as? String, path.hasPrefix("/api/"),
+                  !path.contains(".."), !path.contains("#"), !path.contains("://"),
+                  let url = URL(string: path, relativeTo: server)?.absoluteURL, url.host == server.host else { throw URLError(.badURL) }
+            target = url
+        } else {
+            guard action == "pull" || action == "push" else { throw URLError(.badURL) }
+            target = base.appendingPathComponent("rest/v1/rpc/cafe_cloud_" + action)
+        }
+        var request = URLRequest(url: target)
+        request.timeoutInterval = 20
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "apikey")
         request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if action == "push" {
+        if gameRequest {
+            if let payload = body["body"] as? [String: Any] {
+                request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            } else { request.httpMethod = "GET" }
+        } else if action == "push" {
             guard let save = body["save"] as? [String: Any], let revision = body["expectedVersion"] as? Int, revision >= 0 else { throw URLError(.badURL) }
             request.httpBody = try JSONSerialization.data(withJSONObject: ["expected_version": revision, "next_save": save])
         } else { request.httpBody = Data("{}".utf8) }
@@ -163,7 +191,7 @@ private struct DeviceCafe: UIViewRepresentable {
         guard (200..<300).contains(http.statusCode), let value else {
             let code = value?["code"] as? String ?? String(http.statusCode)
             throw NSError(domain: "CafeCloud", code: http.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: "[\(code)] Bulut kaydı eşitlenemedi; yerel kayıt korundu."])
+                userInfo: [NSLocalizedDescriptionKey: "[\(code)] " + (value?["error"] as? String ?? "Bulut kaydı eşitlenemedi; yerel kayıt korundu.")])
         }
         return value
     }
@@ -537,7 +565,10 @@ private struct AccountGate: View {
     static let amounts = ["com.cafeverse.oopscafe.coins250": 250, "com.cafeverse.oopscafe.coins750": 750, "com.cafeverse.oopscafe.coins2000": 2000]
     let account: UUID?
     private var transactions: [String: StoreKit.Transaction] = [:]
+    private var signedTransactions: [String: String] = [:]
     private var finishedTransactions: Set<String> = []
+    private var deliveredTransactions: Set<String> = []
+    func confirmDelivery(_ id: String) { deliveredTransactions.insert(id) }
     private var purchaseBusy = false
     private var updates: Task<Void, Never>?
     var onUpdate: (() -> Void)?
@@ -548,6 +579,7 @@ private struct AccountGate: View {
                 guard let self else { return }
                 if let transaction = try? self.verified(result), !self.finishedTransactions.contains(String(transaction.id)) {
                     self.transactions[String(transaction.id)] = transaction
+                    self.signedTransactions[String(transaction.id)] = result.jwsRepresentation
                     self.onUpdate?()
                 }
             }
@@ -569,7 +601,8 @@ private struct AccountGate: View {
     }
     private func payload(_ transaction: StoreKit.Transaction) -> [String: Any] {
         ["transactionID": String(transaction.id), "productID": transaction.productID,
-         "coins": Self.amounts[transaction.productID]!, "environment": transaction.environment.rawValue]
+         "coins": Self.amounts[transaction.productID]!, "environment": transaction.environment.rawValue,
+         "originalTransactionID": String(transaction.originalID), "signedTransaction": signedTransactions[String(transaction.id)] ?? ""]
     }
     func handle(_ body: [String: Any]) async throws -> [String: Any] {
         switch body["action"] as? String {
@@ -579,6 +612,7 @@ private struct AccountGate: View {
                 ["id": $0.id, "coins": Self.amounts[$0.id]!, "name": $0.displayName, "price": $0.displayPrice] as [String: Any]
             }, "canPay": AppStore.canMakePayments]
         case "purchase":
+            guard (Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String)?.hasPrefix("https://") == true else { throw problem("Satın alma sunucusu henüz hazır değil.") }
             guard !purchaseBusy else { throw problem(L("Önce devam eden satın almayı tamamla.")) }
             guard AppStore.canMakePayments else { throw problem(L("Bu cihazda satın alma kapalı.")) }
             guard let account, let id = body["productID"] as? String, Self.amounts[id] != nil else { throw problem(L("Ürün veya hesap geçersiz.")) }
@@ -590,6 +624,7 @@ private struct AccountGate: View {
             case .success(let result):
                 let transaction = try verified(result)
                 transactions[String(transaction.id)] = transaction
+                signedTransactions[String(transaction.id)] = result.jwsRepresentation
                 return ["status": "purchased", "transaction": payload(transaction)]
             case .pending: return ["status": "pending"]
             case .userCancelled: return ["status": "cancelled"]
@@ -597,15 +632,15 @@ private struct AccountGate: View {
             }
         case "pending":
             for await result in StoreKit.Transaction.unfinished {
-                if let transaction = try? verified(result), !finishedTransactions.contains(String(transaction.id)) { transactions[String(transaction.id)] = transaction }
+                if let transaction = try? verified(result), !finishedTransactions.contains(String(transaction.id)) { transactions[String(transaction.id)] = transaction; signedTransactions[String(transaction.id)] = result.jwsRepresentation }
             }
             return ["transactions": transactions.values.map(payload)]
         case "finish":
             guard let id = body["transactionID"] as? String else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
             if finishedTransactions.contains(id) { return ["finished": true] }
-            guard let transaction = transactions[id] else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
+            guard deliveredTransactions.contains(id), let transaction = transactions[id] else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
             // Called only after the bundled game confirms its durable, idempotent credit.
-            await transaction.finish(); finishedTransactions.insert(id); transactions.removeValue(forKey: id)
+            await transaction.finish(); finishedTransactions.insert(id); transactions.removeValue(forKey: id); signedTransactions.removeValue(forKey: id)
             return ["finished": true]
         default: throw problem(L("Desteklenmeyen mağaza işlemi."))
         }

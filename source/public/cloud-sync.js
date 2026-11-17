@@ -1,6 +1,7 @@
 /* Account-scoped cloud save. Cloud wins divergent-device conflicts; local recovery is silent. */
 (function(g){
 'use strict';
+if(g.CafeServerEnabled)return;
 if(!g.CafeCloudEngine||!g.webkit?.messageHandlers?.cafeCloud)return;
 const engine=g.CafeCloudEngine,bridge=g.webkit.messageHandlers.cafeCloud;
 const metaKey='cafe-cloud-base:'+(g.CafeAccountID||'device');
