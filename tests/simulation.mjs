@@ -15,7 +15,7 @@ let b=buttons.find(b=>b.dataset.act==='call');await b.onclick();for(let i=0;i<3;
 console.log('PASS simulation: four guests, live machine/tray route, atomic batch, rapid double tap guard, durable rewards, no scene-changing dialog, takeaway and customer-only calls.');
 
 // Purchasing more tables must render every table and its selector immediately.
-ctx.tableCount=()=>3;ctx.render();
+ctx.tableCount=()=>3;ctx.navigateGame('cafe');ctx.render();
 assert.ok(frames.at(-1).includes('data-scene-table="3"'));
 assert.ok(frames.at(-1).includes('data-select="3"'));
 ctx.tableCount=()=>4;ctx.render();
