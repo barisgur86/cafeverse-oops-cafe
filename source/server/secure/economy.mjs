@@ -4,7 +4,7 @@ import {problem} from './apple.mjs';
 const uuid=s=>typeof s==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 const canonical=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 export class Economy {
- constructor(pool,apple,{clock=Date.now}={}){this.pool=pool;this.apple=apple;this.clock=clock;}
+ constructor(pool,apple,{clock=Date.now,features={}}={}){this.pool=pool;this.apple=apple;this.clock=clock;this.features={iap:false,trades:false,market:false,auctions:false,social:false,...features};}
  async transaction(fn){const c=await this.pool.connect();try{await c.query('begin');await c.query("set local lock_timeout='5s'");const r=await fn(c);await c.query('commit');return r;}catch(e){await c.query('rollback');throw e;}finally{c.release();}}
  async lock(c,key){await c.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[key]);}
  async account(c,id){
@@ -15,7 +15,7 @@ export class Economy {
  }
  async save(c,a){a.revision=Number(a.revision)+1;a.save.version=(a.save.version||0)+1;await c.query('update cafe_game_accounts set save=$2,revision=$3,refund_debt=$4,updated_at=now() where user_id=$1',[a.user_id,a.save,a.revision,a.refund_debt]);}
  state(a){const e=gameEngine(a.user_id,a.save,this.clock),d=e.handle('/api/me');return {...d.state,code:a.code,refundDebt:Number(a.refund_debt)};}
- response(a,extra={}){return {state:this.state(a),save:a.save,revision:Number(a.revision),...extra};}
+ response(a,extra={}){return {state:this.state(a),save:a.save,revision:Number(a.revision),features:this.features,...extra};}
  async request(c,id,rid,path,body,fn){
   if(!uuid(rid))throw problem('Geçersiz işlem kimliği.');
   await this.lock(c,'request:'+id+':'+rid);
@@ -119,7 +119,7 @@ export class Economy {
      await this.save(c,r);
     }else s.save.pantry[t.give_item]=(s.save.pantry[t.give_item]||0)+t.give_qty;
     await this.save(c,s);
-    await c.query('update cafe_trade_offers set status=$2,handled_at=now() where id=$1',[tradeID,status]);return {tradeID,status};
+    await c.query('update cafe_trade_offers set status=$2,handled_at=now() where id=$1',[tradeID,status]);if(this.auditTrade)await this.auditTrade(c,t,status);return {tradeID,status};
    };
    const result=system?await execute():await this.request(c,id,rid,'trade-'+action,{tradeID},execute);
    if(system)return result;return this.response(await this.account(c,id),{...result,trades:await this.list(c,id)});
