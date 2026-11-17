@@ -4,7 +4,7 @@
  if(!globalThis.CafeServerEnabled)return;
  const bridge=globalThis.webkit?.messageHandlers?.cafeGame,cache=globalThis.CafeCloudEngine;
  if(!bridge||!cache)throw Error('Güvenli oyun bağlantısı bulunamadı.');
- let revision=0,initialized=false,applying=false,sequence=Promise.resolve(),timer,boardDirty=false;
+ let revision=0,initialized=false,applying=false,sequence=Promise.resolve(),timer,boardDirty=false,boardChanges=0;
  const originalFetch=globalThis.fetch;
  const pendingKey='cafeverse-secure-requests:'+(globalThis.CafeAccountID||'device');
  let pending;try{pending=JSON.parse(localStorage.getItem(pendingKey)||'{}');}catch{pending={};}
@@ -41,10 +41,11 @@
   return queue(async()=>{
    const code=typeof state!=='undefined'?state.cafeCode:null;if(!code)return;
    const raw=localStorage.getItem('cafe-service-board:'+code);if(!raw)return;
-   const board=JSON.parse(raw);await invoke('/api/board',{board,expectedRevision:revision});boardDirty=false;
+   const board=JSON.parse(raw),sent=boardChanges;await invoke('/api/board',{board,expectedRevision:revision});boardDirty=boardChanges!==sent;
+   if(boardDirty){clearTimeout(timer);timer=setTimeout(()=>flushBoard().catch(()=>{}),1500);}
   });
  }
- globalThis.addEventListener('cafeverse-board-save',()=>{if(applying)return;boardDirty=true;clearTimeout(timer);timer=setTimeout(()=>flushBoard().catch(()=>{}),1500);});
+ globalThis.addEventListener('cafeverse-board-save',()=>{if(applying)return;boardDirty=true;boardChanges++;clearTimeout(timer);timer=setTimeout(()=>flushBoard().catch(()=>{}),1500);});
  globalThis.addEventListener('online',()=>flushBoard().catch(()=>{}));
  globalThis.CafeCloudSync={getStatus:()=>({initialized,applying,ready:initialized,blocked:false}),pull:()=>queue(()=>invoke('/api/me')),push:flushBoard};
 })();
