@@ -12,6 +12,7 @@
  const persistPending=()=>localStorage.setItem(pendingKey,JSON.stringify(pending));
  const queue=fn=>{const task=sequence.then(fn);sequence=task.catch(()=>{});return task;};
  function apply(d,restoreBoard=false){
+  if(d.features){globalThis.CafeFeatures=d.features;globalThis.dispatchEvent?.(new Event('cafeverse-features'));}
   if(!d.save)return;applying=true;
   try{cache.importSave(d.save);revision=d.revision;
    if(restoreBoard&&d.save._serviceBoard&&d.state?.code)localStorage.setItem('cafe-service-board:'+d.state.code,JSON.stringify(d.save._serviceBoard));

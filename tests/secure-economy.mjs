@@ -45,6 +45,8 @@ assert.equal((await economy.me(alice)).state.pantry.berry,before.berry+3);assert
 await economy.settle(bob,offer.request_id,'accept',crypto.randomUUID());assert.equal((await economy.me(bob)).state.pantry.milk,6);
 await assert.rejects(economy.settle(alice,offer.request_id,'cancel',crypto.randomUUID()),/işlendi/);
 await assert.rejects(economy.offer(alice,{...offer,request_id:crypto.randomUUID(),give_qty:99}),/yeterli/);
+for(const give_qty of [-1,0,100,1.5,100000000000])await assert.rejects(economy.offer(alice,{...offer,request_id:crypto.randomUUID(),give_qty}));
+await assert.rejects(economy.offer(alice,{...offer,request_id:crypto.randomUUID(),give_item:'coins'}));
 const cancel={...offer,request_id:crypto.randomUUID(),give_qty:1,want_qty:1};await economy.offer(alice,cancel);
 const race=await Promise.allSettled([economy.settle(bob,cancel.request_id,'accept',crypto.randomUUID()),economy.settle(alice,cancel.request_id,'cancel',crypto.randomUUID())]);assert.equal(race.filter(r=>r.status==='fulfilled').length,1);
 const expired={...cancel,request_id:crypto.randomUUID()};const milk=(await economy.me(alice)).state.pantry.milk;await economy.offer(alice,expired);now+=86400001;await economy.trades(bob);assert.equal((await economy.me(alice)).state.pantry.milk,milk);await assert.rejects(economy.settle(bob,expired.request_id,'accept',crypto.randomUUID()),/işlendi/);

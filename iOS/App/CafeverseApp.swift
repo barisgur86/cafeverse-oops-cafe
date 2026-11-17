@@ -8,19 +8,12 @@ import AVFoundation
 
 @main
 struct CafeverseApp: App {
-    @AppStorage("cafeverse.language") private var language = ""
+    @AppStorage("cafeverse.language") private var language = Locale.preferredLanguages.first?.lowercased().hasPrefix("tr") == true ? "tr" : "en"
     var body: some Scene {
         WindowGroup {
-            Group {
-                if !["tr", "en"].contains(language) {
-                    VStack(spacing: 24) {
-                        Text("Caféverse").font(.system(size: 42, weight: .heavy, design: .rounded)).foregroundStyle(.pink)
-                        Text("Türkçe / English").font(.title2.bold())
-                        Button("Türkçe") { language = "tr" }.buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
-                        Button("English") { language = "en" }.buttonStyle(.borderedProminent).tint(.purple).controlSize(.large)
-                    }.frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(red: 0.99, green: 0.9, blue: 0.96))
-                } else { AccountGate().environment(\.locale, Locale(identifier: language == "en" ? "en" : "tr")) }
-            }.preferredColorScheme(.light)
+            AccountGate().environment(\.locale, Locale(identifier: language == "en" ? "en" : "tr"))
+                .preferredColorScheme(.light)
+                .onAppear { if !["tr", "en"].contains(language) { language = "en" } }
         }
     }
 }
@@ -43,6 +36,7 @@ private struct DeviceCafe: UIViewRepresentable {
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeCloud")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeStore")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeGame")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeAudio")
         let serverEnabled = (Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String)?.hasPrefix("https://") == true
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeServerEnabled = \(serverEnabled ? "true" : "false");", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let encoded = String(data: try! JSONEncoder().encode(userID), encoding: .utf8)!
@@ -66,10 +60,23 @@ private struct DeviceCafe: UIViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKScriptMessageHandlerWithReply {
         let onLogout: () -> Void
         let speech = AVSpeechSynthesizer()
+        let audio = CafeAudio()
         let store: CafeStore
         let cloud: CafeCloud
         init(userID: String, session: CafeSession, onLogout: @escaping () -> Void) { self.onLogout = onLogout; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+            if message.name == "cafeAudio" {
+                guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url, url.isFileURL, let root,
+                      url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"), let body = message.body as? [String: Any] else { replyHandler(nil, "Geçersiz ses isteği."); return }
+                Task { @MainActor in
+                    do {
+                        let result = try audio.handle(body)
+                        if audio.settings.effectsGain == 0 { speech.stopSpeaking(at: .immediate) }
+                        replyHandler(result, nil)
+                    } catch { replyHandler(nil, "Ses işlemi tamamlanamadı.") }
+                }
+                return
+            }
             if message.name == "cafeCloud" || message.name == "cafeGame" {
                 guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
                       url.isFileURL, let root,
@@ -109,10 +116,10 @@ private struct DeviceCafe: UIViewRepresentable {
             }
             if message.name == "cafeSpeak" {
                 speech.stopSpeaking(at: .immediate)
-                guard ["tr", "en"].contains(value) else { return }
+                guard ["tr", "en"].contains(value), audio.settings.effectsGain > 0 else { return }
                 let utterance = AVSpeechUtterance(string: value == "en" ? "Come, come!" : "Gel, gel!")
                 utterance.voice = AVSpeechSynthesisVoice(language: value == "en" ? "en-US" : "tr-TR")
-                utterance.rate = 0.48; utterance.pitchMultiplier = 1.2; utterance.volume = 1
+                utterance.rate = 0.48; utterance.pitchMultiplier = 1.2; utterance.volume = audio.settings.effectsGain
                 speech.speak(utterance)
             }
         }
@@ -558,6 +565,113 @@ private struct AccountGate: View {
                 }.scrollDismissesKeyboard(.interactively).background(Color(red: 1, green: 0.93, blue: 0.97))
             }
         }.task { await auth.restore() }.onOpenURL { url in Task { await auth.emailCallback(url) } }
+    }
+}
+
+// Device-local audio preference math is shared by native tests and playback.
+private struct CafeAudioSettings {
+    var master: Float = 0.7
+    var music: Float = 0.35
+    var effects: Float = 0.5
+    var muted = false
+    static func clamp(_ value: Any?, fallback: Float) -> Float {
+        guard let n = value as? NSNumber, n.doubleValue.isFinite else { return fallback }
+        return min(1, max(0, n.floatValue))
+    }
+    mutating func update(_ body: [String: Any]) {
+        master = Self.clamp(body["master"], fallback: master)
+        music = Self.clamp(body["music"], fallback: music)
+        effects = Self.clamp(body["effects"], fallback: effects)
+        if let value = body["muted"] as? Bool { muted = value }
+    }
+    var musicGain: Float { muted ? 0 : master * music }
+    var effectsGain: Float { muted ? 0 : master * effects }
+    var payload: [String: Any] { ["master": master, "music": music, "effects": effects, "muted": muted] }
+}
+
+@MainActor private final class CafeAudio {
+    private(set) var settings = CafeAudioSettings()
+    private var player: AVAudioPlayer?
+    private var effects: [AVAudioPlayer] = []
+    private var observers: [NSObjectProtocol] = []
+    private var wantsMusic = false
+    private var background = false
+    private var interrupted = false
+    private var routePaused = false
+    private var configured: Bool { UserDefaults.standard.object(forKey: "cafeverse.audio.v1") != nil }
+    init() {
+        if let saved = UserDefaults.standard.dictionary(forKey: "cafeverse.audio.v1") { settings.update(saved) }
+        let center = NotificationCenter.default
+        observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.background = true; self?.pause() } })
+        observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.background = false; self?.resume() } })
+        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
+            let type = (notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? NSNumber)?.uintValue
+            let options = (notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? NSNumber)?.uintValue ?? 0
+            Task { @MainActor in
+                guard let self else { return }
+                if type == AVAudioSession.InterruptionType.began.rawValue { self.interrupted = true; self.pause() }
+                else { self.interrupted = false; if AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume) { self.resume() } }
+            }
+        })
+        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] notification in
+            let reason = (notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
+            Task { @MainActor in if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue { self?.routePaused = true; self?.pause() } }
+        })
+    }
+    deinit { for observer in observers { NotificationCenter.default.removeObserver(observer) } }
+    private func session() throws {
+        let audio = AVAudioSession.sharedInstance()
+        // Ambient respects Ring/Silent and mixes with other apps. Hardware/Control
+        // Center volume remains entirely under iOS control.
+        try audio.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        try audio.setActive(true)
+    }
+    func handle(_ body: [String: Any]) throws -> [String: Any] {
+        switch body["action"] as? String {
+        case "get": return settings.payload.merging(["configured": configured]) { _, value in value }
+        case "configure":
+            settings.update(body); UserDefaults.standard.set(settings.payload, forKey: "cafeverse.audio.v1")
+            player?.setVolume(settings.musicGain, fadeDuration: 0.05)
+            for effect in effects { effect.volume = settings.effectsGain * 0.3; if settings.effectsGain == 0 { effect.stop() } }
+            if settings.musicGain == 0 { player?.pause() } else { resume() }
+        case "play": wantsMusic = true; routePaused = false; resume()
+        case "pause": pause()
+        case "effect": if let kind = body["kind"] as? String { try effect(kind) }
+        default: throw URLError(.badURL)
+        }
+        return settings.payload
+    }
+    private func resume() {
+        guard wantsMusic, !background, !interrupted, !routePaused, settings.musicGain > 0 else { return }
+        do {
+            try session()
+            if player == nil, let url = Bundle.main.url(forResource: "cafe-verse", withExtension: "m4a", subdirectory: "Web/assets/audio") {
+                player = try AVAudioPlayer(contentsOf: url); player?.numberOfLoops = -1; player?.prepareToPlay()
+            }
+            player?.volume = settings.musicGain
+            if player?.isPlaying == false { player?.play() }
+        } catch { /* Playback failure must not break the game or grant any reward. */ }
+    }
+    private func pause() { player?.pause(); for effect in effects { effect.stop() }; effects.removeAll() }
+    private func effect(_ kind: String) throws {
+        guard !background, !interrupted, settings.effectsGain > 0 else { return }
+        let tones: [String: Double] = ["prepare": 523, "coin": 880, "xp": 659, "trade": 784, "menu": 440]
+        guard let frequency = tones[kind] else { return }
+        effects.removeAll { !$0.isPlaying }; guard effects.count < 3 else { return }
+        try session(); let sound = try AVAudioPlayer(data: Self.tone(frequency))
+        sound.volume = settings.effectsGain * 0.3; effects.append(sound); sound.play()
+    }
+    private static func tone(_ frequency: Double) -> Data {
+        let rate = 22050, count = 3087
+        var samples = Data()
+        for i in 0..<count {
+            let envelope = max(0, 1 - Double(i) / Double(count))
+            var sample = Int16(sin(2 * .pi * frequency * Double(i) / Double(rate)) * envelope * 12000).littleEndian
+            withUnsafeBytes(of: &sample) { samples.append(contentsOf: $0) }
+        }
+        var wav = Data("RIFF".utf8)
+        func number<T: FixedWidthInteger>(_ value: T) { var n = value.littleEndian; withUnsafeBytes(of: &n) { wav.append(contentsOf: $0) } }
+        number(UInt32(36 + samples.count)); wav.append(Data("WAVEfmt ".utf8)); number(UInt32(16)); number(UInt16(1)); number(UInt16(1)); number(UInt32(rate)); number(UInt32(rate * 2)); number(UInt16(2)); number(UInt16(16)); wav.append(Data("data".utf8)); number(UInt32(samples.count)); wav.append(samples); return wav
     }
 }
 

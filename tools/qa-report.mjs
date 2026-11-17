@@ -1,0 +1,34 @@
+import fs from 'node:fs';import path from 'node:path';
+const source=process.argv[2];if(!source)throw Error('Pass the supplied QA master-plan text path');
+const text=fs.readFileSync(source,'utf8'),groups={A:'AUDIO',B:'UI',C:'LIFE',D:'GAME',E:'ECON',F:'IAP',G:'TRADE',H:'CLOUD',I:'SOCIAL',J:'RELEASE'};let group;const cases=[];
+for(const line of text.split('\n')){const h=line.match(/^([A-J])\. /);if(h)group=groups[h[1]];const m=line.match(/^(\d{3}) (.+)$/);if(m&&group)cases.push({id:group+'-'+m[1],number:Number(m[1]),case:m[2],status:'NOT RUN',layer:'manual/device',evidence:'Bu senaryo uçtan uca henüz çalıştırılmadı.'});}
+if(cases.length!==300)throw Error('Expected exactly 300 cases, found '+cases.length);
+function mark(ids,status,evidence,layer='automated unit/integration'){for(const id of ids){const c=cases.find(c=>c.number===id);c.status=status;c.evidence=evidence;c.layer=layer;}}
+mark([7,8,9,28],'PASS','Gerçek Chrome AudioContext gain değerleri, mute/restore ve OfflineAudioContext PCM RMS ölçümleri; outputs/qa-1.0.0/browser-results.json. Fiziksel iOS hoparlör testi değildir.','browser audio engine');
+mark([29],'PASS','iOS müziği native AVAudioPlayer yoluna taşındı; kazanç matematiği ve native köprü type-check geçti. Fiziksel çıkış ayrıca bekliyor.','native implementation/typecheck');
+mark([1,2,3,4,5,6,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,30],'BLOCKED','Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı.');
+mark([86,87,88,90,91,92,94,95,96,98,99,100,101,102,103,108,111,114,115,116],'PASS','tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir.');
+mark([121,122,123,124,127,128,130,133,134,135,138,139,143,147,148,149,150],'PASS','Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri.');
+mark([125,126,129,131,132,136,104,105,117],'NOT IMPLEMENTED','Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi.');
+mark([163,164,165,166,167,168,171,172,173,174,175,176],'PASS','Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir.');
+mark([151,152,153,154,156,157,158,159,160,169,170,177,178,179,180],'BLOCKED','Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı.');
+mark([182,183,185,186,187,188,189,191,192,193,194,195,196,197,199,200,202,203,204,205,207,210],'PASS','tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir.');
+mark([181,190,198,201,208,209],'BLOCKED','İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir.');
+mark([184,206,255,256,257,258,259,260,261,262,263,264,265,267,268,270,220,298,299],'NOT IMPLEMENTED','Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi.');
+mark([221,222,223,224,226,227,236,237,238,240,241,242],'PASS','Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı.');
+mark([211,212,213,214,215,216,217,219,231,232,235,243,244,245],'BLOCKED','Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor.');
+mark([246,247,248,249,250,252,266],'PASS','tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti.');
+mark([251],'NOT IMPLEMENTED','Dekorasyonu envanteri koruyarak sahneden kaldırma akışı yok; mevcut görünüm sahip olunan dekorları birleştiriyor.');
+mark([284,285,286,287],'PASS','Chrome ekran smoke + ekran görüntüleri: 375×667 tr-TR, 393×852 en-US, 820×1180 tr-TR. Fiziksel iOS/Dynamic Type testi değildir.','browser viewport smoke');
+mark([291,292],'PASS','package.json ve Xcode aday sürümü 1.0.0 / 2026111710. Önceki build 2026111707.');
+mark([293,294,295,296,297],'BLOCKED','Tam unsigned Release build geçti; imzalı archive/upload ve TestFlight/StoreKit gerçek cihaz kanıtı henüz yok.');
+mark([300],'FAIL','Açık üretim yayın engelleri var: gerçek ödeme/takas doğrulaması, güvenli backend cutover, hesap silme/gizlilik/App Review metadata ve fiziksel ses QA. Üretim yayını kapalı.','release gate');
+mark([103],'NOT RUN','Masa/paket ayrı akışları ve eşzamanlı pano kapasitesi bileşenleri geçti; aynı anda iki tam akış uçtan uca denenmedi.');
+mark([98],'NOT IMPLEMENTED','Mevcut hazırlık eksik malzemeyi coin ile otomatik tamamlıyor; ayrı yetersiz-malzeme uyarısı/ön onay akışı tamamlanmadı.');
+mark([226,227],'NOT RUN','Gizli anahtar eklenmedi ve bearer token WebKit’e aktarılmıyor; kapsamlı çalışma zamanı sızıntı/log taraması ayrıca yapılmalı.');
+mark([236],'BLOCKED','Güvenli backend bileşenleri geçti; canlı kullanıcı cutover tamamlanmadı. Dağıtım adayı legacy çevrimdışı beta modunda; IAP kapalı.');
+mark([237],'BLOCKED','Sunucu takas testleri geçti; gerçek kullanıcı cutover ve iki cihaz doğrulaması tamamlanmadığı için takas dağıtımda kapalı.');
+mark([286,287],'NOT RUN','Tarayıcı viewport smoke PASS (375×667,393×852,820×1180); fiziksel iPhone/iPad çalıştırması yapılmadı.','browser evidence / physical NOT RUN');
+fs.mkdirSync('qa',{recursive:true});fs.writeFileSync('qa/1.0.0-cases.json',JSON.stringify({version:'1.0.0',build:'2026111710',productionReady:false,cases},null,2));
+const counts={};for(const c of cases)counts[c.status]=(counts[c.status]||0)+1;
+const body='# 1.0.0 — 300 senaryo QA raporu\n\nBu rapor tüm senaryoların çalıştırıldığını iddia etmez. PASS satırının test katmanı ve kanıtı okunmalıdır. Gerçek cihaz / Apple ödeme testleri ayrı BLOCKED veya NOT RUN olarak tutulur. Üretim yayını onaylı değildir.\n\n'+Object.entries(counts).map(([k,v])=>`- ${k}: ${v}`).join('\n')+'\n\n| ID | Senaryo | Durum | Katman / kanıt |\n|---|---|---|---|\n'+cases.map(c=>`| ${c.id} | ${c.case.replaceAll('|','/')} | ${c.status} | ${c.layer}: ${c.evidence.replaceAll('|','/')} |`).join('\n')+'\n';fs.writeFileSync('qa/1.0.0-report.md',body);console.log(JSON.stringify(counts));

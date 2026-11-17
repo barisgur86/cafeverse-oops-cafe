@@ -1,6 +1,10 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'Satın almalar doğrulama testleri tamamlanana kadar kapalı.':'Purchases are disabled until verification testing is complete.',
+
+ 'Bu özellik test onayından sonra açılacak.':'This feature will be enabled after testing.',
+
 'ürün kapasitesi':'product capacity',
 'Kafe eşitlendi. Siparişi yeniden seç.':'Your cafe was synced. Select the order again.',
 "Hazırlık rafı":"Preparation Shelf","Espresso makinesi III":"Espresso Machine III","Blender III":"Blender III","İkinci servis rafı":"Second Service Shelf","Usta hazırlık düzeni":"Master Preparation Workflow","Yerleştirildi ✓":"Installed ✓","Geliştirme sayfaları":"Upgrade pages","Yeni dört kişilik masa":"New four-seat table","ürün hazırlama kapasitesi":"prepared product capacity","Hazırlık süresine":"Preparation time","Önce gerekli geliştirmeyi satın al.":"Buy the required upgrade first.",
@@ -90,7 +94,7 @@
  };
  const ordered=Object.keys(en).sort((a,b)=>b.length-a.length);
  let language=['tr','en'].includes(globalThis.CafeLanguage)?globalThis.CafeLanguage:localStorage.getItem('cafeverse.language');
- const valid=['tr','en'].includes(language);if(!valid)language='tr';
+ const valid=['tr','en'].includes(language);if(!valid)language=(globalThis.navigator?.languages?.[0]||globalThis.navigator?.language||'en').toLowerCase().startsWith('tr')?'tr':'en';
  function translate(text,lang=language){if(lang!=='en'||!text)return text;const leading=text.match(/^\s*/)[0],trailing=text.match(/\s*$/)[0],s=text.trim();if(en[s])return leading+en[s]+trailing;
  const patterns=[[/^(\d+) misafir girişten Masa (\d+) yönüne yürüyor\.$/,(_,n,t)=>`${n} guests are walking from the entrance to Table ${t}.`],[/^(\d+) misafir girişten paket tezgâhına geliyor\.$/,(_,n)=>`${n} guests are approaching the takeaway counter.`],[/^Melo (.+) için makineye yürüyor\.$/,(_,r)=>`Melo is walking to the machine for ${translate(r,'en')}.`],[/^(.+) hazırlanıyor; malzemeler depodan kullanılıyor\.$/,(_,r)=>`${translate(r,'en')} is being prepared using pantry ingredients.`],[/^Melo hazır ürünü tepsiye bırakıyor\.$/,()=> 'Melo is putting the finished drink on the tray.'],[/^Siparişin tamamı hazır; masaya birlikte servis edebilirsin\.$/,()=> 'The whole order is ready to serve together.'],[/^Melo dolu tepsiyi (.+) yönüne götürüyor\.$/,(_,t)=>`Melo is carrying the tray to ${translate(t,'en')}.`],[/^(\d+) yeni misafir kapıya geldi!$/,(_,n)=>`${n} new guests arrived at the door!`]];
  for(const [rx,fn] of patterns)if(rx.test(s))return leading+s.replace(rx,fn)+trailing;
@@ -106,5 +110,5 @@
  if(typeof document==='undefined'||!document.body)return;
  const style=document.createElement('style');style.textContent='.language-picker{width:min(400px,92vw);box-sizing:border-box;border:3px solid #fff1c1;border-radius:25px;padding:24px;background:linear-gradient(#fff0fb,#f3bbe5);color:#632251;text-align:center}.language-picker::backdrop{background:#54214cbb;backdrop-filter:blur(7px)}.language-picker h2{font-size:25px}.language-picker p{font-size:16px}.language-picker button{display:block;width:100%;min-height:52px;margin-top:12px;border:2px solid #fff0c5;border-radius:18px;background:linear-gradient(#ff9cde,#ed279f);color:white;font-size:20px;font-weight:800}.language-picker [data-language-close]{background:#9d5fa9;min-height:44px}';document.head.append(style);
  const menu=document.querySelector('#app-menu');if(menu){const b=document.createElement('button');b.className='secondary';b.textContent='🌐 Dil / Language';b.onclick=()=>choose();menu.append(b);}
- observer=new MutationObserver(()=>apply());document.documentElement.lang=language;apply();if(!valid)choose(true);
+ observer=new MutationObserver(()=>apply());document.documentElement.lang=language;apply();
 })();
