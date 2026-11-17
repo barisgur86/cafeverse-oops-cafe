@@ -1,0 +1,155 @@
+body.screen-app{height:100dvh;overflow:hidden;padding:0!important;display:flex;flex-direction:column;background:#f9e9f5}.screen-app>header{padding:9px 14px;flex-shrink:0;min-height:60px}.screen-app>header .tag{display:none}.screen-app>header .logo{font-size:23px}.screen-app>main{width:100%;max-width:1100px;padding:0 12px!important;margin:0 auto;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}.screen-app main>.online-banner,.screen-app main>.secondary,.screen-app main>.profile-row,.screen-app main>.intro,.screen-app .bottom,.screen-app .footer,.screen-app main>details,.screen-app .tabs{display:none!important}.screen-app .progress-panel{display:none}.screen-app[data-screen=cafe] .progress-panel{display:block;margin:0 0 8px;padding:9px 12px;flex-shrink:0}.screen-app .progress-title{margin:2px 0}.screen-app .progress-title button{padding:5px 9px;min-height:34px}.screen-app .xp-track{margin:7px 0;height:8px}.screen-app .progress-panel>p{display:none}.app-screen-bar{order:-2;display:flex;align-items:center;gap:10px;min-height:48px;flex-shrink:0}.app-screen-bar h1{font-size:20px;margin:0;flex:1;outline:none}.app-screen-bar button{width:40px;height:40px;border-radius:14px;background:#f0d8ed;font-size:26px}.screen-app .layout{display:flex;flex-direction:column;flex:1;min-height:0;gap:0;overflow:hidden}.screen-app .layout>.panel{display:flex;flex-direction:column;flex:1;min-height:0;border-radius:22px}.screen-app .layout>.panel[hidden],.screen-app #app-menu[hidden]{display:none!important}.screen-app .scene{display:none;flex-shrink:0}.screen-app[data-screen=cafe] .scene{display:block;max-height:30dvh;aspect-ratio:1000/360}.screen-app #left{overflow:auto;overscroll-behavior:contain;min-height:0;flex:1;padding:16px}.screen-app .lab-entry{overflow:auto;overscroll-behavior:contain}.screen-app .lab-entry>.content{padding:14px}.screen-app .mobile-shortcuts{position:static!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));flex-shrink:0;background:#fff7fd;border-top:1px solid #e9cde6;padding:7px 7px calc(7px + env(safe-area-inset-bottom));gap:5px;margin-top:8px;z-index:50}.screen-app .mobile-shortcuts button{min-height:48px;padding:5px 1px;border-radius:14px;background:transparent;font-size:11px;font-weight:800}.screen-app .mobile-shortcuts button span{display:block;font-size:21px;margin-bottom:2px}.screen-app .mobile-shortcuts [aria-current=page]{background:#edd2e9;color:#8e408b}.screen-pager{display:flex;align-items:center;justify-content:center;gap:20px;margin:10px 0}.screen-pager button{width:44px;height:38px;border-radius:12px;background:#efd7ed;font-size:24px}.screen-pager span{font-size:12px;font-weight:800}.screen-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.screen-menu-grid button{padding:14px 6px;background:#fff6fb;border:1px solid #e7c9e1;border-radius:18px;min-height:80px;font-weight:800;font-size:13px}.screen-menu-grid button span{display:block;font-size:28px;margin-bottom:5px}#app-menu{overflow:auto;min-height:0;padding:4px;flex:1}#screen-account{display:block;margin:12px auto}.screen-app .wardrobe-preview{position:relative;top:auto;height:180px;margin:8px 0}.screen-app .wardrobe-model{height:155px;bottom:20px}.screen-app .wardrobe-filters{gap:4px;margin:8px 0}.screen-app .wardrobe-filters button{padding:6px 9px;min-height:34px;font-size:11px}.screen-app .wardrobe-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.screen-app .outfit-card{min-height:90px;padding:8px}.screen-app .outfit-card>b{font-size:26px}.screen-app .outfit-card>strong{margin:4px 0}.screen-app .social-copy{font-size:11px;line-height:1.4}.screen-app .card{padding:10px}.screen-app .pet-card-art{height:95px}.screen-app .card p{font-size:11px}.screen-app .recipe-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.screen-app .recipe-filters{margin:8px 0}.screen-app .recipe-detail{padding:12px}.screen-enter{animation:screen-enter .22s ease-out}@keyframes screen-enter{from{opacity:.35;transform:translateX(15px)}to{opacity:1;transform:translateX(0)}}@media(prefers-reduced-motion:reduce){.screen-enter{animation:none}}@media(min-width:850px){.screen-app>main{max-width:760px}.screen-app .mobile-shortcuts{max-width:760px;width:100%;margin-left:auto;margin-right:auto}.screen-app .wardrobe-preview{height:230px}.screen-app .wardrobe-model{height:200px}}
+@media(max-width:650px){.screen-app[data-screen=outfit] .wardrobe-preview{height:135px}.screen-app[data-screen=outfit] .wardrobe-model{height:115px;bottom:18px}.screen-app[data-screen=outfit] .social-copy{display:none}.screen-app[data-screen=outfit] .wardrobe-filters button{min-height:30px;padding:5px 8px}.screen-app[data-screen=outfit] .outfit-card{min-height:82px}.screen-app[data-screen=outfit] .outfit-card>b{font-size:23px}.screen-app[data-screen=outfit] #left:has(.wardrobe-choice) .wardrobe-grid,.screen-app[data-screen=outfit] #left:has(.wardrobe-choice) .wardrobe-filters,.screen-app[data-screen=outfit] #left:has(.wardrobe-choice) .screen-pager{display:none}}
+.screen-app[data-screen=recipes] .lab-entry>.content>.eyebrow,.screen-app[data-screen=recipes] .lab-entry>.content>h2,.screen-app[data-screen=recipes] .lab-entry>.content>p:first-of-type{display:none}.screen-app[data-screen=recipes] .recipe-filters{margin-top:0}.screen-app[data-screen=recipes] #open-lab{margin-top:10px}.screen-app[data-screen=recipes] #result{font-size:11px}@media(max-width:650px){.screen-menu-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.screen-menu-grid button{min-height:82px;font-size:11px;padding:10px 4px}.screen-menu-grid button span{font-size:25px}}
+.screen-app main{touch-action:pan-y pinch-zoom}.app-screen-bar .section-arrow{width:34px;height:36px;font-size:24px;background:#f4e3f2}.app-screen-bar .section-arrow:disabled{opacity:.3}.screen-app[data-slide-direction=previous] .screen-enter{animation-name:screen-enter-back}@keyframes screen-enter-back{from{opacity:.35;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}@media(prefers-reduced-motion:reduce){.screen-app[data-slide-direction=previous] .screen-enter{animation:none}}
+
+/* Preserve artwork proportions when compact screen layouts resize their frames. */
+.screen-app .wardrobe-model{width:auto!important;aspect-ratio:876/897;left:50%!important;right:auto;margin-left:0;translate:-50% 0;background-size:200% auto}
+.scene-character{background-size:auto 100%}
+.screen-app img:not(.host-avatar):not(.saved-cafe-photo):not(.pet-card-art){height:auto;object-fit:contain}
+.screen-app .pet-card-art{width:100%;height:95px;object-fit:contain;object-position:center;flex-shrink:0}
+.cafe-photo-dialog #cafe-photo{width:100%;height:auto;aspect-ratio:25/9;object-fit:contain;object-position:center}
+.screen-app[data-screen=cafe] #scene{aspect-ratio:25/9;height:auto!important;max-height:none}
+.screen-app .saved-cafe-photo{object-fit:contain;object-position:center}
+
+/* Readable recipe controls and four-seat table summary. */
+.cafe-seating{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;font-size:17px;font-weight:800;line-height:1.5}.cafe-seating span{padding:6px 10px;background:#fff;border:1px solid #d8b8d1;border-radius:12px;color:#46203f}
+#prep-screen .measure-card strong,#prep-screen .measure-card h3{font-size:18px!important;line-height:1.35!important}
+#prep-screen .measure-card small,#prep-screen .measure-card .stock-note,#prep-screen .measure-card p{font-size:15px!important;line-height:1.5!important;color:#492541!important}
+#prep-screen .measure-card{padding:12px 8px!important;background:#fff8fc}
+#prep-screen .quantity{display:grid!important;grid-template-columns:52px minmax(38px,1fr) 52px!important;gap:4px!important;align-items:center}
+#prep-screen .quantity button{width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;font-size:30px!important;background:#edd2e8;color:#45203d;border:2px solid #b97dac}
+#prep-screen .quantity output{font-size:28px!important;font-weight:900!important;line-height:1.4;min-width:38px!important;color:#30142e;background:white;border-radius:8px;text-align:center}
+.recipe-detail,.recipe-detail p,.recipe-detail li,.recipe-detail span,.recipe-detail strong{font-size:17px!important;line-height:1.55}
+.recipe-choices button,.recipe-choices strong{font-size:17px!important;line-height:1.4}
+.studio-recipe,.studio-recipe span,.studio-recipe small,#prep-measures{font-size:17px!important;line-height:1.5}
+#prep-screen .measure-cards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+@media(max-width:390px){#prep-screen .measure-cards{grid-template-columns:1fr!important}}
+#order-flow .flow-ingredients span{font-size:17px;line-height:1.4}.flow-footer p{font-size:16px!important}
+
+.recipe,#prep-copy,#lab-cost{font-size:18px!important;line-height:1.5!important;color:#45203f}.screen-app .recipe-detail button{min-height:48px;font-size:18px}
+
+#prep-screen>.studio-recipe{position:relative!important;inset:auto!important;transform:none!important;width:auto!important;max-width:none!important;max-height:none!important;overflow:visible!important;margin:8px 14px!important;padding:12px!important;flex-shrink:0;box-sizing:border-box}
+#prep-screen #prep-measures{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}#prep-measures span{display:inline-block;background:white;border:1px solid #d5b9cb;padding:5px 9px;border-radius:10px;font-size:18px!important;font-weight:800;color:#3f1a38}
+#prep-screen>.studio-recipe small{display:none}#prep-screen .steps span{font-size:15px}#prep-screen .studio-head h2{font-size:19px}
+/* Universal iPad layout: one game model with a wider presentation. */
+@media(min-width:700px){.screen-app>main{max-width:1100px}.screen-app .mobile-shortcuts{max-width:1100px}.screen-app[data-screen=cafe] .layout>.panel{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(380px,1.15fr);grid-template-rows:1fr;overflow:hidden}.screen-app[data-screen=cafe] #scene{align-self:start;position:sticky;top:0;aspect-ratio:25/9}.screen-app[data-screen=cafe] #left{grid-column:2;grid-row:1;overflow:auto}.screen-app .ticket-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ticket-card{min-width:0}.ticket-new{grid-template-columns:1fr 1fr auto;align-items:end}.ticket-new .primary{grid-column:auto}.service-heading{font-size:20px}.screen-app .recipe-choices,.screen-app .wardrobe-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.screen-app .recipe-detail{font-size:19px}#prep-screen{width:min(1000px,94vw);height:94dvh;max-height:94dvh;overflow:auto}#prep-screen .measure-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important}#prep-screen .studio-stage{min-height:220px;height:26dvh}#prep-screen .studio-bottom{padding:20px}#order-flow .flow-layout{width:min(760px,100%)}#order-flow .flow-art{max-height:47dvh}.flow-logo{font-size:34px}.flow-steps span{font-size:17px}.flow-recipe{font-size:22px}.ticket-service{width:min(660px,90vw)}.ticket-tray{grid-template-columns:repeat(4,minmax(0,1fr))}.ticket-service p{font-size:20px}}
+
+@media(min-width:700px) and (orientation:portrait){.screen-app[data-screen=cafe] .layout>.panel{display:flex;flex-direction:column}.screen-app[data-screen=cafe] #scene{position:relative;flex-shrink:0;width:100%;align-self:stretch}.screen-app[data-screen=cafe] #left{width:100%}.screen-app .ticket-new{grid-template-columns:1fr 1fr auto}.ticket-empty{grid-column:1/-1}}
+
+/* Compact pages, rather than a vertically scrolling game. */
+.screen-app [hidden]{display:none!important}
+.screen-app #left,.screen-app .lab-entry,#app-menu{overflow:hidden!important}
+.screen-app #left{padding:8px 10px}
+.screen-app .screen-pager{flex:none;margin:5px 0;gap:16px}
+.screen-app .screen-pager button{height:44px;min-width:44px}
+.screen-app .lab-entry>.content{padding:8px 12px}
+.screen-app .recipe-detail p:not(.recipe-budget){display:none}
+.screen-app .recipe-detail{padding:8px}
+.screen-app .recipe-detail h3{margin:3px 0}
+.screen-app .recipe-budget{margin:4px 0;font-size:15px!important}
+.screen-app .ingredient-lines{display:flex;flex-wrap:wrap;gap:4px 10px}
+.screen-app .recipe-choices button{min-height:48px;padding:6px}
+.screen-app .recipe-choice i{font-size:26px}
+.screen-app .recipe-filters{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.screen-app .recipe-filters button{padding:5px 8px;min-height:36px;font-size:14px}
+.screen-app .service-heading{margin:0 0 4px;font-size:15px;gap:2px}
+.screen-app .table-floor{grid-template-columns:repeat(4,minmax(0,1fr));margin:3px 0;gap:4px}
+.screen-app .floor-table{padding:2px;border-radius:10px}
+.screen-app .floor-table img{height:44px!important}
+.screen-app .floor-table figcaption{font-size:14px}
+.screen-app .floor-table small{font-size:11px}
+.screen-app .service-modes button{min-height:44px;font-size:16px}
+.screen-app .ticket-new{padding:5px 0;grid-template-columns:1fr 1fr auto;gap:5px;align-items:end}
+.screen-app .ticket-new .primary{grid-column:auto;padding:8px;min-height:44px;font-size:16px}
+.screen-app .ticket-new label{font-size:14px}
+.screen-app .ticket-new select{font-size:16px;min-height:44px;padding:4px}
+.screen-app #board-call{min-height:44px;padding:6px;margin:0}
+.screen-app .ticket-list{display:block}
+.screen-app .ticket-card{margin:5px 0;padding:8px}
+.screen-app .ticket-card h3{font-size:18px;margin:0 0 4px}
+.screen-app .ticket-card p{display:none}
+.screen-app .ticket-card ul{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin:5px 0}
+.screen-app .ticket-card li{font-size:14px;line-height:1.3}
+.screen-app .ticket-card .primary{min-height:44px;margin-top:4px}
+.screen-app[data-screen=cafe] #scene{max-height:15dvh;flex:none;object-fit:contain}
+.screen-app[data-screen=cafe] .progress-panel{padding:4px 10px;margin-bottom:4px}
+@media(max-height:700px){
+ .screen-app[data-screen=cafe] #scene{display:none}
+ .screen-app>header{min-height:46px;padding:4px 12px}
+ .screen-app .app-screen-bar{min-height:44px}
+ .screen-app .wardrobe-preview{height:90px!important}
+ .screen-app .wardrobe-model{height:85px!important}
+ .screen-app .screen-menu-grid button{min-height:64px;padding:5px}
+ .screen-app .mobile-shortcuts{margin-top:3px;padding-top:3px;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
+}
+#order-flow{overflow:hidden}
+#order-flow .flow-layout{height:100%;min-height:0}
+#order-flow .flow-art{min-height:0;flex:1}
+#order-flow .flow-footer{padding:8px 14px max(10px,env(safe-area-inset-bottom))}
+#order-flow .flow-footer p{margin:4px 0}
+.screen-app[data-screen=cafe] .progress-panel{display:grid;grid-template-columns:1fr auto;gap:3px 8px;flex:none;border-radius:14px}
+.screen-app .progress-title{display:contents}
+.screen-app .progress-title>div{font-size:14px}
+.screen-app .progress-title button{grid-column:2;grid-row:1/3;min-height:44px;margin:0}
+.screen-app .xp-track{grid-column:1;grid-row:2;margin:0;height:6px}
+.screen-app .progress-panel .cafe-seating,.screen-app .progress-panel>p{display:none!important}
+.screen-app .progress-panel .progress-title p{display:none}
+.screen-app .table-floor{flex:none}
+.screen-app .ticket-card .primary{display:inline-block;width:calc(50% - 3px);vertical-align:top;font-size:15px;padding:5px}
+.screen-app .ticket-card strong{display:block;font-size:15px}
+.screen-app .ticket-card ul{margin:3px 0}
+@media(max-height:700px){.screen-app .floor-table img{height:30px!important}.screen-app .floor-table small{display:none}.screen-app .service-heading{font-size:14px}.screen-app .ticket-card{padding:6px}}
+.screen-app .progress-title>small{display:none}
+.screen-app .progress-title>span{font-size:12px;grid-column:1;grid-row:2}
+.screen-app .progress-title>strong{font-size:15px;grid-column:1;grid-row:1}
+.screen-app .xp-track{grid-row:3}
+.screen-app .progress-panel #queue-items:empty{display:none}
+.screen-app .recipe-detail .ingredient-lines{display:flex!important;flex-wrap:wrap;gap:3px 10px}
+.screen-app .recipe-detail .ingredient-lines span{padding:0!important;margin:0!important;font-size:16px!important;line-height:1.35!important}
+.screen-app .recipe-detail .type-tag{display:none}
+.screen-app .recipe-detail h3{font-size:18px;line-height:1.2}
+.screen-app #recipe-detail{margin:4px 0!important}
+.screen-app #open-lab{margin:4px 0!important;min-height:48px}
+.screen-app #result{display:none}
+@media(max-height:700px){.screen-app .table-floor{display:none}.screen-app .recipe-detail{margin:0!important}.screen-app .recipe-detail .recipe-budget{font-size:14px!important;line-height:1.25!important}}
+.screen-app #left>h2{font-size:20px;margin:5px 0 10px;line-height:1.2}
+.screen-app[data-screen=door] #left{display:flex;flex-direction:column}
+.screen-app[data-screen=door] .rating-card{padding:8px;margin:0;font-size:15px;flex:none}
+.screen-app[data-screen=door] .rating-card h3{font-size:17px;margin:3px 0}
+.screen-app[data-screen=door] .rating-card p{font-size:14px;margin:3px 0}
+.screen-app[data-screen=door] .door-scene{height:auto;flex:1;min-height:90px;margin:6px 0;max-height:220px}
+.screen-app[data-screen=door] .social-copy{font-size:14px;line-height:1.25;margin:4px 0}
+.screen-app[data-screen=door] #start-call{flex:none;min-height:48px;margin:4px 0}
+.screen-app[data-screen=door] .door-balloons{transform:scale(.65);transform-origin:center bottom}
+.screen-app .viewport-pager{position:sticky;bottom:0;background:#fff3fb;z-index:2;border-radius:12px;padding:3px;margin-top:5px}
+#coin-shop{max-height:100dvh;overflow:hidden;box-sizing:border-box;padding:12px}
+#coin-shop .shop-demo-note{padding:7px;margin:7px 0;font-size:14px;line-height:1.3}
+#coin-shop .shop-balance{margin:6px 0}
+#coin-shop .coin-packs{gap:5px}
+#coin-shop .coin-pack{padding:7px;gap:2px 8px;grid-template-columns:40px 1fr}
+#coin-shop .pack-icon{font-size:30px}
+#coin-shop .shop-help{margin:7px 0;line-height:1.3}
+/* QA: avoid off-screen account controls and narrow pantry columns. */
+@media(min-width:700px){.screen-app .screen-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.screen-app .pantry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.screen-app .pantry-item{min-width:0;grid-template-columns:24px minmax(0,1fr) 22px 44px;padding:5px;gap:3px}
+.screen-app .pantry-item>span{overflow-wrap:anywhere;font-size:13px}
+.screen-app .pantry-item>b{font-size:20px}
+.screen-app .stock-buy{width:44px;min-width:44px;min-height:44px}
+/* QA: character editor must keep its name field and submit action visible. */
+#setup{max-height:100dvh;overflow:hidden;box-sizing:border-box}
+@media(max-width:650px){
+ #setup{width:100%;max-width:100%;margin:auto;padding:0}
+ #setup .welcome-art{display:none}
+ #setup .setup-grid{display:block}
+ #setup .setup-body{padding:16px}
+ #setup .setup-body h2{font-size:23px;line-height:1.15;margin:5px 0}
+ #setup .setup-body>p{font-size:14px;line-height:1.3;margin:6px 0}
+ #setup .characters{gap:6px;margin:10px 0;grid-template-columns:repeat(3,minmax(0,1fr))}
+ #setup .char{padding:4px;font-size:15px;min-width:0}
+ #setup .portrait{height:58px;min-height:0}
+ #setup label{margin:6px 0;font-size:16px}
+ #setup input{height:44px;box-sizing:border-box;font-size:18px}
+ #setup #start-game{min-height:48px;margin-top:8px}
+}

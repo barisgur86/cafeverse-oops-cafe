@@ -1,0 +1,21 @@
+# Secrets and signing
+.env
+.env.*
+!.env.example
+.signing/
+*.p12
+*.p8
+*.key
+*.pem
+*.mobileprovision
+*auth-config*.json
+# Generated and local data
+iOS/App/Web/
+tests/catalog.json
+node_modules/
+DerivedData/
+*.xcarchive/
+*.ipa
+xcuserdata/
+*.xcuserstate
+.DS_Store
