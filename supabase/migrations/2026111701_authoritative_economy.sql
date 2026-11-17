@@ -1,3 +1,5 @@
+begin;
+lock table public.cafe_cloud_saves in share row exclusive mode;
 -- Apply with an administrative database connection. No client write grants.
 create table if not exists public.cafe_game_accounts (
  user_id uuid primary key references auth.users(id) on delete cascade,
@@ -67,3 +69,5 @@ begin
  if auth.uid() is null then raise exception 'Authentication required' using errcode='28000'; end if;
  raise exception 'Please update Cafeverse: authoritative server required' using errcode='42501';
 end; $$;
+
+commit;
