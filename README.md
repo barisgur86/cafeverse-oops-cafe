@@ -31,3 +31,5 @@ Değişiklikleri ayrı dalda hazırlayın, `npm test` sonucunu kontrol edin ve p
 0.5.1: Cafeverse çizimleriyle canlı kafe simülasyonu, Türkçe/İngilizce dil seçimi, dil uyumlu müşteri çağırma sesi, gardırop ve dekorasyonda sayfa başına dört ürün ve haftalık koleksiyon altyapısı. iPhone kart düzeni ve sayfa geçişi kontrol edildi; otomatik oyun testleri geçti. Başarılı gerçek Apple/e-posta girişi ve fiziksel cihazda ses testi bu sürüm için ayrıca doğrulanmalıdır.
 
 0.5.2 (2026111702): Mevcut 0.5.1 özelliklerinin yeni sürüm numarasıyla paketlenmesi. TestFlight yükleme durumu ayrıca doğrulanır.
+
+0.5.3 (2026111703), hazırlık: Satın alınan dekorlar birlikte sahnede görünür; haftalık önlükler gardırop ve canlı Melo üzerinde aynı görünümü kullanır. Mağazada işlem kontrol düğmesi ve satın alma kısıtı açıklaması eklendi; eşzamanlı Apple işlem bildirimleri tek teslim akışında birleştirildi. Gerçek Apple ödemesi ve fiziksel cihaz testi ayrıca gereklidir. TestFlight durumu ayrıca doğrulanır.

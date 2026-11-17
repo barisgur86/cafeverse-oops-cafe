@@ -537,6 +537,7 @@ private struct AccountGate: View {
     static let amounts = ["com.cafeverse.oopscafe.coins250": 250, "com.cafeverse.oopscafe.coins750": 750, "com.cafeverse.oopscafe.coins2000": 2000]
     let account: UUID?
     private var transactions: [String: StoreKit.Transaction] = [:]
+    private var finishedTransactions: Set<String> = []
     private var purchaseBusy = false
     private var updates: Task<Void, Never>?
     var onUpdate: (() -> Void)?
@@ -545,7 +546,7 @@ private struct AccountGate: View {
         updates = Task { [weak self] in
             for await result in StoreKit.Transaction.updates {
                 guard let self else { return }
-                if let transaction = try? self.verified(result) {
+                if let transaction = try? self.verified(result), !self.finishedTransactions.contains(String(transaction.id)) {
                     self.transactions[String(transaction.id)] = transaction
                     self.onUpdate?()
                 }
@@ -596,13 +597,15 @@ private struct AccountGate: View {
             }
         case "pending":
             for await result in StoreKit.Transaction.unfinished {
-                if let transaction = try? verified(result) { transactions[String(transaction.id)] = transaction }
+                if let transaction = try? verified(result), !finishedTransactions.contains(String(transaction.id)) { transactions[String(transaction.id)] = transaction }
             }
             return ["transactions": transactions.values.map(payload)]
         case "finish":
-            guard let id = body["transactionID"] as? String, let transaction = transactions[id] else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
+            guard let id = body["transactionID"] as? String else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
+            if finishedTransactions.contains(id) { return ["finished": true] }
+            guard let transaction = transactions[id] else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
             // Called only after the bundled game confirms its durable, idempotent credit.
-            await transaction.finish(); transactions.removeValue(forKey: id)
+            await transaction.finish(); finishedTransactions.insert(id); transactions.removeValue(forKey: id)
             return ["finished": true]
         default: throw problem(L("Desteklenmeyen mağaza işlemi."))
         }
