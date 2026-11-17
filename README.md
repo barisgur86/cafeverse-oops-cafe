@@ -29,3 +29,5 @@ Değişiklikleri ayrı dalda hazırlayın, `npm test` sonucunu kontrol edin ve p
 0.3.7: Giriş ve hesap oluşturma hata mesajları, yinelenen Apple/e-posta kayıt yönlendirmesi ve native giriş ekranı düzeltildi. Native derleme ile hatalı giriş kontrolü geçti; başarılı hesap erişimi ve genel e-posta gönderimi henüz doğrulanmadı. Ayrıntılar: AUTH_SETUP.md.
 
 0.5.1: Cafeverse çizimleriyle canlı kafe simülasyonu, Türkçe/İngilizce dil seçimi, dil uyumlu müşteri çağırma sesi, gardırop ve dekorasyonda sayfa başına dört ürün ve haftalık koleksiyon altyapısı. iPhone kart düzeni ve sayfa geçişi kontrol edildi; otomatik oyun testleri geçti. Başarılı gerçek Apple/e-posta girişi ve fiziksel cihazda ses testi bu sürüm için ayrıca doğrulanmalıdır.
+
+0.5.2 (2026111702): Mevcut 0.5.1 özelliklerinin yeni sürüm numarasıyla paketlenmesi. TestFlight yükleme durumu ayrıca doğrulanır.
