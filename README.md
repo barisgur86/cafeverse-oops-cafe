@@ -33,3 +33,5 @@ Değişiklikleri ayrı dalda hazırlayın, `npm test` sonucunu kontrol edin ve p
 0.5.2 (2026111702): Mevcut 0.5.1 özelliklerinin yeni sürüm numarasıyla paketlenmesi. TestFlight yükleme durumu ayrıca doğrulanır.
 
 0.5.3 (2026111703), hazırlık: Satın alınan dekorlar birlikte sahnede görünür; haftalık önlükler gardırop ve canlı Melo üzerinde aynı görünümü kullanır. Mağazada işlem kontrol düğmesi ve satın alma kısıtı açıklaması eklendi; eşzamanlı Apple işlem bildirimleri tek teslim akışında birleştirildi. Gerçek Apple ödemesi ve fiziksel cihaz testi ayrıca gereklidir. TestFlight durumu ayrıca doğrulanır.
+
+0.5.4 (2026111704), hazırlık: Bekleyen müşteriler boş masalara otomatik oturur; mevcut masa/paket siparişleri ve hazırlıkları korunur. Ayrılan misafirler masayı boşaltınca sıradakiler alınır. Paket siparişi seçiliyken yeni paket müşterisi için kuyrukta bir kişi ayrılır. Durum bildirimi sipariş panelinin içine alınır, masa sekmeleri panelin yüksekliğine göre konumlanır.

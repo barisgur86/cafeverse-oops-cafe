@@ -40,3 +40,20 @@
 @media(orientation:portrait){.sim-door{display:block}.sim-door-art{width:100%;height:75%}.sim-door-controls{position:absolute;bottom:0;width:100%;height:30%;padding:14px 18px max(14px,env(safe-area-inset-bottom));gap:8px;background:linear-gradient(#ec9ed4,#ae519f)}.sim-door-controls small,.sim-door-controls h2{display:none}.sim-door-controls p{font-size:16px;min-height:35px}.sim-door-controls strong{font-size:16px}.sim-door-controls>button{min-height:48px;font-size:19px}.sim-door-melo{bottom:10%;width:44%;left:53%}.sim-door-guests{bottom:5%;height:32%}.sim-door-bubble{font-size:20px;left:48%;bottom:44%}.sim-door-hud{left:12px;right:12px;gap:6px}.sim-door-hud b{font-size:24px}.sim-door-hud span{font-size:15px;padding:7px}.sim-door-hud button{width:44px;height:44px}.iso-hud{gap:6px!important}.iso-hud>.sim-language{min-width:40px;width:40px;padding:5px}}
 @media(prefers-reduced-motion:reduce){.sim-door.calling .sim-door-melo,.sim-door.calling .sim-door-guests,.sim-door.welcomed .sim-door-guests{animation:none}}
 .sim-door-hud{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:0!important}.sim-door-controls p{color:#fff8f2;font-weight:700;text-shadow:0 1px 2px #773563}.sim-door-controls strong{color:#fff8ef}
+
+/* Status stays in the order panel's flow; table tabs follow its actual height. */
+#living-cafe .iso-order{display:grid;grid-template-columns:minmax(130px,1fr) minmax(0,1fr) minmax(190px,auto);gap:10px 16px}
+#living-cafe .iso-order>.iso-notice{position:static;transform:none;grid-column:1/-1;max-width:none;width:auto;box-sizing:border-box;margin:0;padding:6px 10px;font-size:14px;line-height:1.3}
+#living-cafe .iso-order-copy{min-width:0}
+#living-cafe .iso-table-targets{bottom:calc(var(--sim-footer-height,170px) + max(16px,env(safe-area-inset-bottom)) + 12px)}
+@media(orientation:portrait){
+ #living-cafe .iso-order{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px;bottom:max(12px,env(safe-area-inset-bottom))}
+ #living-cafe .iso-actions{grid-column:1/-1;min-width:0}
+ #living-cafe .iso-order>.iso-notice{font-size:14px;line-height:1.3}
+ #living-cafe .iso-table-targets{bottom:calc(var(--sim-footer-height,180px) + max(12px,env(safe-area-inset-bottom)) + 12px)}
+}
+@media(max-height:520px) and (orientation:landscape){
+ #living-cafe .iso-order{grid-template-columns:minmax(115px,1fr) minmax(0,1fr) minmax(180px,auto);gap:5px 12px}
+ #living-cafe .iso-order>.iso-notice{font-size:12px;padding:4px 8px}
+ #living-cafe .iso-table-targets{bottom:calc(var(--sim-footer-height,125px) + 20px)}
+}

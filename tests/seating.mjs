@@ -1,0 +1,13 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const ctx={};vm.createContext(ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/seating.js',import.meta.url),'utf8'),ctx);let serial=0;
+const plan=(board,waiting,options={})=>ctx.CafeSeating.plan({board,tables:2,waiting,recipes:[0,7],served:18,now:1000,id:()=>String(++serial),...options});
+const old={id:'old',table:1,mode:'table',items:[{recipe:0,preparation:'made',readyAt:900}]},takeaway={id:'pack',mode:'takeaway',table:null,items:[{recipe:7,preparation:'packed',readyAt:900}]};
+const board={admitted:5,sequence:2,tickets:[old,takeaway]},p=plan(board,9);
+assert.equal(p.tickets.length,3);assert.equal(p.admitted,9);assert.equal(p.tickets.at(-1).table,2);assert.equal(p.tickets.at(-1).items.length,4);assert.equal(p.tickets[0],old);assert.equal(p.tickets[1],takeaway);assert.equal(board.admitted,5);assert.equal(board.tickets.length,2);
+assert.equal(plan(p,5),null);assert.equal(new Set(p.tickets.filter(t=>t.mode==='table').map(t=>t.table)).size,2);
+let all=plan({admitted:0,sequence:0,tickets:[]},9);assert.equal(all.admitted,8);assert.equal(all.tickets.length,2);assert.ok(all.tickets.every(t=>t.items.length===4));
+assert.equal(plan({admitted:0,tickets:[]},0),null);let small=plan({admitted:0,tickets:[]},3);assert.equal(small.tickets[0].items.length,3);assert.equal(small.admitted,3);
+assert.equal(plan({admitted:0,tickets:[]},4,{tables:1,blocked:[1]}),null);assert.equal(plan({admitted:0,tickets:[]},1,{reserve:1}),null);
+const afterDepartures=plan({admitted:8,sequence:2,tickets:[]},5);assert.equal(afterDepartures.tickets.length,2);assert.equal(afterDepartures.admitted,13);assert.equal(afterDepartures.tickets[1].items.length,1);
+const loaded=JSON.parse(JSON.stringify(all));assert.equal(plan(loaded,1),null);assert.equal(plan({admitted:0,tickets:[takeaway]},5,{tables:1,capacity:0}),null);assert.equal(plan({admitted:0,tickets:[]},5,{recipes:[]}),null);
+console.log('PASS auto seating: 9 waiting fill the empty four-seat table, in-flight orders preserved, no duplicate admissions, all tables full, partial parties, departures block seats, takeover reservation, restart and capacity limits.');
