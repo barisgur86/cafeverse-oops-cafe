@@ -23,7 +23,7 @@ Trades contain ingredients only; paid or earned coins cannot be offered. Sender 
 5. Deploy the Node service (`npm ci --omit=dev`, `npm run server`) behind TLS, strict request/body/rate limits at the ingress, and managed secrets from `.env.example`. The included process limiter is not a distributed abuse-control service. Monitor 5xx, expired escrow and notification delivery.
 6. Download the real Apple DER root certificates from https://www.apple.com/certificateauthority/ into read-only runtime storage. Configure `APPLE_ROOT_CERTIFICATES` and `APPLE_ENVIRONMENT=Sandbox` for staging. Production uses its own database and `Production` verifier. The server entry point pins the official G3 DER SHA-256; a root rotation requires a reviewed pin update. Test roots cannot start this service.
 7. Configure App Store Server Notifications V2 to `https://BACKEND/apple/notifications`; test delivery and Apple's notification-history recovery. Add periodic App Store transaction reconciliation before production rollout: notifications alone are not a guarantee that every missed refund is recovered automatically. No App Store Server API signing credentials are embedded in this implementation.
-8. Set Xcode build setting `CAFE_GAME_SERVER_URL=https://BACKEND` (origin only). The Info.plist expands it to `CafeGameServerURL`. Set GitHub environment `testflight` variable `CAFE_GAME_SERVER_URL` to the same staging origin. `npm run preflight` must pass before archive/upload. Unconfigured builds refuse real purchases; do not distribute them as the secure online release.
+8. Set Xcode build setting `CAFE_GAME_SERVER_URL=https://BACKEND` (HTTPS base URL; a Supabase `/functions/v1/NAME` prefix is supported). The Info.plist expands it to `CafeGameServerURL`. Set GitHub environment `testflight` variable `CAFE_GAME_SERVER_URL` to the same staging origin. `npm run preflight` must pass before archive/upload. Unconfigured builds refuse real purchases; do not distribute them as the secure online release.
 
 ## App Store Connect
 
@@ -47,3 +47,13 @@ Automated tests distinguish generated signed certificate fixtures from Apple-iss
 Do not merge or distribute as complete until backend staging, migration rehearsal, live Apple products/agreements, physical-device matrix, notification/reconciliation operations and CI all pass. Local XCTest/Release limitations and actual push/PR results belong in the delivery report, not assumed successes.
 
 Reference: https://github.com/apple/app-store-server-library-node and https://apple.github.io/app-store-server-library-node/classes/SignedDataVerifier.html
+
+## Free-plan staging verified on 2026-11-17
+
+No plan upgrade or paid branch was created. Branching was rejected by the Free plan. Instead, `cafe_stage_062` is a private schema in the existing Free project, isolated from `public.cafe_cloud_saves`. A Sandbox-only Edge Function runs at `https://tfbzljhoaxwcapxcbads.supabase.co/functions/v1/cafe-secure-stage`. It uses Supabase-managed server secrets internally; no database password/token was exported. Its source is under `supabase/functions/cafe-secure-stage`.
+
+Health returned 200; unauthenticated wallet/credit returned 401; forged Apple notification returned 422. Six hosted PostgreSQL tests passed using real concurrent connections: duplicate purchase, duplicate acceptance, accept/cancel, rollback on failure, unauthorized actor and expiry. All test schemas were removed. The test runner is NOT present in the final deployed function. Staging has no imported real balances, so it must not be used as the live-player endpoint without a reviewed cutover.
+
+All 5 staging tables have RLS and no client grants or policies (intentional server-only access). Advisor INFO about missing policies does not imply public access. Existing public legacy function/password-protection WARNs remain for separate cutover review; see https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable and https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
+
+Free-plan quotas still apply; no paid resources or upgrade were authorized. The static shared engine build removes runtime filesystem/VM dependencies for Supabase Edge Runtime. Build it with `node tools/build-server-engine.mjs` before deployment.

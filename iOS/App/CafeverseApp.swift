@@ -146,9 +146,10 @@ private struct DeviceCafe: UIViewRepresentable {
         if gameRequest {
             guard let rawServer = Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String,
                   let server = URL(string: rawServer), server.scheme == "https", server.host != nil,
+                  server.query == nil, server.fragment == nil, server.user == nil, server.password == nil,
                   let path = body["path"] as? String, path.hasPrefix("/api/"),
                   !path.contains(".."), !path.contains("#"), !path.contains("://"),
-                  let url = URL(string: path, relativeTo: server)?.absoluteURL, url.host == server.host else { throw URLError(.badURL) }
+                  let url = URL(string: server.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + path), url.host == server.host else { throw URLError(.badURL) }
             target = url
         } else {
             guard action == "pull" || action == "push" else { throw URLError(.badURL) }
