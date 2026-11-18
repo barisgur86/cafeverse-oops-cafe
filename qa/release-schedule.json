@@ -1,0 +1,7 @@
+{
+  "testVersion": "0.9.1",
+  "build": "2026111803",
+  "productionTarget": "1.0.0",
+  "productionTargetDate": "2026-12-01",
+  "productionRequiresPassingReleaseGates": true
+}

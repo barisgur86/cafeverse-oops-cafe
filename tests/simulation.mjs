@@ -22,3 +22,25 @@ ctx.tableCount=()=>4;ctx.render();
 assert.ok(frames.at(-1).includes('data-scene-table="4"'));
 assert.ok(frames.at(-1).includes('data-select="4"'));
 console.log('PASS expanded cafe: third and fourth tables and selectors render after purchase.');
+
+// Empty table: one call-to-action only; its primary button still opens the
+// real call flow. Existing orders and takeaway retain their distinct actions.
+board.tickets=[];ctx.waitingCustomers=()=>0;ctx.render=()=>{};
+vm.runInContext(fs.readFileSync(new URL('../source/public/iso-cafe.js',import.meta.url),'utf8'),ctx);ctx.render();
+selectors[0].onclick();
+const emptyTable=frames.at(-1);
+assert.equal((emptyTable.match(/data-act="action"/g)||[]).length,1);
+assert.equal((emptyTable.match(/data-act="call"/g)||[]).length,0);
+assert.ok(emptyTable.includes('🎈 Müşteri çağır'));
+await action();
+assert.ok(frames.at(-1).includes('id="door-call"'));
+assert.ok(frames.at(-1).includes('id="door-enter"'));
+ctx.navigateGame('cafe');ctx.render();selectors[1].onclick();
+const emptyTakeaway=frames.at(-1);
+assert.ok(emptyTakeaway.includes('Paket siparişi al'));
+assert.equal((emptyTakeaway.match(/data-act="call"/g)||[]).length,1);
+board.tickets=[{id:'regression-table',mode:'table',table:1,enteredAt:now,items:[{recipe:0,preparation:null,readyAt:0}]}];
+selectors[0].onclick();
+assert.ok(frames.at(-1).includes('Siparişi hazırla'));
+assert.equal((frames.at(-1).match(/data-act="call"/g)||[]).length,1);
+console.log('PASS call-button regression: empty table has one working call action; takeaway and occupied table retain distinct controls.');
