@@ -41,3 +41,7 @@ Native recoverable account deletion, server reauthentication/Apple code exchange
 ## Day 2 service stabilization
 
 Customer/chair layer ordering, shared arrival motion, persisted departures and package-only welcome fixed without asset changes. npm test PASS (71 summary lines); virtual 30-minute lifecycle soak PASS. See QA_REPORT_0.9.5.md and qa/0.9.5-cases.json. Current signed archive/upload and physical QA not yet certified. Production closed.
+
+## Verified 0.9.5 upload
+
+0.9.5 (2026111906) signed Release archive verified with codesign --verify --deep --strict; bundled Web SHA matches current source. Xcode TestFlight Internal Only upload SUCCESS on 19 November 2026 at 23:56:48 Europe/Istanbul. IDEDistribution.standard.log confirms upload succeeded. Apple processing and tester-ready notification are being checked; upload success alone is not device acceptance. Production and paid/social flags remain closed.

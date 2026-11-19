@@ -33,6 +33,18 @@ try{
   await migrated.game(id,'/api/stock',{item:'milk',request_id:crypto.randomUUID()});assert.equal((await migrated.me(id)).state.coins,3815);assert.deepEqual((await db.query('select save from cafe_cloud_saves where user_id=$1',[id])).rows[0].save,save);
   await assert.rejects(cloudPush(id,7,save),/authoritative/);
  });
+ await check('deployment legacy reader imports only authenticated account and preserves source',async()=>{
+  await db.query('create table legacy_backup_fixture(user_id uuid primary key,revision bigint,save jsonb)');
+  const id=await makeUser(),other=await makeUser(),save=gameEngine(id).exportSave();save.coins=1649;save.version=17;save.pantry.milk=23;
+  await db.query('insert into legacy_backup_fixture values($1,11,$2),($3,12,$4)',[id,save,other,{...save,coins:9999}]);
+  let reads=0;const scopedPool={query:(...args)=>pool.query(...args),async connect(){const c=await pool.connect();return {query:(...args)=>c.query(...args),release:()=>c.release(),async readLegacyBackup(actor){reads++;assert.equal(actor,id);return (await c.query('select revision,save from legacy_backup_fixture where user_id=$1 for share',[actor])).rows[0];}};}};
+  const migrated=new MarketEconomy(scopedPool,apple,{legacyImport:true,lifecycle:true});
+  const result=await migrated.me(id);assert.deepEqual(result.save,save);assert.equal(Number(result.cutover.source_revision),11);assert.equal(reads,1);
+  await migrated.game(id,'/api/stock',{item:'milk',request_id:crypto.randomUUID()});
+  assert.equal((await migrated.me(id)).state.coins,1647);assert.equal(reads,1);
+  assert.deepEqual((await db.query('select save from legacy_backup_fixture where user_id=$1',[id])).rows[0].save,save);
+  assert.equal((await db.query('select save from legacy_backup_fixture where user_id=$1',[other])).rows[0].save.coins,9999);
+ });
  await check('invalid backup or unmarked existing café is blocked, never overwritten',async()=>{const id=await makeUser();await db.query('insert into cafe_cloud_saves(user_id,revision,save) values($1,1,$2)',[id,{coins:-1}]);const migrated=new MarketEconomy(pool,apple,{legacyImport:true});await assert.rejects(migrated.me(id),/korundu/);assert.equal((await db.query('select count(*)::int as n from cafe_game_accounts where user_id=$1',[id])).rows[0].n,0);const other=await makeUser();await economy.me(other);await assert.rejects(migrated.me(other),/incelemesi/);assert.equal((await economy.me(other)).state.coins,500);});
  await check('unmigrated cloud CAS still works; deletion and cutover gates prevent stale writes',async()=>{const id=await makeUser();const save=gameEngine(id).exportSave();assert.equal(Number((await cloudPush(id,0,save)).rows[0].result.version),1);await assert.rejects(cloudPush(id,0,save),/conflict/);await economy.me(id);await start(id);await assert.rejects(cloudPush(id,1,save),/deletion/);});
  const alice=await makeUser(),bob=await makeUser();const a=await economy.me(alice),b=await economy.me(bob);

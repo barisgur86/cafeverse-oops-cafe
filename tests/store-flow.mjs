@@ -10,3 +10,26 @@ let acknowledged=false;ctx.CafeCloudSync={ensurePurchaseSaved:async()=>{events.p
 const beforeCloud=finishes;await assert.rejects(deliver({...tx,transactionID:'126'}),/cloud unavailable/);assert.equal(finishes,beforeCloud);
 acknowledged=true;await deliver({...tx,transactionID:'126'});assert.equal(finishes,beforeCloud+1);assert.deepEqual(events.slice(-3),['credit','cloud','finish']);
 console.log('PASS store flow: concurrent purchase/update delivery is serialized, credit precedes finish, failed credit never finishes, and failures remain retryable, and native finish waits for cloud acknowledgement. Apple payment itself requires a device test.');
+
+// Recovery must not let one rejected delivery starve every later Apple purchase.
+ctx.CafeServerEnabled=true;ctx.CafeFeatures={iap:true};
+ctx.api=async(_path,{transaction})=>{events.push('credit:'+transaction.transactionID);if(transaction.transactionID==='bad')throw Error('receipt rejected');writes++;return {state:{coins:750},purchase:{coins:250}}};
+const bridge=ctx.webkit.messageHandlers.cafeStore,originalPost=bridge.postMessage;
+bridge.postMessage=async b=>b.action==='pending'?{transactions:[{...tx,transactionID:'bad'},{...tx,transactionID:'good'}]}:originalPost(b);
+const recover=vm.runInContext('recoverNativePurchases',ctx);
+const beforeRecovery=finishes;
+await assert.rejects(recover(),/receipt rejected/);
+assert.equal(finishes,beforeRecovery+1);assert.ok(events.includes('credit:good'));
+assert.equal(vm.runInContext('shopRecovering',ctx),false);
+// Retry after the failed receipt is resolved remains possible; no in-flight lock leaks.
+bridge.postMessage=async b=>b.action==='pending'?{transactions:[]}:originalPost(b);
+await recover();
+// Calling the function directly must not bypass the disabled shop UI.
+let purchaseCalls=0;bridge.postMessage=async()=>{purchaseCalls++;throw Error('must not reach StoreKit')};
+const purchase=vm.runInContext('purchaseNativePack',ctx);
+for(const [server,enabled] of [[false,true],[true,false],[false,false]]){
+ ctx.CafeServerEnabled=server;ctx.CafeFeatures={iap:enabled};
+ await purchase(tx.productID);
+}
+assert.equal(purchaseCalls,0);
+console.log('PASS store recovery isolation: failed receipt does not block later delivery, recovery lock releases, and direct purchase calls require server authority plus enabled IAP.');
