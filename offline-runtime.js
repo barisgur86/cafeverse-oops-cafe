@@ -10,6 +10,9 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
  const exportSave=()=>structuredClone(s);
  const importSave=(candidate)=>{
   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!Number.isSafeInteger(candidate.version)||candidate.version<0||!Number.isSafeInteger(candidate.coins)||candidate.coins<0||!Number.isSafeInteger(candidate.served)||candidate.served<0||!Array.isArray(candidate.wardrobe)||!Array.isArray(candidate.owned)||!Array.isArray(candidate.preparations)||!candidate.receipts||typeof candidate.receipts!=='object'||Array.isArray(candidate.receipts))throw Error('Bulut kaydı geçersiz.');
+  const record=v=>v&&typeof v==='object'&&!Array.isArray(v);
+  const count=v=>Number.isSafeInteger(v)&&v>=0;
+  if(candidate.code!==s.code||!record(candidate.pantry)||!record(candidate.look)||!record(candidate.trades)||!Array.isArray(candidate.bought)||!Array.isArray(candidate.found)||!Array.isArray(candidate.calls)||!Array.isArray(candidate.history)||!count(candidate.attracted)||!count(candidate.reputation)||Object.values(candidate.pantry).some(n=>!count(n))||candidate.wardrobe.some(x=>typeof x!=='string')||candidate.owned.some(x=>typeof x!=='string')||candidate.bought.some(x=>typeof x!=='string')||(candidate.storePurchases!==undefined&&!record(candidate.storePurchases)))throw Error('Bulut kaydı eksik veya başka hesaba ait. Yerel kayıt korundu.');
   const before=s;s=structuredClone(candidate);try{persist()}catch(e){s=before;throw e}return snapshot();
  };
  const progress=()=>{const level=Math.min(10,1+Math.floor(s.served/3));return {xp:s.served*35,level,levelStart:(level-1)*105,nextXP:level===10?null:level*105,upgrades:s.bought,capacity:1+C.upgrades.filter(u=>s.bought.includes(u.id)).reduce((n,u)=>n+(u.capacity||0),0),catalog:C.upgrades,recipeLevels:C.recipeLevels}};
@@ -28,39 +31,55 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
   const fingerprint=JSON.stringify([path,Object.fromEntries(Object.entries(body).filter(([k])=>k!=='request_id').sort(([a],[b])=>a.localeCompare(b)))]);
   if(s.receipts[rid]){if(s.receipts[rid].fingerprint!==fingerprint)failure('İşlem kimliği başka bir işlem için kullanılmış.',409);return stateResult(s.receipts[rid].extra)}
   let extra={};
-  if(path==='/api/ios-store-credit'){
-   if(!global.CafeNativeStore||!global.CafeAccountID)failure('Native Apple doğrulaması gerekli.',403);
-   const tx=body.transaction,packs={'com.cafeverse.oopscafe.coins250':250,'com.cafeverse.oopscafe.coins750':750,'com.cafeverse.oopscafe.coins2000':2000};
-   if(!tx||!/^\d{1,32}$/.test(tx.transactionID)||!packs[tx.productID]||tx.coins!==packs[tx.productID]||!['Sandbox','Production','Xcode'].includes(tx.environment))failure('Satın alma verisi geçersiz.');
-   s.storePurchases??={};const key=tx.environment+':'+tx.transactionID,old=s.storePurchases[key];
-   if(old){if(old.productID!==tx.productID)failure('İşlem başka ürüne ait.',409);extra.purchase={...old,duplicate:true}}
-   else{const purchase={id:tx.transactionID,productID:tx.productID,coins:packs[tx.productID],environment:tx.environment};s.coins+=purchase.coins;s.storePurchases[key]=purchase;extra.purchase=purchase;}
-  }
+  if(path==='/api/ios-store-credit')failure('Satın alma sunucusu gerekli. Coin teslimi cihazda yapılamaz.',503);
   else if(path==='/api/profile'){const name=String(body.name||'').trim();if(!name||name.length>24||!integer(body.character,0,5))failure('Geçerli bir ad ve karakter seç.');s.name=name;s.character=body.character}
   else if(path==='/api/stock'){if(!C.PRICE[body.item])failure('Malzeme bulunamadı.');debit(C.PRICE[body.item]);s.pantry[body.item]=(s.pantry[body.item]||0)+1}
-  else if(path==='/api/outfit'){const item=C.outfits[body.item];if(!item)failure('Kıyafet bulunamadı.');if(!s.wardrobe.includes(body.item)){debit(item[0]);s.wardrobe.push(body.item)}s.look[item[1]]=body.item}
-  else if(path==='/api/decor'){const price=C.decor[body.decor];if(price===undefined)failure('Dekor bulunamadı.');if(!s.owned.includes(body.decor)){debit(price);s.owned.push(body.decor)}s.decor=body.decor}
-  else if(path==='/api/upgrades'){const u=C.upgrades.find(u=>u.id===body.upgrade);if(!u)failure('Geliştirme bulunamadı.');if(progress().level<u.level)failure('Bu geliştirme '+u.level+'. seviyede açılıyor.',403);if(!s.bought.includes(u.id)){debit(u.cost);s.bought.push(u.id)}}
+  else if(path==='/api/outfit'){const weekly=C.weekly?.find(i=>i.id===body.item);if(weekly&&clock()<weekly.release&&!s.wardrobe.includes(body.item))failure('Bu koleksiyon henüz açılmadı.',403);const item=C.outfits[body.item];if(!item)failure('Kıyafet bulunamadı.');if(!s.wardrobe.includes(body.item)){debit(item[0]);s.wardrobe.push(body.item)}s.look[item[1]]=body.item}
+  else if(path==='/api/decor'){const weekly=C.weekly?.find(i=>i.id===body.decor);if(weekly&&clock()<weekly.release&&!s.owned.includes(body.decor))failure('Bu koleksiyon henüz açılmadı.',403);const price=C.decor[body.decor];if(price===undefined)failure('Dekor bulunamadı.');if(!s.owned.includes(body.decor)){debit(price);s.owned.push(body.decor)}s.decor=body.decor}
+  else if(path==='/api/upgrades'){const u=C.upgrades.find(u=>u.id===body.upgrade);if(!u)failure('Geliştirme bulunamadı.');if(progress().level<u.level)failure('Bu geliştirme '+u.level+'. seviyede açılıyor.',403);if(u.requires&&!s.bought.includes(u.requires))failure('Önce gerekli geliştirmeyi satın al.',403);if(!s.bought.includes(u.id)){debit(u.cost);s.bought.push(u.id)}}
   else if(path==='/api/npc-trade'){const o=C.NPC[body.offer];if(!o||(s.trades[body.offer]||0)>=o[4])failure('Teklif tükendi.');if((s.pantry[o[0]]||0)<o[1])failure('Depoda yeterli malzeme yok.',409);s.pantry[o[0]]-=o[1];s.pantry[o[2]]=(s.pantry[o[2]]||0)+o[3];s.trades[body.offer]=(s.trades[body.offer]||0)+1}
   else if(path==='/api/demo-purchases'){if(global.CafeNativeStore)failure('Demo satın alma bu uygulamada kapalı.',403);const pack=C.coinPacks.find(p=>p.id===body.pack_id);if(!pack)failure('Coin paketi bulunamadı.');s.coins+=pack.coins;extra.purchase={id:rid,pack_id:pack.id,coins:pack.coins,demo:true};s.history.push({...extra.purchase,name:pack.name})}
+  else if(path==='/api/service-orders/open'){
+   const t=body.order,uuid=v=>typeof v==='string'&&/^[a-f0-9-]{36}$/i.test(v);
+   if(!t||!uuid(t.id)||!['table','takeaway'].includes(t.mode)||!Array.isArray(t.items)||t.items.length<1||t.items.length>4||t.mode==='takeaway'&&t.items.length!==1||t.mode==='table'&&!integer(t.table,1,1+['table2','table3','table4'].filter(id=>s.bought.includes(id)).length)||t.mode==='takeaway'&&t.table!==null)failure('Masa veya müşteri kaydı geçersiz.');
+   const customers=t.items.map((it,i)=>t.id+':'+i),definition=JSON.stringify([t.mode,t.table,t.items.map(it=>it.recipe)]);
+   if(t.items.some(it=>!integer(it.recipe,0,C.FORMULAS.length-1)||progress().level<C.recipeLevels[it.recipe]))failure('Sipariş tarifi geçersiz.');
+   s.serviceOrders??={};const old=s.serviceOrders[t.id];
+   if(old){if(old.definition!==definition||!['arriving','seated','served'].includes(old.status))failure('Sipariş artık bu masada beklemiyor.',409);if(old.status!=='served')t.items.forEach((it,i)=>{if(!it.preparation)return;const prep=s.preparations.find(p=>p.id===it.preparation);if(!prep||prep.status!=='ready'||prep.recipe!==it.recipe||prep.order_id&&prep.order_id!==t.id||prep.customer_id&&prep.customer_id!==customers[i])failure('Hazırlık başka müşteriye ait.',409);prep.order_id=t.id;prep.customer_id=customers[i];});extra.order=old;}
+   else{
+    if(Object.values(s.serviceOrders).some(o=>['arriving','seated'].includes(o.status)&&o.mode===t.mode&&(t.mode==='takeaway'||o.table===t.table)))failure('Bu masanın başka siparişi var.',409);
+    const used=s.serviceAdmitted??Math.max(0,(s._serviceBoard?.admitted||0)-(s._serviceBoard?.tickets||[]).reduce((n,o)=>n+(o.items?.length||0),0));
+    if(used+t.items.length>4+(s.attracted||0))failure('Masaya oturacak müşteri yok.',409);
+    const items=t.items.map((it,i)=>{if(it.preparation){const prep=s.preparations.find(p=>p.id===it.preparation);if(!prep||prep.status!=='ready'||prep.recipe!==it.recipe||prep.order_id&&prep.order_id!==t.id)failure('Eski sipariş hazırlığı eşleşmiyor.',409);prep.order_id=t.id;prep.customer_id=customers[i];}return {recipe:it.recipe,customer_id:customers[i]};});
+    extra.order=s.serviceOrders[t.id]={id:t.id,mode:t.mode,table:t.table,customers,items,definition,status:t.items.some(it=>it.preparation)?'seated':'arriving',arrives_at:t.items.some(it=>it.preparation)?clock():clock()+2200};s.serviceAdmitted=used+items.length;
+   }
+  }else if(path==='/api/service-orders/leave'){
+   const o=s.serviceOrders?.[body.order_id];if(!o||!['arriving','seated'].includes(o.status))failure('Müşteri artık masada değil.',409);o.status='left';extra.order=o;
+  }
   else if(path==='/api/preparations'){
    if(!body.amounts||typeof body.amounts!=='object'||Array.isArray(body.amounts))failure('Malzemeler eksik.');
    const amounts=Object.fromEntries(Object.entries(body.amounts).filter(([,n])=>n!==0));if(!Object.keys(amounts).length||Object.entries(amounts).some(([k,n])=>!C.ITEMS.includes(k)||!integer(n,1,6)))failure('Malzeme ölçüleri geçersiz.');
    if(s.preparations.filter(p=>p.status==='ready'&&p.recipe>=0).length>=progress().capacity*4)failure('Servis kapasitesi dolu. Önce servis et.',409);
    const recipe=C.FORMULAS.findIndex(f=>C.ITEMS.every(k=>(f[k]||0)===(amounts[k]||0)));if(recipe>=0&&progress().level<C.recipeLevels[recipe])failure('Bu tarif '+C.recipeLevels[recipe]+'. seviyede açılıyor.',403);
+   const order=body.order_id?s.serviceOrders?.[body.order_id]:null;
+   if(order?.status==='arriving'&&clock()>=order.arrives_at)order.status='seated';
+   if(body.order_id&&(!order||order.status!=='seated'||!order.items.some(it=>it.customer_id===body.customer_id&&it.recipe===recipe)||s.preparations.some(p=>p.order_id===order.id&&p.customer_id===body.customer_id&&p.status==='ready')))failure('Müşteri siparişi eşleşmiyor.',409);
    const stock={},cost=Object.entries(amounts).reduce((sum,[k,n])=>{stock[k]=Math.min(s.pantry[k]||0,n);return sum+(n-stock[k])*C.PRICE[k]},0);debit(cost);for(const [k,n] of Object.entries(stock))s.pantry[k]-=n;
-   const duration=s.bought.includes(C.FORMULAS[recipe]?.coffee?'espresso2':'blender2')?4250:5000;
-   const preparation={id:rid,recipe,stock,cost,duration,ready_at:(clock()+duration)/1000,status:'ready'};s.preparations.push(preparation);if(recipe>=0&&!s.found.includes(recipe))s.found.push(recipe);extra.preparation=preparation;
+   const machine=C.FORMULAS[recipe]?.coffee?'espresso':'blender',saving=C.upgrades.filter(u=>s.bought.includes(u.id)&&(!u.machine||u.machine===machine)).reduce((sum,u)=>sum+(u.speed||0),0),duration=Math.round(5000*(1-Math.min(.6,saving)));
+   const preparation={id:rid,recipe,stock,cost,duration,ready_at:(clock()+duration)/1000,status:'ready',...(order?{order_id:order.id,customer_id:body.customer_id}:{})};s.preparations.push(preparation);if(recipe>=0&&!s.found.includes(recipe))s.found.push(recipe);extra.preparation=preparation;
   }else if(path==='/api/service-batches/serve'){
    const ids=body.preparations;if(!Array.isArray(ids)||ids.length<1||ids.length>4||new Set(ids).size!==ids.length||ids.some(x=>typeof x!=='string'))failure('Servis tepsisi geçersiz.');
    const ps=ids.map(id=>s.preparations.find(p=>p.id===id));if(ps.some(p=>!p))failure('Sipariş bulunamadı.',404);
-   if(!ps.every(p=>p.status==='served')){
+   const order=s.serviceOrders?.[body.order_id];
+   if(order?.status==='arriving'&&clock()>=order.arrives_at)order.status='seated';
+   if(!order||order.status!=='seated'||order.mode!==body.mode||order.table!==body.table||ps.length!==order.items.length||JSON.stringify(body.customers)!==JSON.stringify(order.customers)||ps.some((p,i)=>p.order_id!==order.id||p.customer_id!==order.customers[i]||p.recipe!==order.items[i].recipe))failure('Masa ve müşteri siparişi eşleşmiyor.',409);
+   if(!ps.every(p=>p.status==='served')){order.status='served';
     if(ps.some(p=>p.status!=='ready'||p.recipe<0||p.ready_at>clock()/1000))failure('Tüm ürünler hazır olmadan birlikte servis edilemez.',409);
     for(const prep of ps){const before=progress().level;prep.status='served';s.served++;s.coins+=35;if(s.served>=3&&!s.claimed){s.coins+=50;s.claimed=true}if(progress().level>before)s.coins+=50}s.trades={};
    }
   }else if(/^\/api\/preparations\/[^/]+\/serve$/.test(path)){
    const prep=s.preparations.find(p=>p.id===path.split('/')[3]);if(!prep)failure('Sipariş bulunamadı.',404);
-   if(prep.status!=='served'){if(prep.recipe<0||prep.ready_at>clock()/1000)failure('İçecek henüz hazır değil.',409);const before=progress().level;prep.status='served';s.served++;s.coins+=35;if(s.served>=3&&!s.claimed){s.coins+=50;s.claimed=true}if(progress().level>before)s.coins+=50;s.trades={}}
+   failure('Önce geçerli masa veya paket siparişini seç; tepsiyi birlikte teslim et.',409);
   }else if(path==='/api/calls/start'){
    if(clock()<s.nextCall)failure('Yeniden çağırmak için biraz bekle.',409);
    let round=s.calls.find(c=>c.status==='active'&&clock()-c.started<120000);if(!round){round={id:rid,started:clock(),taps:0,hits:0,status:'active'};s.calls.push(round)}extra.round=round;

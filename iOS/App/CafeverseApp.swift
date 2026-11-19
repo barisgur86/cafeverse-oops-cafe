@@ -4,13 +4,16 @@ import AuthenticationServices
 import CryptoKit
 import Security
 import StoreKit
+import AVFoundation
 
 @main
 struct CafeverseApp: App {
+    @AppStorage("cafeverse.language") private var language = Locale.preferredLanguages.first?.lowercased().hasPrefix("tr") == true ? "tr" : "en"
     var body: some Scene {
         WindowGroup {
-            AccountGate()
+            AccountGate().environment(\.locale, Locale(identifier: language == "en" ? "en" : "tr"))
                 .preferredColorScheme(.light)
+                .onAppear { if !["tr", "en"].contains(language) { language = "en" } }
         }
     }
 }
@@ -26,8 +29,16 @@ private struct DeviceCafe: UIViewRepresentable {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.userContentController.add(context.coordinator, name: "cafeLogout")
+        configuration.userContentController.add(context.coordinator, name: "cafeLanguage")
+        configuration.userContentController.add(context.coordinator, name: "cafeSpeak")
+        let languageJSON = String(data: try! JSONEncoder().encode(UserDefaults.standard.string(forKey: "cafeverse.language") ?? "tr"), encoding: .utf8)!
+        configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeLanguage = " + languageJSON + ";", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeCloud")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeStore")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeGame")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeAudio")
+        let serverEnabled = (Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String)?.hasPrefix("https://") == true
+        configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeServerEnabled = \(serverEnabled ? "true" : "false");", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let encoded = String(data: try! JSONEncoder().encode(userID), encoding: .utf8)!
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeAccountID = " + encoded + ";globalThis.CafeNativeStore = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let view = WKWebView(frame: .zero, configuration: configuration)
@@ -48,11 +59,25 @@ private struct DeviceCafe: UIViewRepresentable {
     func updateUIView(_ view: WKWebView, context: Context) {}
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKScriptMessageHandlerWithReply {
         let onLogout: () -> Void
+        let speech = AVSpeechSynthesizer()
+        let audio = CafeAudio()
         let store: CafeStore
         let cloud: CafeCloud
         init(userID: String, session: CafeSession, onLogout: @escaping () -> Void) { self.onLogout = onLogout; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
-            if message.name == "cafeCloud" {
+            if message.name == "cafeAudio" {
+                guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url, url.isFileURL, let root,
+                      url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"), let body = message.body as? [String: Any] else { replyHandler(nil, "Geçersiz ses isteği."); return }
+                Task { @MainActor in
+                    do {
+                        let result = try audio.handle(body)
+                        if audio.settings.effectsGain == 0 { speech.stopSpeaking(at: .immediate) }
+                        replyHandler(result, nil)
+                    } catch { replyHandler(nil, "Ses işlemi tamamlanamadı.") }
+                }
+                return
+            }
+            if message.name == "cafeCloud" || message.name == "cafeGame" {
                 guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
                       url.isFileURL, let root,
                       url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
@@ -60,7 +85,14 @@ private struct DeviceCafe: UIViewRepresentable {
                     replyHandler(nil, "Geçersiz bulut isteği."); return
                 }
                 Task { @MainActor in
-                    do { replyHandler(try await cloud.handle(body), nil) }
+                    do {
+                        let result = try await cloud.handle(body)
+                        if body["action"] as? String == "game", body["path"] as? String == "/api/ios-store-credit",
+                           let purchase = result["purchase"] as? [String: Any], let id = purchase["id"] as? String {
+                            store.confirmDelivery(id)
+                        }
+                        replyHandler(result, nil)
+                    }
                     catch { replyHandler(nil, error.localizedDescription) }
                 }
                 return
@@ -75,7 +107,21 @@ private struct DeviceCafe: UIViewRepresentable {
             }
         }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            if message.name == "cafeLogout" { onLogout() }
+            if message.name == "cafeLogout" { onLogout(); return }
+            guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
+                  url.isFileURL, let root, url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
+                  let value = message.body as? String else { return }
+            if message.name == "cafeLanguage", ["tr", "en"].contains(value) {
+                UserDefaults.standard.set(value, forKey: "cafeverse.language")
+            }
+            if message.name == "cafeSpeak" {
+                speech.stopSpeaking(at: .immediate)
+                guard ["tr", "en"].contains(value), audio.settings.effectsGain > 0 else { return }
+                let utterance = AVSpeechUtterance(string: value == "en" ? "Come, come!" : "Gel, gel!")
+                utterance.voice = AVSpeechSynthesisVoice(language: value == "en" ? "en-US" : "tr-TR")
+                utterance.rate = 0.48; utterance.pitchMultiplier = 1.2; utterance.volume = audio.settings.effectsGain
+                speech.speak(utterance)
+            }
         }
         var root: URL?
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
@@ -101,13 +147,32 @@ private struct DeviceCafe: UIViewRepresentable {
               let base = URL(string: raw), base.scheme == "https", base.host != nil,
               let key = Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String,
               !key.isEmpty else { throw URLError(.badURL) }
-        guard let action = body["action"] as? String, action == "pull" || action == "push" else { throw URLError(.badURL) }
-        var request = URLRequest(url: base.appendingPathComponent("rest/v1/rpc/cafe_cloud_" + action))
+        guard let action = body["action"] as? String else { throw URLError(.badURL) }
+        let gameRequest = action == "game"
+        let target: URL
+        if gameRequest {
+            guard let rawServer = Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String,
+                  let server = URL(string: rawServer), server.scheme == "https", server.host != nil,
+                  server.query == nil, server.fragment == nil, server.user == nil, server.password == nil,
+                  let path = body["path"] as? String, path.hasPrefix("/api/"),
+                  !path.contains(".."), !path.contains("#"), !path.contains("://"),
+                  let url = URL(string: server.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + path), url.host == server.host else { throw URLError(.badURL) }
+            target = url
+        } else {
+            guard action == "pull" || action == "push" else { throw URLError(.badURL) }
+            target = base.appendingPathComponent("rest/v1/rpc/cafe_cloud_" + action)
+        }
+        var request = URLRequest(url: target)
+        request.timeoutInterval = 20
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "apikey")
         request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if action == "push" {
+        if gameRequest {
+            if let payload = body["body"] as? [String: Any] {
+                request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            } else { request.httpMethod = "GET" }
+        } else if action == "push" {
             guard let save = body["save"] as? [String: Any], let revision = body["expectedVersion"] as? Int, revision >= 0 else { throw URLError(.badURL) }
             request.httpBody = try JSONSerialization.data(withJSONObject: ["expected_version": revision, "next_save": save])
         } else { request.httpBody = Data("{}".utf8) }
@@ -134,7 +199,7 @@ private struct DeviceCafe: UIViewRepresentable {
         guard (200..<300).contains(http.statusCode), let value else {
             let code = value?["code"] as? String ?? String(http.statusCode)
             throw NSError(domain: "CafeCloud", code: http.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: "[\(code)] Bulut kaydı eşitlenemedi; yerel kayıt korundu."])
+                userInfo: [NSLocalizedDescriptionKey: "[\(code)] " + (value?["error"] as? String ?? "Bulut kaydı eşitlenemedi; yerel kayıt korundu.")])
         }
         return value
     }
@@ -204,7 +269,7 @@ private enum AccountKeychain {
     private var apiKey: String { Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String ?? "" }
     private func request(_ path: String, body: [String: Any]? = nil, token: String? = nil, method: String? = nil) async throws -> Data {
         guard let base, !apiKey.isEmpty else {
-            throw NSError(domain: "CafeAuth", code: 1, userInfo: [NSLocalizedDescriptionKey: "Gerçek hesap sunucusunun bağlantısı henüz yapılandırılmadı."])
+            throw NSError(domain: "CafeAuth", code: 1, userInfo: [NSLocalizedDescriptionKey: L("Gerçek hesap sunucusunun bağlantısı henüz yapılandırılmadı.")])
         }
         var request = URLRequest(url: base.appendingPathComponent("auth/v1/" + path.components(separatedBy: "?")[0]))
         if let query = path.components(separatedBy: "?").dropFirst().first {
@@ -222,14 +287,14 @@ private enum AccountKeychain {
             let reason = payload?["error_code"] as? String ?? payload?["code"] as? String ?? ""
             let text: String
             switch reason {
-            case "invalid_credentials": text = "E-posta veya şifre doğru değil. Şifreni yenileyebilir ya da yeni hesap oluşturabilirsin."
-            case "email_not_confirmed": text = "Önce e-postana gelen doğrulama bağlantısını aç, ardından giriş yap."
-            case "email_address_invalid", "validation_failed": text = "Geçerli bir e-posta adresi gir."
-            case "email_address_not_authorized", "email_send_failed": text = "Doğrulama e-postası şu anda gönderilemiyor. Apple ile giriş yapabilir veya daha sonra tekrar deneyebilirsin."
-            case "weak_password": text = "Daha güçlü bir şifre seç. En az 8 karakter kullan."
-            case "signup_disabled": text = "Yeni hesap oluşturma şu anda kapalı. Mevcut hesabınla giriş yap."
-            case "over_email_send_rate_limit", "over_request_rate_limit": text = "Çok fazla deneme yapıldı. Biraz sonra tekrar dene."
-            default: text = code == 429 ? "Çok fazla deneme yapıldı. Biraz sonra tekrar dene." : "Giriş tamamlanamadı. İnternet bağlantını kontrol edip tekrar dene."
+            case "invalid_credentials": text = L("E-posta veya şifre doğru değil. Şifreni yenileyebilir ya da yeni hesap oluşturabilirsin.")
+            case "email_not_confirmed": text = L("Önce e-postana gelen doğrulama bağlantısını aç, ardından giriş yap.")
+            case "email_address_invalid", "validation_failed": text = L("Geçerli bir e-posta adresi gir.")
+            case "email_address_not_authorized", "email_send_failed": text = L("Doğrulama e-postası şu anda gönderilemiyor. Apple ile giriş yapabilir veya daha sonra tekrar deneyebilirsin.")
+            case "weak_password": text = L("Daha güçlü bir şifre seç. En az 8 karakter kullan.")
+            case "signup_disabled": text = L("Yeni hesap oluşturma şu anda kapalı. Mevcut hesabınla giriş yap.")
+            case "over_email_send_rate_limit", "over_request_rate_limit": text = L("Çok fazla deneme yapıldı. Biraz sonra tekrar dene.")
+            default: text = code == 429 ? L("Çok fazla deneme yapıldı. Biraz sonra tekrar dene.") : L("Giriş tamamlanamadı. İnternet bağlantını kontrol edip tekrar dene.")
             }
             throw NSError(domain: "CafeAuth", code: code, userInfo: [NSLocalizedDescriptionKey: text])
         }
@@ -246,24 +311,25 @@ private enum AccountKeychain {
         do {
             // Server refresh validates the session; a local token never unlocks the game by itself.
             try accept(try await request("token?grant_type=refresh_token", body: ["refresh_token": saved.refresh_token]))
-        } catch { session = nil; message = "Oturum doğrulanamadı. İnternetini kontrol edip yeniden giriş yap." }
+        } catch { session = nil; message = L("Oturum doğrulanamadı. İnternetini kontrol edip yeniden giriş yap.") }
     }
     func password(email: String, password: String, username: String, register: Bool) async {
         guard !busy else { return }; busy = true; message = ""; confirmationEmail = nil; defer { finishRequest() }
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard address.contains("@"), address.split(separator: "@").count == 2,
-              !address.contains(" "), address.split(separator: "@").last?.contains(".") == true else { message = "Geçerli bir e-posta adresi gir."; return }
+              !address.contains(" "), address.split(separator: "@").last?.contains(".") == true else { message = L("Geçerli bir e-posta adresi gir."); return }
+        if !register && password.isEmpty { message = L("Şifreni gir."); return }
         do {
             if register {
                 guard username.trimmingCharacters(in: .whitespacesAndNewlines).count >= 3, password.count >= 8 else {
-                    message = "Kullanıcı adı en az 3, şifre en az 8 karakter olmalı."; return
+                    message = L("Kullanıcı adı en az 3, şifre en az 8 karakter olmalı."); return
                 }
                 var bytes = [UInt8](repeating: 0, count: 32)
                 guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw URLError(.unknown) }
                 let verifier = Data(bytes).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
                 let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
                 _ = try AccountKeychain.verifier(verifier)
-                let response = try await request("signup?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": email.trimmingCharacters(in: .whitespacesAndNewlines), "password": password, "data": ["username": username], "code_challenge": challenge, "code_challenge_method": "s256"])
+                let response = try await request("signup?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": email.trimmingCharacters(in: .whitespacesAndNewlines), "password": password, "data": ["username": username.trimmingCharacters(in: .whitespacesAndNewlines)], "code_challenge": challenge, "code_challenge_method": "s256"])
                 if (try? JSONDecoder().decode(CafeSession.self, from: response)) != nil {
                     try accept(response)
                 } else {
@@ -271,10 +337,10 @@ private enum AccountKeychain {
                     let user = payload?["user"] as? [String: Any] ?? payload
                     if let identities = user?["identities"] as? [Any], identities.isEmpty {
                         confirmationEmail = nil
-                        message = "Bu adresle zaten hesabın varsa giriş yap veya Şifremi unuttum seçeneğini kullan."
+                        message = L("Bu adresle zaten hesabın varsa giriş yap veya Şifremi unuttum seçeneğini kullan.")
                     } else {
                         confirmationEmail = address
-                        message = "Doğrulama bağlantısını " + address + " adresinde kontrol et. Bağlantıyı açtıktan sonra giriş yap."
+                        message = L("Doğrulama bağlantısını ") + address + L(" adresinde kontrol et. Bağlantıyı açtıktan sonra giriş yap.")
                     }
                 }
             } else {
@@ -285,23 +351,23 @@ private enum AccountKeychain {
     func sendPasswordReset(email: String) async {
         guard !busy else { return }
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard address.contains("@"), address.contains(".") else { message = "Geçerli bir e-posta adresi gir."; return }
+        guard address.contains("@"), address.contains(".") else { message = L("Geçerli bir e-posta adresi gir."); return }
         busy = true; defer { finishRequest() }
         do {
             _ = try await request("recover?redirect_to=cafeverse%3A%2F%2Fauth-callback", body: ["email": address])
             recoveryRequested = true
-            message = "Bu adres kayıtlıysa şifre yenileme bağlantısı gönderildi. E-postanı kontrol et."
+            message = L("Bu adres kayıtlıysa şifre yenileme bağlantısı gönderildi. E-postanı kontrol et.")
         } catch { message = error.localizedDescription }
     }
     func changePassword(_ password: String) async {
         guard !busy, awaitingNewPassword, let token = recoveryAccessToken else { return }
-        guard password.count >= 8 else { message = "Yeni şifre en az 8 karakter olmalı."; return }
+        guard password.count >= 8 else { message = L("Yeni şifre en az 8 karakter olmalı."); return }
         busy = true; defer { finishRequest() }
         do {
             _ = try await request("user", body: ["password": password], token: token, method: "PUT")
             awaitingNewPassword = false; recoveryAccessToken = nil; recoveryRequested = false
             session = nil; AccountKeychain.clear()
-            message = "Şifren değiştirildi. Yeni şifrenle giriş yap."
+            message = L("Şifren değiştirildi. Yeni şifrenle giriş yap.")
         } catch { message = error.localizedDescription }
     }
     func cancelPasswordRecovery() {
@@ -316,7 +382,7 @@ private enum AccountKeychain {
            parts.queryItems?.first(where: { $0.name == "type" })?.value == "recovery",
            let token = parts.queryItems?.first(where: { $0.name == "access_token" })?.value, !token.isEmpty {
             recoveryAccessToken = token; awaitingNewPassword = true
-            message = "Yeni şifreni belirle."; return
+            message = L("Yeni şifreni belirle."); return
         }
         // Token-hash recovery links are supported when the Supabase email template uses token_hash.
         if let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
@@ -328,14 +394,14 @@ private enum AccountKeychain {
                 let response = try JSONSerialization.jsonObject(with: data) as? [String: Any]
                 guard let token = response?["access_token"] as? String else { throw URLError(.badServerResponse) }
                 recoveryAccessToken = token; awaitingNewPassword = true
-                message = "Yeni şifreni belirle."
-            } catch { message = "Şifre yenileme bağlantısı geçersiz veya süresi dolmuş." }
+                message = L("Yeni şifreni belirle.")
+            } catch { message = L("Şifre yenileme bağlantısı geçersiz veya süresi dolmuş.") }
             return
         }
         guard url.scheme == "cafeverse", url.host == "auth-callback", !busy else { return }
         guard let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "code" })?.value,
               let verifier = try? AccountKeychain.verifier() else {
-            message = "E-posta doğrulamasından sonra e-posta ve şifrenle giriş yap."; return
+            message = L("E-posta doğrulamasından sonra e-posta ve şifrenle giriş yap."); return
         }
         busy = true; defer { finishRequest() }
         do {
@@ -346,15 +412,15 @@ private enum AccountKeychain {
                 recoveryAccessToken = candidate.access_token
                 awaitingNewPassword = true
                 recoveryRequested = false
-                message = "Yeni şifreni belirle."
+                message = L("Yeni şifreni belirle.")
             } else { try accept(data) }
         }
-        catch { message = "Doğrulama bağlantısı kullanılamadı. E-posta ve şifrenle giriş yap." }
+        catch { message = L("Doğrulama bağlantısı kullanılamadı. E-posta ve şifrenle giriş yap.") }
     }
     func prepareApple(_ request: ASAuthorizationAppleIDRequest) {
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
-            pendingNonce = nil; message = "Güvenli giriş başlatılamadı."; return
+            pendingNonce = nil; message = L("Güvenli giriş başlatılamadı."); return
         }
         let nonce = Data(bytes).base64EncodedString(); pendingNonce = nonce
         request.nonce = SHA256.hash(data: Data(nonce.utf8)).map { String(format: "%02x", $0) }.joined()
@@ -370,10 +436,11 @@ private enum AccountKeychain {
             try accept(try await request("token?grant_type=id_token", body: ["provider": "apple", "id_token": idToken, "nonce": nonce]))
         } catch {
             if let apple = error as? ASAuthorizationError, apple.code == .canceled { return }
+            if (error as NSError).domain == "CafeAuth" { message = error.localizedDescription; return }
             #if targetEnvironment(simulator)
-            message = "Apple girişi tamamlanamadı. Simülatörün Ayarlar uygulamasında Apple hesabına giriş yap veya e-posta ile devam et."
+            message = L("Apple girişi tamamlanamadı. Simülatörün Ayarlar uygulamasında Apple hesabına giriş yap veya e-posta ile devam et.")
             #else
-            message = "Apple girişi tamamlanamadı. Apple hesabını ve internet bağlantını kontrol edip tekrar dene."
+            message = L("Apple girişi tamamlanamadı. Apple hesabını ve internet bağlantını kontrol edip tekrar dene.")
             #endif
         }
     }
@@ -385,6 +452,7 @@ private enum AccountKeychain {
 }
 
 private struct AccountGate: View {
+    @AppStorage("cafeverse.language") private var selectedLanguage = "tr"
     @StateObject private var auth = CafeAuth()
     @State private var email = ""
     @State private var password = ""
@@ -394,7 +462,7 @@ private struct AccountGate: View {
     @State private var showPassword = false
     private let ink = Color(red: 0.29, green: 0.10, blue: 0.31)
     private let pink = Color(red: 0.86, green: 0.10, blue: 0.55)
-    private var title: String { auth.awaitingNewPassword ? "Yeni şifren" : forgotPassword ? "Şifreni yenile" : register ? "Kafeni oluşturalım" : "Kafene hoş geldin!" }
+    private var title: String { auth.awaitingNewPassword ? L("Yeni şifren") : forgotPassword ? L("Şifreni yenile") : register ? L("Kafeni oluşturalım") : L("Kafene hoş geldin!") }
     private var hero: UIImage? {
         guard let url = Bundle.main.url(forResource: "cafe-interior", withExtension: "png", subdirectory: "Web/assets") else { return nil }
         return UIImage(contentsOfFile: url.path)
@@ -418,36 +486,36 @@ private struct AccountGate: View {
                             if let hero { Image(uiImage: hero).resizable().scaledToFill().frame(height: 205).clipped() }
                             else { LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing).frame(height: 205) }
                             LinearGradient(colors: [.clear, Color.black.opacity(0.35)], startPoint: .center, endPoint: .bottom)
-                            Text("Küçük bir kafe, kocaman bir dünya.").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white).shadow(radius: 3).padding(20)
+                            Text(L("Küçük bir kafe, kocaman bir dünya.")).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white).shadow(radius: 3).padding(20)
                         }.frame(height: 205).accessibilityLabel("Cafeverse OOPS Café")
                         VStack(spacing: 18) {
                             VStack(spacing: 7) {
-                                Text(title).font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(ink)
-                                Text(auth.awaitingNewPassword ? "En az 8 karakterle güvenli bir şifre belirle." : forgotPassword ? "Hesabına dönmen için sana bir bağlantı gönderelim." : register ? "Bir hesap oluştur, kafenle yolculuğa başla." : "Siparişlerin ve tatlı dostların seni bekliyor.")
+                                HStack { Text(title); Spacer(); Button(selectedLanguage == "en" ? "Türkçe" : "English") { selectedLanguage = selectedLanguage == "en" ? "tr" : "en"; auth.message = "" }.font(.system(size: 15, weight: .bold)) }.font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(ink)
+                                Text(auth.awaitingNewPassword ? L("En az 8 karakterle güvenli bir şifre belirle.") : forgotPassword ? L("Hesabına dönmen için sana bir bağlantı gönderelim.") : register ? L("Bir hesap oluştur, kafenle yolculuğa başla.") : L("Siparişlerin ve tatlı dostların seni bekliyor."))
                                     .font(.system(size: 16)).foregroundStyle(ink.opacity(0.75)).multilineTextAlignment(.center)
                             }
                             if !forgotPassword && !auth.awaitingNewPassword {
-                                Picker("Hesap işlemi", selection: $register) {
-                                    Text("Giriş yap").tag(false); Text("Hesap oluştur").tag(true)
+                                Picker(L("Hesap işlemi"), selection: $register) {
+                                    Text(L("Giriş yap")).tag(false); Text(L("Hesap oluştur")).tag(true)
                                 }.pickerStyle(.segmented).onChange(of: register) { _ in password = ""; auth.message = ""; auth.confirmationEmail = nil }
                             }
                             if register && !forgotPassword && !auth.awaitingNewPassword {
-                                entry("person") { TextField("Kullanıcı adı", text: $username).textContentType(.username).textInputAutocapitalization(.never).autocorrectionDisabled() }
+                                entry("person") { TextField(L("Kullanıcı adı"), text: $username).textContentType(.username).textInputAutocapitalization(.never).autocorrectionDisabled() }
                             }
                             if !auth.awaitingNewPassword {
-                                entry("envelope") { TextField("E-posta", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("login-email") }
+                                entry("envelope") { TextField(L("E-posta"), text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("login-email") }
                             }
                             if !forgotPassword || auth.awaitingNewPassword {
                                 entry("lock") {
                                     Group {
-                                        if showPassword { TextField(auth.awaitingNewPassword ? "Yeni şifre" : "Şifre", text: $password) }
-                                        else { SecureField(auth.awaitingNewPassword ? "Yeni şifre" : "Şifre", text: $password) }
+                                        if showPassword { TextField(auth.awaitingNewPassword ? L("Yeni şifre") : L("Şifre"), text: $password) }
+                                        else { SecureField(auth.awaitingNewPassword ? L("Yeni şifre") : L("Şifre"), text: $password) }
                                     }.textContentType(register || auth.awaitingNewPassword ? .newPassword : .password).textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("login-password")
-                                    Button { showPassword.toggle() } label: { Image(systemName: showPassword ? "eye.slash" : "eye").foregroundStyle(ink.opacity(0.65)) }.accessibilityLabel(showPassword ? "Şifreyi gizle" : "Şifreyi göster")
+                                    Button { showPassword.toggle() } label: { Image(systemName: showPassword ? "eye.slash" : "eye").foregroundStyle(ink.opacity(0.65)) }.accessibilityLabel(showPassword ? L("Şifreyi gizle") : L("Şifreyi göster"))
                                 }
                             }
                             if !register && !forgotPassword && !auth.awaitingNewPassword {
-                                HStack { Spacer(); Button("Şifremi unuttum") { forgotPassword = true; auth.message = "" }.font(.system(size: 16, weight: .semibold)).foregroundStyle(pink) }
+                                HStack { Spacer(); Button(L("Şifremi unuttum")) { forgotPassword = true; auth.message = "" }.font(.system(size: 16, weight: .semibold)).foregroundStyle(pink) }
                             }
                             if !auth.message.isEmpty {
                                 Label(auth.message, systemImage: auth.confirmationEmail == nil ? "info.circle" : "envelope.badge")
@@ -464,7 +532,7 @@ private struct AccountGate: View {
                             } label: {
                                 HStack(spacing: 10) {
                                     if auth.busy { ProgressView().tint(.white) }
-                                    Text(auth.busy ? "Bir saniye…" : auth.awaitingNewPassword ? "Şifreyi kaydet" : forgotPassword ? "Yenileme bağlantısı gönder" : register ? "Kafemi oluştur" : "Kafeme gir")
+                                    Text(auth.busy ? L("Bir saniye…") : auth.awaitingNewPassword ? L("Şifreyi kaydet") : forgotPassword ? L("Yenileme bağlantısı gönder") : register ? L("Kafemi oluştur") : L("Kafeme gir"))
                                         .font(.system(size: 20, weight: .bold, design: .rounded))
                                     if !auth.busy { Image(systemName: "arrow.right") }
                                 }.foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 17)
@@ -472,18 +540,25 @@ private struct AccountGate: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 18)).shadow(color: pink.opacity(0.22), radius: 8, y: 4)
                             }.accessibilityIdentifier("login-submit")
                             if !forgotPassword && !auth.awaitingNewPassword {
-                                HStack { Rectangle().frame(height: 1); Text("veya").font(.system(size: 15)); Rectangle().frame(height: 1) }.foregroundStyle(ink.opacity(0.3))
+                                HStack { Rectangle().frame(height: 1); Text(L("veya")).font(.system(size: 15)); Rectangle().frame(height: 1) }.foregroundStyle(ink.opacity(0.3))
                                 SignInWithAppleButton(.signIn, onRequest: auth.prepareApple) { result in
                                     Task { await auth.completeApple(result) }
-                                }.signInWithAppleButtonStyle(.black).frame(height: 54).clipShape(RoundedRectangle(cornerRadius: 14))
+                                }.signInWithAppleButtonStyle(.black).frame(height: 54)
+                                    .overlay {
+                                        HStack(spacing: 9) {
+                                            Image(systemName: "apple.logo").font(.system(size: 22))
+                                            Text(selectedLanguage == "en" ? "Sign in with Apple" : "Apple ile Giriş Yap").font(.system(size: 19, weight: .medium))
+                                        }.foregroundStyle(.white).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color.black).allowsHitTesting(false).accessibilityHidden(true)
+                                    }.accessibilityLabel(selectedLanguage == "en" ? "Sign in with Apple" : "Apple ile Giriş Yap")
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                             if auth.awaitingNewPassword {
-                                Button("Şifre yenilemeyi iptal et") { auth.cancelPasswordRecovery(); password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
+                                Button(L("Şifre yenilemeyi iptal et")) { auth.cancelPasswordRecovery(); password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
                             }
                             if forgotPassword {
-                                Button("Giriş ekranına dön") { forgotPassword = false; auth.message = ""; password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
+                                Button(L("Giriş ekranına dön")) { forgotPassword = false; auth.message = ""; password = "" }.font(.system(size: 17, weight: .semibold)).foregroundStyle(pink)
                             }
-                            Text("Kafeni hesabınla koru, kaldığın yerden devam et.").font(.system(size: 14)).foregroundStyle(ink.opacity(0.6)).multilineTextAlignment(.center)
+                            Text(L("Kafeni hesabınla koru, kaldığın yerden devam et.")).font(.system(size: 14)).foregroundStyle(ink.opacity(0.6)).multilineTextAlignment(.center)
                         }.padding(24).frame(maxWidth: 480).frame(maxWidth: .infinity)
                             .disabled(auth.busy)
                     }.frame(maxWidth: 640).frame(maxWidth: .infinity)
@@ -493,11 +568,122 @@ private struct AccountGate: View {
     }
 }
 
+// Device-local audio preference math is shared by native tests and playback.
+private struct CafeAudioSettings {
+    var master: Float = 0.7
+    var music: Float = 0.35
+    var effects: Float = 0.5
+    var muted = false
+    static func clamp(_ value: Any?, fallback: Float) -> Float {
+        guard let n = value as? NSNumber, n.doubleValue.isFinite else { return fallback }
+        return min(1, max(0, n.floatValue))
+    }
+    mutating func update(_ body: [String: Any]) {
+        master = Self.clamp(body["master"], fallback: master)
+        music = Self.clamp(body["music"], fallback: music)
+        effects = Self.clamp(body["effects"], fallback: effects)
+        if let value = body["muted"] as? Bool { muted = value }
+    }
+    var musicGain: Float { muted ? 0 : master * music }
+    var effectsGain: Float { muted ? 0 : master * effects }
+    var payload: [String: Any] { ["master": master, "music": music, "effects": effects, "muted": muted] }
+}
+
+@MainActor private final class CafeAudio {
+    private(set) var settings = CafeAudioSettings()
+    private var player: AVAudioPlayer?
+    private var effects: [AVAudioPlayer] = []
+    private var observers: [NSObjectProtocol] = []
+    private var wantsMusic = false
+    private var background = false
+    private var interrupted = false
+    private var routePaused = false
+    private var configured: Bool { UserDefaults.standard.object(forKey: "cafeverse.audio.v1") != nil }
+    init() {
+        if let saved = UserDefaults.standard.dictionary(forKey: "cafeverse.audio.v1") { settings.update(saved) }
+        let center = NotificationCenter.default
+        observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.background = true; self?.pause() } })
+        observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.background = false; self?.resume() } })
+        observers.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
+            let type = (notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? NSNumber)?.uintValue
+            let options = (notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? NSNumber)?.uintValue ?? 0
+            Task { @MainActor in
+                guard let self else { return }
+                if type == AVAudioSession.InterruptionType.began.rawValue { self.interrupted = true; self.pause() }
+                else { self.interrupted = false; if AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume) { self.resume() } }
+            }
+        })
+        observers.append(center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] notification in
+            let reason = (notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
+            Task { @MainActor in if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue { self?.routePaused = true; self?.pause() } }
+        })
+    }
+    deinit { for observer in observers { NotificationCenter.default.removeObserver(observer) } }
+    private func session() throws {
+        let audio = AVAudioSession.sharedInstance()
+        // Ambient respects Ring/Silent and mixes with other apps. Hardware/Control
+        // Center volume remains entirely under iOS control.
+        try audio.setCategory(.ambient, mode: .default, options: [])
+        try audio.setActive(true)
+    }
+    func handle(_ body: [String: Any]) throws -> [String: Any] {
+        switch body["action"] as? String {
+        case "get": return settings.payload.merging(["configured": configured]) { _, value in value }
+        case "configure":
+            settings.update(body); UserDefaults.standard.set(settings.payload, forKey: "cafeverse.audio.v1")
+            player?.setVolume(settings.musicGain, fadeDuration: 0.05)
+            for effect in effects { effect.volume = settings.effectsGain * 0.3; if settings.effectsGain == 0 { effect.stop() } }
+            if settings.musicGain == 0 { player?.pause() } else { resume() }
+        case "play": wantsMusic = true; routePaused = false; resume()
+        case "pause": pause()
+        case "effect": if let kind = body["kind"] as? String { try effect(kind) }
+        default: throw URLError(.badURL)
+        }
+        return settings.payload
+    }
+    private func resume() {
+        guard wantsMusic, !background, !interrupted, !routePaused, settings.musicGain > 0 else { return }
+        do {
+            try session()
+            if player == nil, let url = Bundle.main.url(forResource: "cafe-verse", withExtension: "m4a", subdirectory: "Web/assets/audio") {
+                player = try AVAudioPlayer(contentsOf: url); player?.numberOfLoops = -1; player?.prepareToPlay()
+            }
+            player?.volume = settings.musicGain
+            if player?.isPlaying == false { player?.play() }
+        } catch { /* Playback failure must not break the game or grant any reward. */ }
+    }
+    private func pause() { player?.pause(); for effect in effects { effect.stop() }; effects.removeAll() }
+    private func effect(_ kind: String) throws {
+        guard !background, !interrupted, settings.effectsGain > 0 else { return }
+        let tones: [String: Double] = ["prepare": 523, "coin": 880, "xp": 659, "trade": 784, "menu": 440]
+        guard let frequency = tones[kind] else { return }
+        effects.removeAll { !$0.isPlaying }; guard effects.count < 3 else { return }
+        try session(); let sound = try AVAudioPlayer(data: Self.tone(frequency))
+        sound.volume = settings.effectsGain * 0.3; effects.append(sound); sound.play()
+    }
+    private static func tone(_ frequency: Double) -> Data {
+        let rate = 22050, count = 3087
+        var samples = Data()
+        for i in 0..<count {
+            let envelope = max(0, 1 - Double(i) / Double(count))
+            var sample = Int16(sin(2 * .pi * frequency * Double(i) / Double(rate)) * envelope * 12000).littleEndian
+            withUnsafeBytes(of: &sample) { samples.append(contentsOf: $0) }
+        }
+        var wav = Data("RIFF".utf8)
+        func number<T: FixedWidthInteger>(_ value: T) { var n = value.littleEndian; withUnsafeBytes(of: &n) { wav.append(contentsOf: $0) } }
+        number(UInt32(36 + samples.count)); wav.append(Data("WAVEfmt ".utf8)); number(UInt32(16)); number(UInt16(1)); number(UInt16(1)); number(UInt32(rate)); number(UInt32(rate * 2)); number(UInt16(2)); number(UInt16(16)); wav.append(Data("data".utf8)); number(UInt32(samples.count)); wav.append(samples); return wav
+    }
+}
+
 // Consumable delivery is persisted by the game before the transaction is finished.
 @MainActor private final class CafeStore {
     static let amounts = ["com.cafeverse.oopscafe.coins250": 250, "com.cafeverse.oopscafe.coins750": 750, "com.cafeverse.oopscafe.coins2000": 2000]
     let account: UUID?
     private var transactions: [String: StoreKit.Transaction] = [:]
+    private var signedTransactions: [String: String] = [:]
+    private var finishedTransactions: Set<String> = []
+    private var deliveredTransactions: Set<String> = []
+    func confirmDelivery(_ id: String) { deliveredTransactions.insert(id) }
     private var purchaseBusy = false
     private var updates: Task<Void, Never>?
     var onUpdate: (() -> Void)?
@@ -506,8 +692,9 @@ private struct AccountGate: View {
         updates = Task { [weak self] in
             for await result in StoreKit.Transaction.updates {
                 guard let self else { return }
-                if let transaction = try? self.verified(result) {
+                if let transaction = try? self.verified(result), !self.finishedTransactions.contains(String(transaction.id)) {
                     self.transactions[String(transaction.id)] = transaction
+                    self.signedTransactions[String(transaction.id)] = result.jwsRepresentation
                     self.onUpdate?()
                 }
             }
@@ -523,13 +710,14 @@ private struct AccountGate: View {
               transaction.revocationDate == nil,
               transaction.purchasedQuantity == 1,
               Self.amounts[transaction.productID] != nil else {
-            throw problem("Satın alma Apple tarafından bu hesap için doğrulanamadı.")
+            throw problem(L("Satın alma Apple tarafından bu hesap için doğrulanamadı."))
         }
         return transaction
     }
     private func payload(_ transaction: StoreKit.Transaction) -> [String: Any] {
         ["transactionID": String(transaction.id), "productID": transaction.productID,
-         "coins": Self.amounts[transaction.productID]!, "environment": transaction.environment.rawValue]
+         "coins": Self.amounts[transaction.productID]!, "environment": transaction.environment.rawValue,
+         "originalTransactionID": String(transaction.originalID), "signedTransaction": signedTransactions[String(transaction.id)] ?? ""]
     }
     func handle(_ body: [String: Any]) async throws -> [String: Any] {
         switch body["action"] as? String {
@@ -539,33 +727,297 @@ private struct AccountGate: View {
                 ["id": $0.id, "coins": Self.amounts[$0.id]!, "name": $0.displayName, "price": $0.displayPrice] as [String: Any]
             }, "canPay": AppStore.canMakePayments]
         case "purchase":
-            guard !purchaseBusy else { throw problem("Önce devam eden satın almayı tamamla.") }
-            guard AppStore.canMakePayments else { throw problem("Bu cihazda satın alma kapalı.") }
-            guard let account, let id = body["productID"] as? String, Self.amounts[id] != nil else { throw problem("Ürün veya hesap geçersiz.") }
+            guard (Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String)?.hasPrefix("https://") == true else { throw problem("Satın alma sunucusu henüz hazır değil.") }
+            guard !purchaseBusy else { throw problem(L("Önce devam eden satın almayı tamamla.")) }
+            guard AppStore.canMakePayments else { throw problem(L("Bu cihazda satın alma kapalı.")) }
+            guard let account, let id = body["productID"] as? String, Self.amounts[id] != nil else { throw problem(L("Ürün veya hesap geçersiz.")) }
             purchaseBusy = true; defer { purchaseBusy = false }
             guard let product = try await Product.products(for: [id]).first, product.type == .consumable else {
-                throw problem("Ürün App Store'da henüz kullanıma açık değil.")
+                throw problem(L("Ürün App Store'da henüz kullanıma açık değil."))
             }
             switch try await product.purchase(options: [.appAccountToken(account)]) {
             case .success(let result):
                 let transaction = try verified(result)
                 transactions[String(transaction.id)] = transaction
+                signedTransactions[String(transaction.id)] = result.jwsRepresentation
                 return ["status": "purchased", "transaction": payload(transaction)]
             case .pending: return ["status": "pending"]
             case .userCancelled: return ["status": "cancelled"]
-            @unknown default: throw problem("Satın alma sonucu alınamadı.")
+            @unknown default: throw problem(L("Satın alma sonucu alınamadı."))
             }
         case "pending":
             for await result in StoreKit.Transaction.unfinished {
-                if let transaction = try? verified(result) { transactions[String(transaction.id)] = transaction }
+                if let transaction = try? verified(result), !finishedTransactions.contains(String(transaction.id)) { transactions[String(transaction.id)] = transaction; signedTransactions[String(transaction.id)] = result.jwsRepresentation }
             }
             return ["transactions": transactions.values.map(payload)]
         case "finish":
-            guard let id = body["transactionID"] as? String, let transaction = transactions[id] else { throw problem("Teslim bekleyen işlem bulunamadı.") }
+            guard let id = body["transactionID"] as? String else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
+            if finishedTransactions.contains(id) { return ["finished": true] }
+            guard deliveredTransactions.contains(id), let transaction = transactions[id] else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
             // Called only after the bundled game confirms its durable, idempotent credit.
-            await transaction.finish(); transactions.removeValue(forKey: id)
+            await transaction.finish(); finishedTransactions.insert(id); transactions.removeValue(forKey: id); signedTransactions.removeValue(forKey: id)
             return ["finished": true]
-        default: throw problem("Desteklenmeyen mağaza işlemi.")
+        default: throw problem(L("Desteklenmeyen mağaza işlemi."))
         }
     }
+}
+
+
+private let cafeEnglish: [String: String] = [
+    "Şifreni gir.": "Enter your password.",
+    "Dil seç": "Choose your language",
+    "Dil / Language": "Language / Dil",
+    "Dili değiştir": "Change language",
+    "Türkçe": "Türkçe",
+    "English": "English",
+    "Kapat": "Close",
+    "Devam et": "Continue",
+    "Ayarlar": "Settings",
+    "Ses açık": "Sound on",
+    "Ses kapalı": "Sound off",
+    "Kafem": "My café",
+    "Tarifler": "Recipes",
+    "Gardırop": "Wardrobe",
+    "Dekorasyon ve petler": "Decor and pets",
+    "Dekor ve petler": "Decor and pets",
+    "Dekorasyon": "Decoration",
+    "Dekor": "Decor",
+    "Oyuncular": "Players",
+    "Takas": "Trade",
+    "Kapıya çık": "Go outside",
+    "Dünyalar": "Worlds",
+    "Koleksiyon": "Collection",
+    "Kafeyi büyüt": "Expand café",
+    "Menü": "Menu",
+    "Görevler": "Quests",
+    "Geliştir": "Upgrade",
+    "Karakter": "Character",
+    "Coin mağazası": "Coin shop",
+    "Hesap / çıkış": "Account / sign out",
+    "Kafeye geç": "Enter café",
+    "Kafeme dön": "Return to café",
+    "Kafeye dön": "Return to café",
+    "Kafe menüsünü aç": "Open café menu",
+    "Oyun menüsünü aç": "Open game menu",
+    "Kafe araçları": "Café tools",
+    "OOPS! CAFÉ · CANLI KAFE": "OOPS! CAFÉ · LIVE CAFÉ",
+    "BİRLİKTE MASA SERVİSİ": "SERVE THE WHOLE TABLE",
+    "PAKET SERVİS": "TAKEAWAY",
+    "Paket siparişi": "Takeaway order",
+    "Paket": "Takeaway",
+    "Masa": "Table",
+    "Giriş": "Entrance",
+    "Seviye": "Level",
+    "misafir bekliyor": "guests waiting",
+    "misafir": "guests",
+    "masa": "tables",
+    "koltuk": "seats",
+    "kişilik": "seats",
+    "hazır": "ready",
+    "Melo çalışıyor…": "Melo is working…",
+    "Makine çalışıyor": "Blender is running",
+    "Melo yolda": "Melo is on the way",
+    "Kafen yaşıyor": "Your café is alive",
+    "Masaya servis et": "Serve the table",
+    "Paketi teslim et": "Hand over takeaway",
+    "Siparişi hazırla": "Prepare the order",
+    "Misafirleri masaya al": "Welcome the guests",
+    "Paket siparişi al": "Take a takeaway order",
+    "Müşteri çağır": "Call guests",
+    "Servise hazır": "Ready to serve",
+    "Afiyet olsun!": "Enjoy!",
+    "Harika servis!": "Wonderful service!",
+    "Geliştirmeyi kapat": "Close upgrades",
+    "Kafeni büyüt": "Grow your café",
+    "Kafene yeni kapasite ekler.": "Adds more room to your café.",
+    "Hazırlamayı hızlandırır.": "Speeds up preparation.",
+    "Yerleştir": "Place it",
+    "Yeni eşyan kafenin içine yerleşti!": "Your new item is now in your café!",
+    "Bir masaya dokun, misafirlerini karşıla.": "Tap a table to welcome your guests.",
+    "Misafirlerini karşıla.": "Welcome your guests.",
+    "Siparişleri aynı tepside birlikte teslim et.": "Serve the whole order together on one tray.",
+    "Kapıdan yeni müşteri çağır.": "Call new guests from the doorway.",
+    "Önce bekleyen siparişleri servis et.": "Serve the waiting orders first.",
+    "Misafirlerin masadan ayrılıyor.": "Your guests are leaving the table.",
+    "Melo bütün ürünleri tepsiye alıyor.": "Melo is collecting the whole order.",
+    "Misafirler mutlu! Birlikte servis edildi.": "Happy guests! The whole order was served.",
+    "Misafirlerin teşekkür edip kapıya yürüyor.": "Your guests thank you and walk to the door.",
+    "Yeni geliştirmeler açıldı.": "New upgrades unlocked.",
+    "Hazırlık tamamlanamadı; yeniden dene.": "Preparation failed. Please try again.",
+    "Servis tamamlanamadı; yeniden dene.": "Serving failed. Please try again.",
+    "Satın alma tamamlanamadı.": "Purchase could not be completed.",
+    "Üç kez seslen; kafenin önüne yeni misafirler gelsin.": "Call three times to attract new guests.",
+    "Gel gel! Taptaze kahve var!": "Come come! Fresh coffee is ready!",
+    "Gel gel!": "Come come!",
+    "Çilekli Frappé": "Strawberry Frappé",
+    "Bulut Frappé": "Cloud Frappé",
+    "Galaksi Mocha": "Galaxy Mocha",
+    "Gökkuşağı Latte": "Rainbow Latte",
+    "Yıldız Çikolata": "Star Chocolate",
+    "Pembe Mocha": "Pink Mocha",
+    "Vanilyalı Latte": "Vanilla Latte",
+    "Çilekli Süt": "Strawberry Milk",
+    "Buzlu Espresso": "Iced Espresso",
+    "Kakaolu Milkshake": "Chocolate Milkshake",
+    "Kremalı Mocha": "Creamy Mocha",
+    "Yıldızlı Süt": "Star Milk",
+    "Ananaslı Smoothie": "Pineapple Smoothie",
+    "Vişneli Jöle": "Cherry Jelly",
+    "Mutsuz Cupcake": "Sad Cupcake",
+    "Ananaslı Frappé": "Pineapple Frappé",
+    "Vişneli Süt": "Cherry Milk",
+    "Yıldızlı Cupcake": "Star Cupcake",
+    "Süt": "Milk",
+    "Kahve": "Coffee",
+    "Çilek": "Strawberry",
+    "Buz": "Ice",
+    "Vanilya": "Vanilla",
+    "Krema": "Cream",
+    "Kakao": "Cocoa",
+    "Yıldız tozu": "Stardust",
+    "Renkli şurup": "Rainbow syrup",
+    "Meyveli": "Fruity",
+    "Sütlü": "Milky",
+    "Kahveli": "Coffee",
+    "Çikolatalı": "Chocolate",
+    "Sihirli": "Magical",
+    "İkinci masa": "Second table",
+    "Üçüncü masa": "Third table",
+    "Dördüncü masa": "Fourth table",
+    "Espresso makinesi II": "Espresso machine II",
+    "Geniş servis tezgâhı": "Wide serving counter",
+    "Kafe genişletme": "Café expansion",
+    "Blender II": "Blender II",
+    "Alındı ✓": "Owned ✓",
+    "Satın al": "Buy",
+    "Kafede ✓": "In your café ✓",
+    "Depo": "Pantry",
+    "Tarif": "Recipe",
+    "Malzemeler": "Ingredients",
+    "Malzemeleri seç": "Choose ingredients",
+    "Karıştır!": "Blend!",
+    "Servis Et!": "Serve!",
+    "Servis et": "Serve",
+    "Sipariş Hazır!": "Order ready!",
+    "Sipariş hazır!": "Order ready!",
+    "Karıştırılıyor…": "Blending…",
+    "Tepsiye ekle": "Add to tray",
+    "Sıradaki misafir": "Next guest",
+    "Ödülünü al": "Claim reward",
+    "Devam Et": "Continue",
+    "Saksı bitkisi": "Potted plant",
+    "Bahar çiçekleri": "Spring flowers",
+    "Uykucu kedi": "Sleepy cat",
+    "Masal mantarı": "Fairy mushroom",
+    "Pirana": "Piranha",
+    "Canlı ananas": "Living pineapple",
+    "Mutsuz cupcake": "Sad cupcake",
+    "Vişneli jöle": "Cherry jelly",
+    "Mavi civciv": "Blue chick",
+    "Şef şapkası": "Chef hat",
+    "Pembe önlük": "Pink apron",
+    "Fiyonk": "Bow",
+    "Gözlük": "Glasses",
+    "Yok": "None",
+    "Tak": "Wear",
+    "Çıkar": "Remove",
+    "Giyiliyor": "Wearing",
+    "Giy": "Wear",
+    "Sahipsin": "Owned",
+    "Giriş yap": "Sign in",
+    "Hesap oluştur": "Create account",
+    "Kullanıcı adı": "Username",
+    "E-posta": "Email",
+    "Şifre": "Password",
+    "Yeni şifre": "New password",
+    "Şifremi unuttum": "Forgot password",
+    "Şifreyi yenile": "Reset password",
+    "Girişe dön": "Back to sign in",
+    "İşlem tamamlanamadı.": "Could not complete the request.",
+    "Hesabın kontrol ediliyor…": "Checking your account…",
+    "Şifren yenilendi. Yeni şifrenle giriş yap.": "Password updated. Sign in with your new password.",
+    "Kafe Açık": "Café open",
+    "Kafe açık": "Café open",
+    "Kafeye gir": "Enter café",
+    "Gel gel! Taptaze kahve ve tatlı var!": "Come come! Fresh coffee and treats!",
+    "Çağrı tamamlandı": "Call complete",
+    "Kafe önünde kollarını sallayarak müşteri çağıran iki renkli hava üflemeli balon": "Two colorful inflatable greeters waving outside the café",
+    "Sesli çağrı bu cihazda kullanılamıyor.": "Voice calling is unavailable on this device.",
+    "Tekrar seslen": "Call again",
+    "Kafene dön": "Enter your café",
+    "Müşteriler geliyor!": "Guests are coming!",
+    "Birazdan tekrar çağırabilirsin.": "You can call again shortly.",
+    "Hesabım": "My account",
+    "Çıkış yap": "Sign out",
+    "Kayıtlı": "Saved",
+    "Kaydet": "Save",
+    "İptal": "Cancel",
+    "Tamam": "OK",
+    "Hazırlanıyor…": "Preparing…",
+    "Bağlanıyor…": "Connecting…",
+    "Yükleniyor…": "Loading…",
+    "Ölçü": "Measure",
+    "ölçü": "measure",
+    "jeton": "coins",
+    "müşteri": "guests",
+    "ürün": "items",
+    "sipariş": "order",
+    "Biraz daha altın için siparişleri tamamla.": "Complete orders to earn more coins.",
+    "Küçük bir kafe, kocaman bir dünya.": "A little café, a whole world.",
+    "Kafene hoş geldin!": "Welcome to your café!",
+    "Kafeni oluşturalım": "Let's create your café",
+    "Yeni şifren": "Your new password",
+    "Şifreni yenile": "Reset your password",
+    "En az 8 karakterle güvenli bir şifre belirle.": "Choose a secure password with at least 8 characters.",
+    "Hesabına dönmen için sana bir bağlantı gönderelim.": "We will send you a link to get back into your account.",
+    "Bir hesap oluştur, kafenle yolculuğa başla.": "Create an account and start your café journey.",
+    "Siparişlerin ve tatlı dostların seni bekliyor.": "Your orders and sweet friends are waiting for you.",
+    "Bir saniye…": "Just a moment…",
+    "Şifreyi kaydet": "Save password",
+    "Yenileme bağlantısı gönder": "Send reset link",
+    "Kafemi oluştur": "Create my café",
+    "Kafeme gir": "Enter my café",
+    "veya": "or",
+    "Şifre yenilemeyi iptal et": "Cancel password reset",
+    "Giriş ekranına dön": "Back to sign in",
+    "Kafeni hesabınla koru, kaldığın yerden devam et.": "Keep your café safe and pick up where you left off.",
+    "Şifreyi gizle": "Hide password",
+    "Şifreyi göster": "Show password",
+    "Kullanıcı adı en az 3, şifre en az 8 karakter olmalı.": "Use at least 3 characters for your username and 8 for your password.",
+    "Geçerli bir e-posta adresi gir.": "Enter a valid email address.",
+    "Yeni şifre en az 8 karakter olmalı.": "Your new password must have at least 8 characters.",
+    "Yeni şifreni belirle.": "Choose your new password.",
+    "Şifren değiştirildi. Yeni şifrenle giriş yap.": "Password updated. Sign in with your new password.",
+    "Bu adres kayıtlıysa şifre yenileme bağlantısı gönderildi. E-postanı kontrol et.": "If this email is registered, a reset link has been sent. Check your inbox.",
+    "Giriş tamamlanamadı. İnternet bağlantını kontrol edip tekrar dene.": "Sign-in failed. Check your internet connection and try again.",
+    "E-posta veya şifre doğru değil. Şifreni yenileyebilir ya da yeni hesap oluşturabilirsin.": "Incorrect email or password. Reset your password or create an account.",
+    "Çok fazla deneme yapıldı. Biraz sonra tekrar dene.": "Too many attempts. Please try again later.",
+    "Önce e-postana gelen doğrulama bağlantısını aç, ardından giriş yap.": "Open the verification link in your email, then sign in.",
+    "E-posta doğrulamasından sonra e-posta ve şifrenle giriş yap.": "After verifying your email, sign in with your email and password.",
+    "Bu adresle zaten hesabın varsa giriş yap veya Şifremi unuttum seçeneğini kullan.": "If you already have an account, sign in or use Forgot password.",
+    "Doğrulama e-postası şu anda gönderilemiyor. Apple ile giriş yapabilir veya daha sonra tekrar deneyebilirsin.": "Verification email is unavailable. Sign in with Apple or try again later.",
+    "Yeni hesap oluşturma şu anda kapalı. Mevcut hesabınla giriş yap.": "Registration is currently closed. Sign in with your existing account.",
+    "Şifre yenileme bağlantısı geçersiz veya süresi dolmuş.": "The reset link is invalid or has expired.",
+    "Doğrulama bağlantısı kullanılamadı. E-posta ve şifrenle giriş yap.": "The verification link could not be used. Sign in with your email and password.",
+    "Doğrulama bağlantısını ": "Check the verification link at ",
+    " adresinde kontrol et. Bağlantıyı açtıktan sonra giriş yap.": ". Open the link, then sign in.",
+    "Apple girişi tamamlanamadı. Apple hesabını ve internet bağlantını kontrol edip tekrar dene.": "Apple sign-in failed. Check your Apple Account and internet connection, then try again.",
+    "Apple girişi tamamlanamadı. Simülatörün Ayarlar uygulamasında Apple hesabına giriş yap veya e-posta ile devam et.": "Apple sign-in failed. Sign in to your Apple Account in Simulator Settings, or continue with email.",
+    "Oturum doğrulanamadı. İnternetini kontrol edip yeniden giriş yap.": "Your session could not be verified. Check your connection and sign in again.",
+    "Güvenli giriş başlatılamadı.": "Secure sign-in could not be started.",
+    "Daha güçlü bir şifre seç. En az 8 karakter kullan.": "Choose a stronger password with at least 8 characters.",
+    "Bu cihazda satın alma kapalı.": "Purchases are disabled on this device.",
+    "Desteklenmeyen mağaza işlemi.": "Unsupported store operation.",
+    "Satın alma Apple tarafından bu hesap için doğrulanamadı.": "Apple could not verify this purchase for your account.",
+    "Satın alma sonucu alınamadı.": "Could not retrieve the purchase result.",
+    "Teslim bekleyen işlem bulunamadı.": "No pending transaction was found.",
+    "Önce devam eden satın almayı tamamla.": "Complete the current purchase first.",
+    "Ürün App Store'da henüz kullanıma açık değil.": "This product is not yet available on the App Store.",
+    "Ürün veya hesap geçersiz.": "Invalid product or account.",
+    "Gerçek hesap sunucusunun bağlantısı henüz yapılandırılmadı.": "The account server has not been configured.",
+    "Hesap işlemi": "Account request"
+]
+private func L(_ text: String, language: String = UserDefaults.standard.string(forKey: "cafeverse.language") ?? "tr") -> String {
+    guard language == "en" else { return text }
+    return cafeEnglish[text] ?? text
 }

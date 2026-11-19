@@ -1,11 +1,21 @@
 {
   "name": "cafeverse-oops-cafe",
   "private": true,
-  "version": "0.3.7",
+  "version": "0.9.4",
   "type": "module",
   "scripts": {
-    "build": "node tools/build.mjs",
-    "test": "node tools/build.mjs && node tests/offline.mjs && node tests/preparation-controls.mjs && node tests/recipe-catalog.mjs && node tests/store-delivery.mjs && node tests/cloud-save.mjs && node tests/cloud-sync.mjs",
-    "test:auth-routing": "node tools/test-auth-routing.mjs"
+    "build": "node tools/build-server-engine.mjs && node tools/build.mjs",
+    "test": "node tools/build-server-engine.mjs && node tools/build.mjs && node tests/offline.mjs && node tests/preparation-controls.mjs && node tests/recipe-catalog.mjs && node tests/store-delivery.mjs && node tests/cloud-save.mjs && node tests/cloud-sync.mjs && node tests/service-restore.mjs && node tests/service-orders.mjs && node tests/simulation.mjs && node tests/i18n.mjs && node tests/collections.mjs && node tests/store-flow.mjs && node tests/seating.mjs && node tests/upgrades.mjs && node tests/secure-economy.mjs && node tests/apple-signature.mjs && node tests/secure-client.mjs && node tests/audio.mjs && node tests/marketplace.mjs && node tests/release-gates.mjs",
+    "test:auth-routing": "node tools/test-auth-routing.mjs",
+    "server": "node tools/build-server-engine.mjs && node source/server/secure/start.mjs",
+    "preflight": "node tools/release-preflight.mjs",
+    "test:audio-native": "node tools/test-audio-native.mjs"
+  },
+  "dependencies": {
+    "@apple/app-store-server-library": "3.1.0",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16"
   }
 }

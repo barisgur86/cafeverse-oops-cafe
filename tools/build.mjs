@@ -1,14 +1,16 @@
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';
 import {upgrades,recipeLevels} from '../source/server/progression.mjs';
+import {weeklySets,weeklyItems,weeklyOutfits,weeklyDecor} from '../source/server/collections.mjs';
 import {coinPacks} from '../source/server/coin-shop.mjs';
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),publicRoot=path.join(root,'source/public'),web=path.join(root,'iOS/App/Web');
 const api=fs.readFileSync(path.resolve(publicRoot,'../server/game-api.mjs'),'utf8');
 function literal(name){const source=api.match(new RegExp('const '+name+'=(.*?);'))?.[1];if(!source)throw Error('Missing catalog '+name);return new Function('return ('+source+')')()}
-const catalog={ITEMS:literal('ITEMS'),PRICE:literal('PRICE'),FORMULAS:literal('FORMULAS'),NPC:literal('NPC'),outfits:literal('catalog'),decor:literal('prices'),upgrades,recipeLevels,coinPacks};
+const catalog={ITEMS:literal('ITEMS'),PRICE:literal('PRICE'),FORMULAS:literal('FORMULAS'),NPC:literal('NPC'),outfits:{...literal('catalog'),...weeklyOutfits},decor:{...literal('prices'),...weeklyDecor},weekly:weeklyItems,upgrades,recipeLevels,coinPacks};
 fs.writeFileSync(path.join(root,'tests/catalog.json'),JSON.stringify(catalog,null,2));
 fs.rmSync(web,{recursive:true,force:true});fs.mkdirSync(web,{recursive:true});fs.cpSync(path.join(publicRoot,'assets'),path.join(web,'assets'),{recursive:true});
 const svg=Object.fromEntries(fs.readdirSync(path.join(web,'assets')).filter(f=>f.endsWith('.svg')).map(f=>[f,fs.readFileSync(path.join(web,'assets',f),'utf8')]));
 const script=code=>'<script>'+code.replace(/<\/script/gi,'<\\/script')+'</script>';
+fs.writeFileSync(path.join(publicRoot,'weekly-data.js'),'globalThis.CafeWeeklySets='+JSON.stringify(weeklySets)+';');
 let html=fs.readFileSync(path.join(publicRoot,'play.html'),'utf8');
 html=html.replace(/@import url\('https:\/\/fonts\.googleapis\.com[^;]+;/g,'');
 html=html.replace(/<script src="([^"]+)"><\/script>/g,(_,src)=>script(fs.readFileSync(path.join(publicRoot,src.replace(/^\//,'')),'utf8')));
@@ -19,6 +21,6 @@ const prefix=script('globalThis.CafeTestCatalog='+JSON.stringify(catalog)+';glob
 html=html.replace('<title>',prefix+'<title>');
 const cloudScript=script(fs.readFileSync(path.join(root,'source/public/cloud-sync.js'),'utf8'));
 html=html.replace('</html>',cloudScript+'</html>');
-const patch=script(`const deviceRender=render;render=function(){deviceRender();const exit=document.querySelector('main > .secondary');if(exit)exit.onclick=()=>globalThis.webkit?.messageHandlers?.cafeLogout?.postMessage('logout');const status=$('online-status');if(status)status.textContent=globalThis.CafeCloudStatus||'Bulut kayıt kontrol ediliyor…';};render();`);
+const patch=script(`const deviceRender=render;render=function(){deviceRender();const exit=document.querySelector('main > .secondary');if(exit)exit.onclick=()=>globalThis.webkit?.messageHandlers?.cafeLogout?.postMessage('logout');};render();`);
 html=html.replace('</html>',patch+'<style>html,body{user-select:none;-webkit-user-select:none}input,textarea{user-select:text;-webkit-user-select:text}.screen-app>header{padding-top:calc(9px + env(safe-area-inset-top))}.screen-app .screen-app{height:100dvh}</style></html>');
 fs.writeFileSync(path.join(web,'index.html'),html);console.log('Bundled current game, device-only engine and '+Object.keys(svg).length+' SVG assets; no localhost or external fonts.');

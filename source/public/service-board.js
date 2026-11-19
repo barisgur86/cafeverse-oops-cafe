@@ -1,10 +1,10 @@
 /* Table tickets are device/account scoped; a tray is settled atomically by the API. */
 let serviceMode='table',activeTicket=null,activeTicketSlot=null,serviceBoards={};
 const tableCount=()=>1+['table2','table3','table4'].filter(id=>state.progression?.upgrades.includes(id)).length;
-function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}return serviceBoards[key]}
-function saveBoard(){localStorage.setItem('cafe-service-board:'+(state.cafeCode||'device-test'),JSON.stringify(serviceBoard()));globalThis.dispatchEvent(new Event('cafeverse-local-save'))}
-const waitingCustomers=()=>Math.max(0,4+(state.attracted||0)-serviceBoard().admitted);
-function ticketReady(t){return t.items.every(i=>i.preparation&&i.readyAt<=Date.now())}
+function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}const board=serviceBoards[key];board.tickets=board.tickets.filter(t=>!['served','left'].includes(state.serviceOrders?.[t.id]?.status));return board}
+function saveBoard(){localStorage.setItem('cafe-service-board:'+(state.cafeCode||'device-test'),JSON.stringify(serviceBoard()));globalThis.dispatchEvent(new Event('cafeverse-local-save'));globalThis.dispatchEvent(new Event('cafeverse-board-save'))}
+const waitingCustomers=()=>CafeService.view(serviceBoard(),state).waiting;
+function ticketReady(t){return globalThis.CafeService.ready(t)}
 function ticketName(t){return t.mode==='table'?'Masa '+t.table:'Paket #'+t.number}
 function clearTicketPreparation(){pending=null;madeRecipe=null;serverPreparation=null;$('serve').hidden=true;activeTicket=null;activeTicketSlot=null}
 function createTicket(){const board=serviceBoard(),guests=serviceMode==='table'?Number($('table-guests').value):1,table=serviceMode==='table'?Number($('table-choice').value):null;
@@ -23,7 +23,8 @@ function renderServiceBoard(){const board=serviceBoard(),count=tableCount();
 const beforeServiceBoard=renderLeft;renderLeft=function(){if(tab==='cafe')return renderServiceBoard();return beforeServiceBoard()};
 const beforeTicketBrew=$('brew').onclick;$('brew').onclick=async()=>{const ticket=activeTicket,slot=activeTicketSlot;await beforeTicketBrew();if(ticket&&serverPreparation&&serverPreparation.recipe>=0){const t=serviceBoard().tickets.find(t=>t.id===ticket),item=t?.items[slot];if(item&&item.recipe===serverPreparation.recipe){item.preparation=serverPreparation.id;item.readyAt=serverPreparation.ready_at?serverPreparation.ready_at*1000:Date.now()+(serverPreparation.duration||5000);saveBoard()}}};
 const beforeTicketFlow=renderOrderFlow;renderOrderFlow=function(step){beforeTicketFlow(step);if(!activeTicket)return;const t=serviceBoard().tickets.find(t=>t.id===activeTicket);if(!t)return;const footer=flowDialog.querySelector('.flow-footer');if(step==='ready'){footer.querySelectorAll('button').forEach(b=>b.remove());const b=document.createElement('button');b.className='flow-primary';const next=t.items.some(i=>!i.preparation);b.textContent=next?'🥤 Tepsiye bırak · Sıradaki ürünü hazırla':'✓ Tepsi hazır · Sipariş panosuna dön';footer.appendChild(b);b.onclick=()=>{const id=t.id;flowDialog.close();clearTicketPreparation();if(next)prepareTicket(id);else{tab='cafe';render()}};footer.querySelector('p').textContent=t.mode==='table'?ticketName(t)+' · Ürünler birlikte servis edilecek.':'Paket siparişin hazır.';}}
-function openTicketService(id){
+function openTicketService(id,{deliver:customDeliver}={}){
+ if(document.querySelector('.ticket-service[open]'))return;
  const t=serviceBoard().tickets.find(t=>t.id===id);if(!t||!ticketReady(t))return;
  const dialog=document.createElement('dialog');dialog.className='ticket-service service-reference';
  let sending=false,delivered=false,earned=0;
@@ -37,9 +38,12 @@ function openTicketService(id){
  async function deliver(){
   if(sending||delivered)return;sending=true;draw();const before=state.coins;
   try{
-   await transact('/api/service-batches/serve',{preparations:t.items.map(i=>i.preparation)});
-   serviceBoard().tickets=serviceBoard().tickets.filter(x=>x.id!==id);saveBoard();clearTicketPreparation();
+   if(!serviceBoard().tickets.includes(t)||!ticketReady(t))throw Error('Müşteri siparişi artık masada değil.');
+   if(customDeliver){const result=await customDeliver(t);if(!result?.served)throw Error('Servis tamamlanamadı.');}else{
+   await CafeService.register(t,transact);
+   const deliveredResult=await transact('/api/service-batches/serve',{...CafeService.context(t),preparations:t.items.map(i=>i.preparation)});if(!deliveredResult)throw Error('Servis tamamlanamadı.');}
    earned=state.coins-before;delivered=true;
+   serviceBoard().tickets=serviceBoard().tickets.filter(x=>x.id!==id);saveBoard();clearTicketPreparation();
    const d=await api('/api/me');state.readyQueue=d.preparations||[];render();celebrate();
   }catch(e){if(!delivered){sending=false;draw();dialog.querySelector('[role=status]').textContent=e.message;return}}
   sending=false;draw();
@@ -51,7 +55,7 @@ const beforeTicketQueue=renderQueue;renderQueue=function(){beforeTicketQueue();c
 setInterval(()=>{if(tab==='cafe'&&document.querySelector('[data-ticket-serve]:disabled')&&!document.querySelector('dialog[open]'))renderServiceBoard()},1000);
 render();
 const beforeTicketRestore=restoreReady;restoreReady=function(prep){if(prep&&serviceBoard().tickets.some(t=>t.items.some(i=>i.preparation===prep.id)))return;return beforeTicketRestore(prep)};
-const beforeTicketService=openService;openService=function(){const t=serverPreparation&&serviceBoard().tickets.find(t=>t.items.some(i=>i.preparation===serverPreparation.id));if(t){if(ticketReady(t))return openTicketService(t.id);return toast('Masanın tüm ürünlerini hazırla; sipariş birlikte servis edilir.')}return beforeTicketService()};
+const beforeTicketService=openService;openService=function(){const t=serverPreparation&&serviceBoard().tickets.find(t=>t.items.some(i=>i.preparation===serverPreparation.id));if(t){if(ticketReady(t))return openTicketService(t.id);return toast('Masanın tüm ürünlerini hazırla; sipariş birlikte servis edilir.')}return toast('Önce masadan veya paket tezgâhından müşteri siparişi seç.')};
 
 // Keep the full recipe readable outside the cropped mixer illustration.
 const readableRecipe=document.querySelector('#prep-screen .studio-recipe');if(readableRecipe)$('prep-stage').before(readableRecipe);

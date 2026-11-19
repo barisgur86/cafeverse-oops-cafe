@@ -36,3 +36,120 @@ body.screen-app{height:100dvh;overflow:hidden;padding:0!important;display:flex;f
 @media(min-width:700px){.screen-app>main{max-width:1100px}.screen-app .mobile-shortcuts{max-width:1100px}.screen-app[data-screen=cafe] .layout>.panel{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(380px,1.15fr);grid-template-rows:1fr;overflow:hidden}.screen-app[data-screen=cafe] #scene{align-self:start;position:sticky;top:0;aspect-ratio:25/9}.screen-app[data-screen=cafe] #left{grid-column:2;grid-row:1;overflow:auto}.screen-app .ticket-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ticket-card{min-width:0}.ticket-new{grid-template-columns:1fr 1fr auto;align-items:end}.ticket-new .primary{grid-column:auto}.service-heading{font-size:20px}.screen-app .recipe-choices,.screen-app .wardrobe-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.screen-app .recipe-detail{font-size:19px}#prep-screen{width:min(1000px,94vw);height:94dvh;max-height:94dvh;overflow:auto}#prep-screen .measure-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important}#prep-screen .studio-stage{min-height:220px;height:26dvh}#prep-screen .studio-bottom{padding:20px}#order-flow .flow-layout{width:min(760px,100%)}#order-flow .flow-art{max-height:47dvh}.flow-logo{font-size:34px}.flow-steps span{font-size:17px}.flow-recipe{font-size:22px}.ticket-service{width:min(660px,90vw)}.ticket-tray{grid-template-columns:repeat(4,minmax(0,1fr))}.ticket-service p{font-size:20px}}
 
 @media(min-width:700px) and (orientation:portrait){.screen-app[data-screen=cafe] .layout>.panel{display:flex;flex-direction:column}.screen-app[data-screen=cafe] #scene{position:relative;flex-shrink:0;width:100%;align-self:stretch}.screen-app[data-screen=cafe] #left{width:100%}.screen-app .ticket-new{grid-template-columns:1fr 1fr auto}.ticket-empty{grid-column:1/-1}}
+
+/* Compact pages, rather than a vertically scrolling game. */
+.screen-app [hidden]{display:none!important}
+.screen-app #left,.screen-app .lab-entry,#app-menu{overflow:hidden!important}
+.screen-app #left{padding:8px 10px}
+.screen-app .screen-pager{flex:none;margin:5px 0;gap:16px}
+.screen-app .screen-pager button{height:44px;min-width:44px}
+.screen-app .lab-entry>.content{padding:8px 12px}
+.screen-app .recipe-detail p:not(.recipe-budget){display:none}
+.screen-app .recipe-detail{padding:8px}
+.screen-app .recipe-detail h3{margin:3px 0}
+.screen-app .recipe-budget{margin:4px 0;font-size:15px!important}
+.screen-app .ingredient-lines{display:flex;flex-wrap:wrap;gap:4px 10px}
+.screen-app .recipe-choices button{min-height:48px;padding:6px}
+.screen-app .recipe-choice i{font-size:26px}
+.screen-app .recipe-filters{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.screen-app .recipe-filters button{padding:5px 8px;min-height:36px;font-size:14px}
+.screen-app .service-heading{margin:0 0 4px;font-size:15px;gap:2px}
+.screen-app .table-floor{grid-template-columns:repeat(4,minmax(0,1fr));margin:3px 0;gap:4px}
+.screen-app .floor-table{padding:2px;border-radius:10px}
+.screen-app .floor-table img{height:44px!important}
+.screen-app .floor-table figcaption{font-size:14px}
+.screen-app .floor-table small{font-size:11px}
+.screen-app .service-modes button{min-height:44px;font-size:16px}
+.screen-app .ticket-new{padding:5px 0;grid-template-columns:1fr 1fr auto;gap:5px;align-items:end}
+.screen-app .ticket-new .primary{grid-column:auto;padding:8px;min-height:44px;font-size:16px}
+.screen-app .ticket-new label{font-size:14px}
+.screen-app .ticket-new select{font-size:16px;min-height:44px;padding:4px}
+.screen-app #board-call{min-height:44px;padding:6px;margin:0}
+.screen-app .ticket-list{display:block}
+.screen-app .ticket-card{margin:5px 0;padding:8px}
+.screen-app .ticket-card h3{font-size:18px;margin:0 0 4px}
+.screen-app .ticket-card p{display:none}
+.screen-app .ticket-card ul{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin:5px 0}
+.screen-app .ticket-card li{font-size:14px;line-height:1.3}
+.screen-app .ticket-card .primary{min-height:44px;margin-top:4px}
+.screen-app[data-screen=cafe] #scene{max-height:15dvh;flex:none;object-fit:contain}
+.screen-app[data-screen=cafe] .progress-panel{padding:4px 10px;margin-bottom:4px}
+@media(max-height:700px){
+ .screen-app[data-screen=cafe] #scene{display:none}
+ .screen-app>header{min-height:46px;padding:4px 12px}
+ .screen-app .app-screen-bar{min-height:44px}
+ .screen-app .wardrobe-preview{height:90px!important}
+ .screen-app .wardrobe-model{height:85px!important}
+ .screen-app .screen-menu-grid button{min-height:64px;padding:5px}
+ .screen-app .mobile-shortcuts{margin-top:3px;padding-top:3px;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
+}
+#order-flow{overflow:hidden}
+#order-flow .flow-layout{height:100%;min-height:0}
+#order-flow .flow-art{min-height:0;flex:1}
+#order-flow .flow-footer{padding:8px 14px max(10px,env(safe-area-inset-bottom))}
+#order-flow .flow-footer p{margin:4px 0}
+.screen-app[data-screen=cafe] .progress-panel{display:grid;grid-template-columns:1fr auto;gap:3px 8px;flex:none;border-radius:14px}
+.screen-app .progress-title{display:contents}
+.screen-app .progress-title>div{font-size:14px}
+.screen-app .progress-title button{grid-column:2;grid-row:1/3;min-height:44px;margin:0}
+.screen-app .xp-track{grid-column:1;grid-row:2;margin:0;height:6px}
+.screen-app .progress-panel .cafe-seating,.screen-app .progress-panel>p{display:none!important}
+.screen-app .progress-panel .progress-title p{display:none}
+.screen-app .table-floor{flex:none}
+.screen-app .ticket-card .primary{display:inline-block;width:calc(50% - 3px);vertical-align:top;font-size:15px;padding:5px}
+.screen-app .ticket-card strong{display:block;font-size:15px}
+.screen-app .ticket-card ul{margin:3px 0}
+@media(max-height:700px){.screen-app .floor-table img{height:30px!important}.screen-app .floor-table small{display:none}.screen-app .service-heading{font-size:14px}.screen-app .ticket-card{padding:6px}}
+.screen-app .progress-title>small{display:none}
+.screen-app .progress-title>span{font-size:12px;grid-column:1;grid-row:2}
+.screen-app .progress-title>strong{font-size:15px;grid-column:1;grid-row:1}
+.screen-app .xp-track{grid-row:3}
+.screen-app .progress-panel #queue-items:empty{display:none}
+.screen-app .recipe-detail .ingredient-lines{display:flex!important;flex-wrap:wrap;gap:3px 10px}
+.screen-app .recipe-detail .ingredient-lines span{padding:0!important;margin:0!important;font-size:16px!important;line-height:1.35!important}
+.screen-app .recipe-detail .type-tag{display:none}
+.screen-app .recipe-detail h3{font-size:18px;line-height:1.2}
+.screen-app #recipe-detail{margin:4px 0!important}
+.screen-app #open-lab{margin:4px 0!important;min-height:48px}
+.screen-app #result{display:none}
+@media(max-height:700px){.screen-app .table-floor{display:none}.screen-app .recipe-detail{margin:0!important}.screen-app .recipe-detail .recipe-budget{font-size:14px!important;line-height:1.25!important}}
+.screen-app #left>h2{font-size:20px;margin:5px 0 10px;line-height:1.2}
+.screen-app[data-screen=door] #left{display:flex;flex-direction:column}
+.screen-app[data-screen=door] .rating-card{padding:8px;margin:0;font-size:15px;flex:none}
+.screen-app[data-screen=door] .rating-card h3{font-size:17px;margin:3px 0}
+.screen-app[data-screen=door] .rating-card p{font-size:14px;margin:3px 0}
+.screen-app[data-screen=door] .door-scene{height:auto;flex:1;min-height:90px;margin:6px 0;max-height:220px}
+.screen-app[data-screen=door] .social-copy{font-size:14px;line-height:1.25;margin:4px 0}
+.screen-app[data-screen=door] #start-call{flex:none;min-height:48px;margin:4px 0}
+.screen-app[data-screen=door] .door-balloons{transform:scale(.65);transform-origin:center bottom}
+.screen-app .viewport-pager{position:sticky;bottom:0;background:#fff3fb;z-index:2;border-radius:12px;padding:3px;margin-top:5px}
+#coin-shop{max-height:100dvh;overflow:hidden;box-sizing:border-box;padding:12px}
+#coin-shop .shop-demo-note{padding:7px;margin:7px 0;font-size:14px;line-height:1.3}
+#coin-shop .shop-balance{margin:6px 0}
+#coin-shop .coin-packs{gap:5px}
+#coin-shop .coin-pack{padding:7px;gap:2px 8px;grid-template-columns:40px 1fr}
+#coin-shop .pack-icon{font-size:30px}
+#coin-shop .shop-help{margin:7px 0;line-height:1.3}
+/* QA: avoid off-screen account controls and narrow pantry columns. */
+@media(min-width:700px){.screen-app .screen-menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.screen-app .pantry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.screen-app .pantry-item{min-width:0;grid-template-columns:24px minmax(0,1fr) 22px 44px;padding:5px;gap:3px}
+.screen-app .pantry-item>span{overflow-wrap:anywhere;font-size:13px}
+.screen-app .pantry-item>b{font-size:20px}
+.screen-app .stock-buy{width:44px;min-width:44px;min-height:44px}
+/* QA: character editor must keep its name field and submit action visible. */
+#setup{max-height:100dvh;overflow:hidden;box-sizing:border-box}
+@media(max-width:650px){
+ #setup{width:100%;max-width:100%;margin:auto;padding:0}
+ #setup .welcome-art{display:none}
+ #setup .setup-grid{display:block}
+ #setup .setup-body{padding:16px}
+ #setup .setup-body h2{font-size:23px;line-height:1.15;margin:5px 0}
+ #setup .setup-body>p{font-size:14px;line-height:1.3;margin:6px 0}
+ #setup .characters{gap:6px;margin:10px 0;grid-template-columns:repeat(3,minmax(0,1fr))}
+ #setup .char{padding:4px;font-size:15px;min-width:0}
+ #setup .portrait{height:58px;min-height:0}
+ #setup label{margin:6px 0;font-size:16px}
+ #setup input{height:44px;box-sizing:border-box;font-size:18px}
+ #setup #start-game{min-height:48px;margin-top:8px}
+}

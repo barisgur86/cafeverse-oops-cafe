@@ -1,0 +1,2407 @@
+{
+  "version": "1.0.0",
+  "build": "2026111710",
+  "productionReady": false,
+  "cases": [
+    {
+      "id": "AUDIO-001",
+      "number": 1,
+      "case": "Müzik ses kaydırıcısı 100→50 seviyesinde duyulur şekilde azalır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-002",
+      "number": 2,
+      "case": "Müzik ses kaydırıcısı 50→10 seviyesinde azalır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-003",
+      "number": 3,
+      "case": "Müzik 0 seviyesinde tamamen sessizleşir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-004",
+      "number": 4,
+      "case": "Efekt ses kaydırıcısı 100→50 azalır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-005",
+      "number": 5,
+      "case": "Efekt ses kaydırıcısı 50→10 azalır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-006",
+      "number": 6,
+      "case": "Efekt sesi 0 seviyesinde tamamen kapanır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-007",
+      "number": 7,
+      "case": "Ana ses seviyesi varsa hem müzik hem efektleri etkiler.",
+      "status": "PASS",
+      "layer": "browser audio engine",
+      "evidence": "Gerçek Chrome AudioContext gain değerleri, mute/restore ve OfflineAudioContext PCM RMS ölçümleri; outputs/qa-1.0.0/browser-results.json. Fiziksel iOS hoparlör testi değildir."
+    },
+    {
+      "id": "AUDIO-008",
+      "number": 8,
+      "case": "Sessize al düğmesi anında çalışır.",
+      "status": "PASS",
+      "layer": "browser audio engine",
+      "evidence": "Gerçek Chrome AudioContext gain değerleri, mute/restore ve OfflineAudioContext PCM RMS ölçümleri; outputs/qa-1.0.0/browser-results.json. Fiziksel iOS hoparlör testi değildir."
+    },
+    {
+      "id": "AUDIO-009",
+      "number": 9,
+      "case": "Sessizden çıkınca önceki ses seviyesi geri gelir.",
+      "status": "PASS",
+      "layer": "browser audio engine",
+      "evidence": "Gerçek Chrome AudioContext gain değerleri, mute/restore ve OfflineAudioContext PCM RMS ölçümleri; outputs/qa-1.0.0/browser-results.json. Fiziksel iOS hoparlör testi değildir."
+    },
+    {
+      "id": "AUDIO-010",
+      "number": 10,
+      "case": "Ses ayarları uygulama kapanıp açılınca korunur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "AUDIO-011",
+      "number": 11,
+      "case": "Ses ayarları oturum değişiminde doğru davranır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-012",
+      "number": 12,
+      "case": "Oyun başlatıldığında müzik beklenmedik şekilde yüksek başlamaz.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-013",
+      "number": 13,
+      "case": "Sipariş hazırlama sesi ayarlanan seviyeye uyar.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-014",
+      "number": 14,
+      "case": "Coin kazanma sesi ayarlanan seviyeye uyar.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-015",
+      "number": 15,
+      "case": "Seviye atlama sesi ayarlanan seviyeye uyar.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-016",
+      "number": 16,
+      "case": "Takas bildirimi sesi ayarlanan seviyeye uyar.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-017",
+      "number": 17,
+      "case": "Menü geçiş sesleri ayarlanan seviyeye uyar.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-018",
+      "number": 18,
+      "case": "Aynı anda çok efekt çalınca ses patlaması olmaz.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-019",
+      "number": 19,
+      "case": "Arka plana geçince müzik uygun şekilde durur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "AUDIO-020",
+      "number": 20,
+      "case": "Uygulamaya dönünce müzik doğru devam eder.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "AUDIO-021",
+      "number": 21,
+      "case": "Telefon araması geldiğinde ses kesilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-022",
+      "number": 22,
+      "case": "Arama bitince ses doğru geri gelir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-023",
+      "number": 23,
+      "case": "AirPods bağlanınca ses yönlendirmesi çalışır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-024",
+      "number": 24,
+      "case": "Bluetooth kulaklık çıkarılınca ses doğru yönlenir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-025",
+      "number": 25,
+      "case": "iPhone fiziksel ses tuşlarıyla sistem sesi değişir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-026",
+      "number": 26,
+      "case": "iOS sessiz mod davranışı seçilen ses politikasına uyar.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-027",
+      "number": 27,
+      "case": "Kontrol Merkezi ses seviyesiyle çakışma olmaz.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "AUDIO-028",
+      "number": 28,
+      "case": "Web Audio gain node gerçekten değişir.",
+      "status": "PASS",
+      "layer": "browser audio engine",
+      "evidence": "Gerçek Chrome AudioContext gain değerleri, mute/restore ve OfflineAudioContext PCM RMS ölçümleri; outputs/qa-1.0.0/browser-results.json. Fiziksel iOS hoparlör testi değildir."
+    },
+    {
+      "id": "AUDIO-029",
+      "number": 29,
+      "case": "HTML audio volume değişimi iOS'ta etkisizse native ses yolu veya uygun gain kontrolü kullanılır.",
+      "status": "PASS",
+      "layer": "native implementation/typecheck",
+      "evidence": "iOS müziği native AVAudioPlayer yoluna taşındı; kazanç matematiği ve native köprü type-check geçti. Fiziksel çıkış ayrıca bekliyor."
+    },
+    {
+      "id": "AUDIO-030",
+      "number": 30,
+      "case": "Ses ayarları UI değeriyle gerçek ses seviyesi tutarlıdır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Fiziksel iPhone ses çıkışı / arama / sessiz anahtarı / kulaklık erişimi gerekiyor. UI/gain birim testleri geçti; bu senaryo için PASS sayılmadı."
+    },
+    {
+      "id": "UI-031",
+      "number": 31,
+      "case": "Tüm butonlar tek dokunuşta çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-032",
+      "number": 32,
+      "case": "Çift dokunma çift satın alma yapmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-033",
+      "number": 33,
+      "case": "Hızlı ardışık dokunuşlar oyunu bozmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-034",
+      "number": 34,
+      "case": "Kaydırma hareketi menülerle çakışmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-035",
+      "number": 35,
+      "case": "Ses slider'ı parmak hareketini doğru takip eder.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-036",
+      "number": 36,
+      "case": "Slider parmak bırakıldığında değer kaydetmiş olur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-037",
+      "number": 37,
+      "case": "Açılır pencereler kapanır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-038",
+      "number": 38,
+      "case": "Modal açıkken arkadaki butonlar çalışmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-039",
+      "number": 39,
+      "case": "Geri düğmesi doğru ekrana döner.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-040",
+      "number": 40,
+      "case": "Menü geçişlerinde boş ekran oluşmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-041",
+      "number": 41,
+      "case": "Menü açma/kapama animasyonu takılmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-042",
+      "number": 42,
+      "case": "Yatay/dikey ekran davranışı tutarlıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-043",
+      "number": 43,
+      "case": "iPhone küçük ekranında butonlar kesilmez.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-044",
+      "number": 44,
+      "case": "Büyük iPhone ekranında yerleşim bozulmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-045",
+      "number": 45,
+      "case": "iPad ekranında butonlar erişilebilirdir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-046",
+      "number": 46,
+      "case": "Dynamic Island altında kontrol kalmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-047",
+      "number": 47,
+      "case": "Alt home indicator kontrolleri kapatmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-048",
+      "number": 48,
+      "case": "Klavye açıldığında giriş alanları görünür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-049",
+      "number": 49,
+      "case": "Klavye kapanınca ekran düzeni düzelir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-050",
+      "number": 50,
+      "case": "Uzun oyuncu isimleri taşmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-051",
+      "number": 51,
+      "case": "Türkçe karakterler doğru gösterilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-052",
+      "number": 52,
+      "case": "İngilizce metinler taşmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-053",
+      "number": 53,
+      "case": "İnternet yokken hata mesajı anlaşılırdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-054",
+      "number": 54,
+      "case": "Yükleme sırasında işlem göstergesi çıkar.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-055",
+      "number": 55,
+      "case": "Yükleme sonsuza kadar sürmez.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-056",
+      "number": 56,
+      "case": "Hatalı işlem sonrası tekrar dene çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-057",
+      "number": 57,
+      "case": "Ekran okuyucu temel kontrolleri tanır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-058",
+      "number": 58,
+      "case": "Dokunma hedefleri yeterince büyüktür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-059",
+      "number": 59,
+      "case": "Uyarı ve onay düğmeleri karıştırılmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "UI-060",
+      "number": 60,
+      "case": "Hızlı ekran değişiminde uygulama çökmez.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-061",
+      "number": 61,
+      "case": "Soğuk açılış başarılıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-062",
+      "number": 62,
+      "case": "Sıcak açılış başarılıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-063",
+      "number": 63,
+      "case": "İlk kurulum başarılıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-064",
+      "number": 64,
+      "case": "Güncelleme sonrası açılış başarılıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-065",
+      "number": 65,
+      "case": "Açılışta siyah ekranda kalmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-066",
+      "number": 66,
+      "case": "Açılışta sonsuz spinner oluşmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-067",
+      "number": 67,
+      "case": "Arka plana alıp 5 saniye sonra dönülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-068",
+      "number": 68,
+      "case": "Arka plana alıp 5 dakika sonra dönülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-069",
+      "number": 69,
+      "case": "Arka plana alıp 30 dakika sonra dönülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-070",
+      "number": 70,
+      "case": "Uygulama sistem tarafından kapatılırsa kayıt korunur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-071",
+      "number": 71,
+      "case": "Oyun zorla kapatılıp açılır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-072",
+      "number": 72,
+      "case": "Telefon kilitlenip açılır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-073",
+      "number": 73,
+      "case": "Düşük pil modunda çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-074",
+      "number": 74,
+      "case": "Ağ Wi-Fi'den hücresele geçer.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-075",
+      "number": 75,
+      "case": "Hücreselden Wi-Fi'ye geçer.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-076",
+      "number": 76,
+      "case": "İnternet tamamen kesilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-077",
+      "number": 77,
+      "case": "İnternet geri geldiğinde oyun toparlanır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-078",
+      "number": 78,
+      "case": "Sunucu geçici olarak yanıt vermez.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-079",
+      "number": 79,
+      "case": "Sunucu 500 döndürür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-080",
+      "number": 80,
+      "case": "Sunucu 401 döndürür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-081",
+      "number": 81,
+      "case": "Sunucu 429 döndürür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-082",
+      "number": 82,
+      "case": "Oturum süresi dolar.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-083",
+      "number": 83,
+      "case": "Cihaz yeniden başlatılır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-084",
+      "number": 84,
+      "case": "Uygulama kaldırılıp yeniden yüklenir; bulut kayıt geri gelir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "LIFE-085",
+      "number": 85,
+      "case": "Eski sürüm kayıtları bozulmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-086",
+      "number": 86,
+      "case": "İlk müşteri gelir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-087",
+      "number": 87,
+      "case": "Müşteri masaya oturur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-088",
+      "number": 88,
+      "case": "Dört masa aynı anda çalışır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-089",
+      "number": 89,
+      "case": "Sipariş balonu doğru görünür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-090",
+      "number": 90,
+      "case": "Sipariş doğru tarifle eşleşir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-091",
+      "number": 91,
+      "case": "Tarif hazırlama başlar.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-092",
+      "number": 92,
+      "case": "Hazırlama sayacı doğru işler.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-093",
+      "number": 93,
+      "case": "Hazırlama animasyonu tamamlanır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-094",
+      "number": 94,
+      "case": "Sipariş teslim edilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-095",
+      "number": 95,
+      "case": "Ödül doğru eklenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-096",
+      "number": 96,
+      "case": "Ödül iki kez eklenmez.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-097",
+      "number": 97,
+      "case": "Yanlış sipariş reddedilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-098",
+      "number": 98,
+      "case": "Yetersiz malzeme uyarısı çıkar.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Mevcut hazırlık eksik malzemeyi coin ile otomatik tamamlıyor; ayrı yetersiz-malzeme uyarısı/ön onay akışı tamamlanmadı."
+    },
+    {
+      "id": "GAME-099",
+      "number": 99,
+      "case": "Stok negatif olmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-100",
+      "number": 100,
+      "case": "Paket servis siparişi gelir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-101",
+      "number": 101,
+      "case": "Paket servis hazırlanır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-102",
+      "number": 102,
+      "case": "Paket servis teslim edilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-103",
+      "number": 103,
+      "case": "Masa ve paket servis aynı anda çalışır.",
+      "status": "NOT RUN",
+      "layer": "automated unit/integration",
+      "evidence": "Masa/paket ayrı akışları ve eşzamanlı pano kapasitesi bileşenleri geçti; aynı anda iki tam akış uçtan uca denenmedi."
+    },
+    {
+      "id": "GAME-104",
+      "number": 104,
+      "case": "Müşteri sabır süresi doğru işler.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "GAME-105",
+      "number": 105,
+      "case": "Süresi dolan sipariş yönetilir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "GAME-106",
+      "number": 106,
+      "case": "Oyun duraklatılırsa sayaç politikası tutarlıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-107",
+      "number": 107,
+      "case": "Arka planda sayaçlar bozulmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-108",
+      "number": 108,
+      "case": "Hızlı sipariş tesliminde çift ödül oluşmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-109",
+      "number": 109,
+      "case": "Müşteri animasyonları takılmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-110",
+      "number": 110,
+      "case": "Masa boşalma animasyonu çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-111",
+      "number": 111,
+      "case": "Masa yeniden müşteri alır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-112",
+      "number": 112,
+      "case": "Dekorasyon müşteri yerleşimini bozmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-113",
+      "number": 113,
+      "case": "Tarif yükseltme oyuna yansır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-114",
+      "number": 114,
+      "case": "XP doğru artar.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-115",
+      "number": 115,
+      "case": "Seviye doğru yükselir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-116",
+      "number": 116,
+      "case": "Kilitli tarif doğru zamanda açılır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/simulation.mjs, tests/seating.mjs, tests/preparation-controls.mjs ve tests/offline.mjs oyun durumu/atomik ödül kontrolleri. Görsel gerçek cihaz doğrulaması değildir."
+    },
+    {
+      "id": "GAME-117",
+      "number": 117,
+      "case": "Günlük kazanç doğru hesaplanır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "GAME-118",
+      "number": 118,
+      "case": "Oyun 30 dakika kesintisiz çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-119",
+      "number": 119,
+      "case": "Oyun 60 dakika kesintisiz çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "GAME-120",
+      "number": 120,
+      "case": "Uzun oturum sonunda ekonomi tutarlıdır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-121",
+      "number": 121,
+      "case": "18 tarifin tamamı yüklenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-122",
+      "number": 122,
+      "case": "Her tarifin malzeme gereksinimi doğrudur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-123",
+      "number": 123,
+      "case": "Hazırlama malzemeyi bir kez düşer.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-124",
+      "number": 124,
+      "case": "Başarısız hazırlama stok bozmamalıdır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-125",
+      "number": 125,
+      "case": "Tarif yükseltme maliyeti doğrudur.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "ECON-126",
+      "number": 126,
+      "case": "Yükseltme sonrası özellikler değişir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "ECON-127",
+      "number": 127,
+      "case": "Negatif stok engellenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-128",
+      "number": 128,
+      "case": "Negatif coin engellenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-129",
+      "number": 129,
+      "case": "Negatif oyun parası engellenir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "ECON-130",
+      "number": 130,
+      "case": "Harcama iki kez uygulanmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-131",
+      "number": 131,
+      "case": "Günlük ödül bir kez alınır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "ECON-132",
+      "number": 132,
+      "case": "Görev ödülü bir kez alınır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "ECON-133",
+      "number": 133,
+      "case": "Seviye ödülü bir kez alınır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-134",
+      "number": 134,
+      "case": "Coin ile alınan eşya envantere eklenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-135",
+      "number": 135,
+      "case": "Yetersiz coin satın almayı engeller.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-136",
+      "number": 136,
+      "case": "Oyun parası ile coin karışmaz.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Bu kapsamın tarif bazlı yükseltme / ayrı normal para / günlük görev / müşteri sabrı / günlük kazanç özelliği tamamlanmadı. Genel makine/masa yükseltmeleri ayrı test edildi."
+    },
+    {
+      "id": "ECON-137",
+      "number": 137,
+      "case": "Fiyatlar doğru gösterilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-138",
+      "number": 138,
+      "case": "Fiyat değişiminde mevcut bakiye korunur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-139",
+      "number": 139,
+      "case": "Oyun kapanınca bakiye korunur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-140",
+      "number": 140,
+      "case": "Bulut senkronizasyonunda bakiye korunur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-141",
+      "number": 141,
+      "case": "İki cihazda harcama tutarlı olur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-142",
+      "number": 142,
+      "case": "Eşzamanlı harcamada çift kullanım engellenir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-143",
+      "number": 143,
+      "case": "İşlem geçmişi doğru tutulur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-144",
+      "number": 144,
+      "case": "Bozuk kayıt güvenli ele alınır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-145",
+      "number": 145,
+      "case": "Eski kayıt yeni sürüme taşınır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-146",
+      "number": 146,
+      "case": "Ekonomi verileri başka hesaba sızmaz.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "ECON-147",
+      "number": 147,
+      "case": "Hileli negatif miktar reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-148",
+      "number": 148,
+      "case": "Çok büyük miktarlar reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-149",
+      "number": 149,
+      "case": "Ondalıklı stok miktarı politikaya uygun kontrol edilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "ECON-150",
+      "number": 150,
+      "case": "Sıfır miktarlı işlem reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Tarif kataloğu, hazırlık, yükseltme ve secure-economy/marketplace testlerindeki stok, bakiye, idempotency ve doğrulama assertleri."
+    },
+    {
+      "id": "IAP-151",
+      "number": 151,
+      "case": "coins250 ürünü yüklenir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-152",
+      "number": 152,
+      "case": "coins750 ürünü yüklenir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-153",
+      "number": 153,
+      "case": "coins2000 ürünü yüklenir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-154",
+      "number": 154,
+      "case": "Apple fiyatı doğru gösterilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-155",
+      "number": 155,
+      "case": "Ürün bulunamazsa anlaşılır hata gösterilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "IAP-156",
+      "number": 156,
+      "case": "Satın alma onayı açılır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-157",
+      "number": 157,
+      "case": "Sandbox satın alma başarılıdır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-158",
+      "number": 158,
+      "case": "250 coin doğru teslim edilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-159",
+      "number": 159,
+      "case": "750 coin doğru teslim edilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-160",
+      "number": 160,
+      "case": "2000 coin doğru teslim edilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-161",
+      "number": 161,
+      "case": "Satın alma iptali coin vermez.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "IAP-162",
+      "number": 162,
+      "case": "Pending işlem coin vermez.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "IAP-163",
+      "number": 163,
+      "case": "Geçersiz Apple imzası reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-164",
+      "number": 164,
+      "case": "Yanlış Bundle ID reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-165",
+      "number": 165,
+      "case": "Yanlış Product ID reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-166",
+      "number": 166,
+      "case": "Yanlış Environment reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-167",
+      "number": 167,
+      "case": "Duplicate Transaction ID ikinci teslim yapmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-168",
+      "number": 168,
+      "case": "Eşzamanlı duplicate istek ikinci teslim yapmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-169",
+      "number": 169,
+      "case": "Ağ kesilirse işlem kurtarılır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-170",
+      "number": 170,
+      "case": "Uygulama kapanırsa işlem kurtarılır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-171",
+      "number": 171,
+      "case": "Sunucu 500 verirse güvenli tekrar denenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-172",
+      "number": 172,
+      "case": "Coin teslimi başarısızsa işlem kaybolmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-173",
+      "number": 173,
+      "case": "Başka oyuncunun işlemi kullanılamaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-174",
+      "number": 174,
+      "case": "Satın alma geçmişi tutarlıdır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-175",
+      "number": 175,
+      "case": "İade güvenli muhasebeleştirilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-176",
+      "number": 176,
+      "case": "Revoked transaction yönetilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Apple resmi JWS doğrulayıcı test zinciri + secure-economy ledger testleri: imza/ürün/hesap/ortam/replay/rollback/iade. Apple tarafından verilmiş gerçek sandbox ödeme işlemi değildir."
+    },
+    {
+      "id": "IAP-177",
+      "number": 177,
+      "case": "Satın alma sırasında hesap değiştirme korunur.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-178",
+      "number": 178,
+      "case": "TestFlight Sandbox gerçek cihaz testi.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-179",
+      "number": 179,
+      "case": "Sunucu bakiyesi ile istemci bakiyesi eşleşir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "IAP-180",
+      "number": 180,
+      "case": "Gerçek para işlemi için açık P0 bulunmaz.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek StoreKit ürün/sandbox/cihaz ve sunucu cutover doğrulaması gerekiyor. IAP feature flag kapalı; gerçek ödeme PASS sayılmadı."
+    },
+    {
+      "id": "TRADE-181",
+      "number": 181,
+      "case": "Café ID ile oyuncu bulunur.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir."
+    },
+    {
+      "id": "TRADE-182",
+      "number": 182,
+      "case": "Olmayan oyuncu bulunamaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-183",
+      "number": 183,
+      "case": "Oyuncu kendine teklif gönderemez.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-184",
+      "number": 184,
+      "case": "Engellenen oyuncuya teklif gönderilemez.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "TRADE-185",
+      "number": 185,
+      "case": "Geçerli malzeme teklifi oluşturulur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-186",
+      "number": 186,
+      "case": "Yetersiz stok teklif oluşturmayı engeller.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-187",
+      "number": 187,
+      "case": "Negatif miktar reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-188",
+      "number": 188,
+      "case": "Sıfır miktar reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-189",
+      "number": 189,
+      "case": "Çok büyük miktar reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-190",
+      "number": 190,
+      "case": "Teklif karşı oyuncuya ulaşır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir."
+    },
+    {
+      "id": "TRADE-191",
+      "number": 191,
+      "case": "Teklif kabul edilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-192",
+      "number": 192,
+      "case": "İki oyuncunun stokları atomik aktarılır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-193",
+      "number": 193,
+      "case": "Teklif reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-194",
+      "number": 194,
+      "case": "Teklif iptal edilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-195",
+      "number": 195,
+      "case": "Süresi dolan teklif reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-196",
+      "number": 196,
+      "case": "Aynı teklif iki kez kabul edilmez.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-197",
+      "number": 197,
+      "case": "Kabul ve iptal aynı anda gelirse tek sonuç oluşur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-198",
+      "number": 198,
+      "case": "Kabul ve süre dolumu yarışında tek sonuç oluşur.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir."
+    },
+    {
+      "id": "TRADE-199",
+      "number": 199,
+      "case": "Sunucu hatasında rollback yapılır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-200",
+      "number": 200,
+      "case": "Veritabanı hatasında rollback yapılır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-201",
+      "number": 201,
+      "case": "Bağlantı kopunca işlem tutarlı kalır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir."
+    },
+    {
+      "id": "TRADE-202",
+      "number": 202,
+      "case": "Tekrar istek çift aktarım yapmaz.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-203",
+      "number": 203,
+      "case": "Başkasının teklifini kabul etme reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-204",
+      "number": 204,
+      "case": "Başkasının teklifini iptal etme reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-205",
+      "number": 205,
+      "case": "Premium coin takası engellenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-206",
+      "number": 206,
+      "case": "Takas geçmişi iki oyuncuda görünür.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "TRADE-207",
+      "number": 207,
+      "case": "Çevrimdışı oyuncuya teklif bekler.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "TRADE-208",
+      "number": 208,
+      "case": "Yeniden bağlanınca teklif güncellenir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir."
+    },
+    {
+      "id": "TRADE-209",
+      "number": 209,
+      "case": "İki gerçek cihazda takas çalışır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "İki gerçek oturum/cihazla sosyal/takas ve bağlantı kesme doğrulaması eksik. Geçici sentetik PostgreSQL aktörleri gerçek oyuncu değildir."
+    },
+    {
+      "id": "TRADE-210",
+      "number": 210,
+      "case": "Takas sonunda toplam malzeme korunur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/secure-economy.mjs ve geçici Supabase gerçek PostgreSQL testi: escrow, idempotency, atomik aktarım, yetersiz stok, rollback, actor izolasyonu, kabul/iptal ve süre sonu. İki fiziksel cihaz testi değildir."
+    },
+    {
+      "id": "CLOUD-211",
+      "number": 211,
+      "case": "Apple giriş başarılıdır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-212",
+      "number": 212,
+      "case": "Apple giriş iptali güvenlidir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-213",
+      "number": 213,
+      "case": "E-posta giriş başarılıdır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-214",
+      "number": 214,
+      "case": "Yanlış şifre reddedilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-215",
+      "number": 215,
+      "case": "E-posta doğrulama çalışır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-216",
+      "number": 216,
+      "case": "Şifre sıfırlama çalışır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-217",
+      "number": 217,
+      "case": "Oturum yenileme çalışır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-218",
+      "number": 218,
+      "case": "Oturum çıkışı veriyi korur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-219",
+      "number": 219,
+      "case": "Hesap değişimi verileri ayırır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-220",
+      "number": 220,
+      "case": "Hesap silme çalışır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "CLOUD-221",
+      "number": 221,
+      "case": "Kullanıcı başkasının kayıtlarını göremez.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-222",
+      "number": 222,
+      "case": "Kullanıcı başkasının envanterini değiştiremez.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-223",
+      "number": 223,
+      "case": "RLS kuralları uygulanır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-224",
+      "number": 224,
+      "case": "API auth kontrolü çalışır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-225",
+      "number": 225,
+      "case": "Rate limiting çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-226",
+      "number": 226,
+      "case": "Gizli anahtarlar loglanmaz.",
+      "status": "NOT RUN",
+      "layer": "automated unit/integration",
+      "evidence": "Gizli anahtar eklenmedi ve bearer token WebKit’e aktarılmıyor; kapsamlı çalışma zamanı sızıntı/log taraması ayrıca yapılmalı."
+    },
+    {
+      "id": "CLOUD-227",
+      "number": 227,
+      "case": "Token sızıntısı olmaz.",
+      "status": "NOT RUN",
+      "layer": "automated unit/integration",
+      "evidence": "Gizli anahtar eklenmedi ve bearer token WebKit’e aktarılmıyor; kapsamlı çalışma zamanı sızıntı/log taraması ayrıca yapılmalı."
+    },
+    {
+      "id": "CLOUD-228",
+      "number": 228,
+      "case": "Otomatik kayıt çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-229",
+      "number": 229,
+      "case": "Çevrimdışı kayıt çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-230",
+      "number": 230,
+      "case": "Ağ gelince senkronizasyon çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-231",
+      "number": 231,
+      "case": "İki cihazda kayıt çakışması çözülür.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-232",
+      "number": 232,
+      "case": "Eski sürüm kayıtları taşınır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-233",
+      "number": 233,
+      "case": "Sunucu hatasında yerel kayıt korunur.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-234",
+      "number": 234,
+      "case": "Bozuk veri güvenli ele alınır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-235",
+      "number": 235,
+      "case": "Silinmiş kullanıcı erişemez.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-236",
+      "number": 236,
+      "case": "Coin kayıtları sunucu otoritesindedir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Güvenli backend bileşenleri geçti; canlı kullanıcı cutover tamamlanmadı. Dağıtım adayı legacy çevrimdışı beta modunda; IAP kapalı."
+    },
+    {
+      "id": "CLOUD-237",
+      "number": 237,
+      "case": "Takas kayıtları sunucu otoritesindedir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu takas testleri geçti; gerçek kullanıcı cutover ve iki cihaz doğrulaması tamamlanmadığı için takas dağıtımda kapalı."
+    },
+    {
+      "id": "CLOUD-238",
+      "number": 238,
+      "case": "Transaction audit kayıtları tutulur.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-239",
+      "number": 239,
+      "case": "Yetkisiz admin işlemi reddedilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "CLOUD-240",
+      "number": 240,
+      "case": "Hatalı JSON güvenli reddedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-241",
+      "number": 241,
+      "case": "Büyük payload kontrol edilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-242",
+      "number": 242,
+      "case": "Tekrar gönderilen API istekleri idempotenttir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "Sunucu auth/actor izolasyonu, RLS/grant, sahte satın alma reddi, atomik ledger ve request-ID testleri; yalnızca güvenli backend katmanı. Dağıtılan eski beta istemcisi için üretim cutover tamamlanmadı."
+    },
+    {
+      "id": "CLOUD-243",
+      "number": 243,
+      "case": "Bağlantı zaman aşımı yönetilir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-244",
+      "number": 244,
+      "case": "Çift cihazda eşzamanlı kayıt güvenlidir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "CLOUD-245",
+      "number": 245,
+      "case": "Veri kaybı oluşmaz.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Gerçek Apple/e-posta oturumları, silme, iki cihaz, güncelleme ve kesinti senaryoları için cihaz/servis erişimi ve kontrollü cutover gerekiyor."
+    },
+    {
+      "id": "SOCIAL-246",
+      "number": 246,
+      "case": "Dekorasyon mağazası açılır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-247",
+      "number": 247,
+      "case": "Eşya önizlemesi çalışır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-248",
+      "number": 248,
+      "case": "Eşya satın alınır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-249",
+      "number": 249,
+      "case": "Eşya envantere eklenir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-250",
+      "number": 250,
+      "case": "Eşya yerleştirilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-251",
+      "number": 251,
+      "case": "Eşya kaldırılır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Dekorasyonu envanteri koruyarak sahneden kaldırma akışı yok; mevcut görünüm sahip olunan dekorları birleştiriyor."
+    },
+    {
+      "id": "SOCIAL-252",
+      "number": 252,
+      "case": "Dekorasyon kaydedilir.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-253",
+      "number": 253,
+      "case": "Başka cihazda dekorasyon görünür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "SOCIAL-254",
+      "number": 254,
+      "case": "Arkadaş arama çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "SOCIAL-255",
+      "number": 255,
+      "case": "Arkadaş isteği gönderilir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-256",
+      "number": 256,
+      "case": "Arkadaş isteği kabul edilir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-257",
+      "number": 257,
+      "case": "Arkadaş isteği reddedilir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-258",
+      "number": 258,
+      "case": "Engelleme çalışır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-259",
+      "number": 259,
+      "case": "Şikâyet işlemi çalışır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-260",
+      "number": 260,
+      "case": "Kafe ziyareti çalışır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-261",
+      "number": 261,
+      "case": "Günlük görev açılır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-262",
+      "number": 262,
+      "case": "Haftalık görev açılır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-263",
+      "number": 263,
+      "case": "Görev ilerlemesi doğru hesaplanır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-264",
+      "number": 264,
+      "case": "Görev ödülü bir kez alınır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-265",
+      "number": 265,
+      "case": "Başarımlar doğru açılır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-266",
+      "number": 266,
+      "case": "Kilitli dekorasyon doğru görünür.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "tests/collections.mjs: dekor/önlük sahipliği, önizleme durumu, tek debit ve restart kalıcılığı. Tarayıcı ekran açma smoke kontrolü de geçti."
+    },
+    {
+      "id": "SOCIAL-267",
+      "number": 267,
+      "case": "Sosyal bildirimler çalışır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-268",
+      "number": 268,
+      "case": "Çocuk kullanıcılar için güvenli etkileşim sağlanır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "SOCIAL-269",
+      "number": 269,
+      "case": "Çevrimdışı sosyal işlem hata vermeden yönetilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "SOCIAL-270",
+      "number": 270,
+      "case": "Sosyal ve görev kayıtları korunur.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "RELEASE-271",
+      "number": 271,
+      "case": "İlk açılış süresi ölçülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-272",
+      "number": 272,
+      "case": "Menü geçiş süresi ölçülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-273",
+      "number": 273,
+      "case": "FPS ölçülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-274",
+      "number": 274,
+      "case": "Uzun oturum bellek tüketimi ölçülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-275",
+      "number": 275,
+      "case": "Bellek sızıntısı kontrol edilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-276",
+      "number": 276,
+      "case": "CPU tüketimi ölçülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-277",
+      "number": 277,
+      "case": "Pil tüketimi değerlendirilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-278",
+      "number": 278,
+      "case": "Isınma kontrol edilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-279",
+      "number": 279,
+      "case": "Düşük ağ hızında oyun çalışır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-280",
+      "number": 280,
+      "case": "Sunucu yük testi yapılır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-281",
+      "number": 281,
+      "case": "Eşzamanlı oyuncu testi yapılır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-282",
+      "number": 282,
+      "case": "API hata oranı ölçülür.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-283",
+      "number": 283,
+      "case": "Crash raporları incelenir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-284",
+      "number": 284,
+      "case": "Türkçe arayüz kontrol edilir.",
+      "status": "PASS",
+      "layer": "browser viewport smoke",
+      "evidence": "Chrome ekran smoke + ekran görüntüleri: 375×667 tr-TR, 393×852 en-US, 820×1180 tr-TR. Fiziksel iOS/Dynamic Type testi değildir."
+    },
+    {
+      "id": "RELEASE-285",
+      "number": 285,
+      "case": "İngilizce arayüz kontrol edilir.",
+      "status": "PASS",
+      "layer": "browser viewport smoke",
+      "evidence": "Chrome ekran smoke + ekran görüntüleri: 375×667 tr-TR, 393×852 en-US, 820×1180 tr-TR. Fiziksel iOS/Dynamic Type testi değildir."
+    },
+    {
+      "id": "RELEASE-286",
+      "number": 286,
+      "case": "iPhone ekran boyutları kontrol edilir.",
+      "status": "NOT RUN",
+      "layer": "browser evidence / physical NOT RUN",
+      "evidence": "Tarayıcı viewport smoke PASS (375×667,393×852,820×1180); fiziksel iPhone/iPad çalıştırması yapılmadı."
+    },
+    {
+      "id": "RELEASE-287",
+      "number": 287,
+      "case": "iPad ekranları kontrol edilir.",
+      "status": "NOT RUN",
+      "layer": "browser evidence / physical NOT RUN",
+      "evidence": "Tarayıcı viewport smoke PASS (375×667,393×852,820×1180); fiziksel iPhone/iPad çalıştırması yapılmadı."
+    },
+    {
+      "id": "RELEASE-288",
+      "number": 288,
+      "case": "VoiceOver temel akışları kontrol edilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-289",
+      "number": 289,
+      "case": "Dynamic Type okunabilirliği kontrol edilir.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-290",
+      "number": 290,
+      "case": "Uygulama ikonu doğrulanır.",
+      "status": "NOT RUN",
+      "layer": "manual/device",
+      "evidence": "Bu senaryo uçtan uca henüz çalıştırılmadı."
+    },
+    {
+      "id": "RELEASE-291",
+      "number": 291,
+      "case": "Version 1.0.0 doğrulanır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "package.json ve Xcode aday sürümü 1.0.0 / 2026111710. Önceki build 2026111707."
+    },
+    {
+      "id": "RELEASE-292",
+      "number": 292,
+      "case": "Benzersiz build numarası doğrulanır.",
+      "status": "PASS",
+      "layer": "automated unit/integration",
+      "evidence": "package.json ve Xcode aday sürümü 1.0.0 / 2026111710. Önceki build 2026111707."
+    },
+    {
+      "id": "RELEASE-293",
+      "number": 293,
+      "case": "Release archive oluşturulur.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Tam unsigned Release build geçti; imzalı archive/upload ve TestFlight/StoreKit gerçek cihaz kanıtı henüz yok."
+    },
+    {
+      "id": "RELEASE-294",
+      "number": 294,
+      "case": "Signing ve Bundle ID doğrulanır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Tam unsigned Release build geçti; imzalı archive/upload ve TestFlight/StoreKit gerçek cihaz kanıtı henüz yok."
+    },
+    {
+      "id": "RELEASE-295",
+      "number": 295,
+      "case": "TestFlight yüklenir.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Tam unsigned Release build geçti; imzalı archive/upload ve TestFlight/StoreKit gerçek cihaz kanıtı henüz yok."
+    },
+    {
+      "id": "RELEASE-296",
+      "number": 296,
+      "case": "TestFlight gerçek cihaz smoke testi yapılır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Tam unsigned Release build geçti; imzalı archive/upload ve TestFlight/StoreKit gerçek cihaz kanıtı henüz yok."
+    },
+    {
+      "id": "RELEASE-297",
+      "number": 297,
+      "case": "App Store ürünleri hazırdır.",
+      "status": "BLOCKED",
+      "layer": "automated unit/integration",
+      "evidence": "Tam unsigned Release build geçti; imzalı archive/upload ve TestFlight/StoreKit gerçek cihaz kanıtı henüz yok."
+    },
+    {
+      "id": "RELEASE-298",
+      "number": 298,
+      "case": "Gizlilik politikası ve hesap silme erişilebilirdir.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "RELEASE-299",
+      "number": 299,
+      "case": "App Review metadata ve test hesabı hazırdır.",
+      "status": "NOT IMPLEMENTED",
+      "layer": "automated unit/integration",
+      "evidence": "Arkadaşlık/engelleme/şikâyet/ziyaret/günlük-haftalık görev, tam hesap silme veya yayın metadata/gizlilik gereksinimi bu adayda tamamlanmadı. Üretim onayı verilmedi."
+    },
+    {
+      "id": "RELEASE-300",
+      "number": 300,
+      "case": "Açık P0 hata sayısı sıfırdır.",
+      "status": "FAIL",
+      "layer": "release gate",
+      "evidence": "Açık üretim yayın engelleri var: gerçek ödeme/takas doğrulaması, güvenli backend cutover, hesap silme/gizlilik/App Review metadata ve fiziksel ses QA. Üretim yayını kapalı."
+    }
+  ]
+}

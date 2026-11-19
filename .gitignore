@@ -19,3 +19,7 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 .DS_Store
+
+source/server/secure/engine.generated.mjs
+
+supabase/.temp/

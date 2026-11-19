@@ -1,6 +1,10 @@
+# Secure economy candidate 0.6.2
+
+See [SECURE_ECONOMY_SETUP.md](SECURE_ECONOMY_SETUP.md) for server deployment, migration/cutover, Apple verification, trade rules and release gates. This candidate is not yet deployed or certified on real devices.
+
 # Cafeverse · OOPS! Café
 
-iPhone ve iPad için SwiftUI kabuğu ve uygulamaya gömülü JavaScript oyun motoru. Bu depo güncel 0.3.7 geliştirme kaynaklarını içerir; TestFlight yayımlama durumu değildir.
+iPhone ve iPad için SwiftUI kabuğu ve uygulamaya gömülü JavaScript oyun motoru. Bu depo 0.5.1 (2026111701) kaynaklarını içerir. Bu paket 17 Kasım 2026 tarihinde TestFlight iç test için Apple’a başarıyla yüklendi; test kullanılabilirliği Apple’ın işleme ve grup dağıtımı durumuna bağlıdır.
 
 ## Geliştirme
 
@@ -27,3 +31,13 @@ Değişiklikleri ayrı dalda hazırlayın, `npm test` sonucunu kontrol edin ve p
 0.3.6: Canlı bulut kayıt şeması, hesap ayrımı kontrolü, çevrimdışı kayıtları koruma, çakışmada açık seçim ve yerel kurtarma kopyası. Fiziksel cihaz testi ayrıca tamamlanmalıdır. Ayrıntılar: CLOUD_SETUP.md.
 
 0.3.7: Giriş ve hesap oluşturma hata mesajları, yinelenen Apple/e-posta kayıt yönlendirmesi ve native giriş ekranı düzeltildi. Native derleme ile hatalı giriş kontrolü geçti; başarılı hesap erişimi ve genel e-posta gönderimi henüz doğrulanmadı. Ayrıntılar: AUTH_SETUP.md.
+
+0.5.1: Cafeverse çizimleriyle canlı kafe simülasyonu, Türkçe/İngilizce dil seçimi, dil uyumlu müşteri çağırma sesi, gardırop ve dekorasyonda sayfa başına dört ürün ve haftalık koleksiyon altyapısı. iPhone kart düzeni ve sayfa geçişi kontrol edildi; otomatik oyun testleri geçti. Başarılı gerçek Apple/e-posta girişi ve fiziksel cihazda ses testi bu sürüm için ayrıca doğrulanmalıdır.
+
+0.5.2 (2026111702): Mevcut 0.5.1 özelliklerinin yeni sürüm numarasıyla paketlenmesi. TestFlight yükleme durumu ayrıca doğrulanır.
+
+0.5.3 (2026111703), hazırlık: Satın alınan dekorlar birlikte sahnede görünür; haftalık önlükler gardırop ve canlı Melo üzerinde aynı görünümü kullanır. Mağazada işlem kontrol düğmesi ve satın alma kısıtı açıklaması eklendi; eşzamanlı Apple işlem bildirimleri tek teslim akışında birleştirildi. Gerçek Apple ödemesi ve fiziksel cihaz testi ayrıca gereklidir. TestFlight durumu ayrıca doğrulanır.
+
+0.5.4 (2026111704), hazırlık: Bekleyen müşteriler boş masalara otomatik oturur; mevcut masa/paket siparişleri ve hazırlıkları korunur. Ayrılan misafirler masayı boşaltınca sıradakiler alınır. Paket siparişi seçiliyken yeni paket müşterisi için kuyrukta bir kişi ayrılır. Durum bildirimi sipariş panelinin içine alınır, masa sekmeleri panelin yüksekliğine göre konumlanır.
+
+0.5.5 (2026111705), hazırlık: Bulut kaydı esas alınır; cihaz/bulut seçim penceresi kaldırıldı. JSON alan sırası yanlış çakışma üretmez. Coin tesliminde bulut onayı beklenir. Coin ile alınabilen 12 geliştirme, ön koşullar ve dört ürünlü sayfalar; hız ve kapasite etkileri cihaz/sunucu kodunda eşleşir. Gerçek Apple ödemesi ve iki fiziksel cihaz testi ayrıca gereklidir.

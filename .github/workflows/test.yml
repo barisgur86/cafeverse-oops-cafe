@@ -1,13 +1,40 @@
-name: Game checks
+name: Game and secure economy checks
 on: [push, pull_request]
 permissions:
   contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: cafeverse_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
+      - run: npm ci
       - run: npm test
+        env:
+          CAFE_TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/cafeverse_test
+  native:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:auth-routing
+      - name: Unsigned Release compile
+        run: xcodebuild -project iOS/Cafeverse.xcodeproj -scheme Cafeverse -configuration Release -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
