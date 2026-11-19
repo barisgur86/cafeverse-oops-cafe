@@ -1,6 +1,7 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'Misafirler ayrılıyor…':'Guests are leaving…',
  'Satın almalar doğrulama testleri tamamlanana kadar kapalı.':'Purchases are disabled until verification testing is complete.',
 
  'Bu özellik test onayından sonra açılacak.':'This feature will be enabled after testing.',

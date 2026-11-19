@@ -73,7 +73,7 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
    const order=s.serviceOrders?.[body.order_id];
    if(order?.status==='arriving'&&clock()>=order.arrives_at)order.status='seated';
    if(!order||order.status!=='seated'||order.mode!==body.mode||order.table!==body.table||ps.length!==order.items.length||JSON.stringify(body.customers)!==JSON.stringify(order.customers)||ps.some((p,i)=>p.order_id!==order.id||p.customer_id!==order.customers[i]||p.recipe!==order.items[i].recipe))failure('Masa ve müşteri siparişi eşleşmiyor.',409);
-   if(!ps.every(p=>p.status==='served')){order.status='served';
+   if(!ps.every(p=>p.status==='served')){order.status='served';order.served_at=clock();
     if(ps.some(p=>p.status!=='ready'||p.recipe<0||p.ready_at>clock()/1000))failure('Tüm ürünler hazır olmadan birlikte servis edilemez.',409);
     for(const prep of ps){const before=progress().level;prep.status='served';s.served++;s.coins+=35;if(s.served>=3&&!s.claimed){s.coins+=50;s.claimed=true}if(progress().level>before)s.coins+=50}s.trades={};
    }
