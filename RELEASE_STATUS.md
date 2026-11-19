@@ -29,3 +29,7 @@ Welcome/arrival/order stages, existing table/takeaway reference artwork, live co
 ## Master stability follow-up
 
 Partial-party seating, world-layer arrival/departure, arriving-slot reservation and dedicated takeaway handoff fixed. Three-pack signed fixtures, UI audio handlers and translations covered. npm test PASS (49 PASS summary lines); native audio/auth math/routing PASS. See qa/2026-11-19-master-fix.md for scoped PASS/BLOCKED and remaining production gates. Final build/upload evidence is recorded separately; no production submission.
+
+## Verified 0.9.4 delivery
+
+0.9.4 (2026111904) signed Release + matched Web SHA PASS. Uploaded 19 November 2026 10:02:40 Europe/Istanbul; Apple ready-to-test email 10:04:29. Code SHA 96950aaa3188c0b016360852b8b96f7df6b5018e pushed. Draft PR https://github.com/barisgur86/cafeverse-oops-cafe/pull/1 has four passing checks. Xcode UI simulator build/run reached Running on iPhone 17e; simulator gameplay/login and all physical-device acceptance remain NOT RUN. Production preflight remains blocked by missing configured backend URL/cutover; native account deletion/revocation and real purchase/two-device trading remain P0.

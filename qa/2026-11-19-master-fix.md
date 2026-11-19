@@ -35,7 +35,7 @@ Aday: **0.9.4 (2026111904)**. Production hedefi: **1 Aralık 2026 / 1.0.0**. Pro
 | İmza/ekonomi/takas | PASS: Apple fixture imzası, üç paket, replay, iptal/pending istemci, kurtarma, iade borcu; DB rollback, stok, yetki ve kabul/iptal yarışları |
 | Komut satırı Release | BLOCKED: sandbox SwiftUI macro/plugin; kod derleme hatası olarak gizlenmedi |
 | Xcode UI Release | Son arşiv doğrulaması dış teslim kaydında |
-| Simulator | BLOCKED: CoreSimulatorService connection invalid / sandbox erişimi |
+| Simulator | CLI BLOCKED; Xcode UI ile iPhone 17e üzerinde derlendi ve Running durumu gözlendi; normal durduruldu. Simulator ekranı CUA uygulama erişiminde yok, oyun/giriş kabul testi NOT RUN |
 | Headless browser | BLOCKED: Chrome yardımcı süreç başlatılamadı; CUA gerçek tarayıcı ile kısmi alternatif QA yapıldı |
 | Fiziksel iPhone/iPad/Bluetooth/hardware volume | BLOCKED / NOT RUN |
 | Gerçek Apple Sandbox alımı / iki gerçek cihaz takası | BLOCKED / NOT RUN; özellikler kapalı |
@@ -58,3 +58,34 @@ P2: cihaz/lokalizasyon kombinasyonlarının kalan geniş görsel matrisi. Sadece
 
 Branch: `fix/master-stability-20261119`. İstenen commit mesajı: `fix: stabilize cafe service, customer seating, audio and economy`.
 Commit/push/PR ve son TestFlight durumu: `outputs/qa-master-2026-11-19/delivery.json`. Önceki 0.9.3 hazır; yeni build doğrulanmadan mail/dağıtım başarılı sayılmaz.
+
+## Son doğrulama ve teslim
+
+- Kod commit: `96950aaa3188c0b016360852b8b96f7df6b5018e`. Remote branch SHA aynı, push PASS.
+- Taslak PR: https://github.com/barisgur86/cafeverse-oops-cafe/pull/1 ; dört GitHub kontrolü PASS. Main'e merge yok.
+- 0.9.4 /2026111904 signed Release arşivi PASS. Web SHA256: `6efd2c0891e07d4dae8960cc2e7b15c26012f25ab71a01660abe7073ccc9fe8e`.
+- Apple upload PASS: 19 Kasım **10:02:40 İstanbul**; Apple hazır maili **10:04:29 İstanbul**, barisgur@gmail.com. Önceki 2026111903 paketi son metin/rota düzeltmesi için iptal edildi ve yüklenmedi.
+- Gerçek yerel tarayıcıda 0/10/50/100 müzik slider gösterimi, mute ve reload sonrası tercih PASS; hoparlör/Bluetooth çıktısı test edilmedi.
+- Türkçe ekran 375×667,430×932,820×1180: üst/alt panel, masa seçiciler ve işlem düğmeleri viewport içinde PASS. İngilizce karşılama/ses/paket ekranı küçük boyutta kontrol edildi. Bu, tüm ekranların bütün dil/cihaz kombinasyonları için PASS değildir.
+- Son paket: 725→710 hazırlık→795 teslim (+35 servis,+50 mevcut hedef bonusu). Masa 1'in hazır olmayan ayrı siparişi ve tek müşterisi korundu.
+- `npm run preflight` üretim gate'i BLOCKED: CAFE_GAME_SERVER_URL ayarlanmamış. Staging health geçmesi bunu veya migration/cutover'ı tamamlamaz.
+
+### Değişen dosyalar
+
+- `RELEASE_STATUS.md`
+- `iOS/Cafeverse.xcodeproj/project.pbxproj`
+- `offline-runtime.js`
+- `package-lock.json`
+- `package.json`
+- `qa/2026-11-19-master-fix.md`
+- `qa/release-schedule.json`
+- `source/public/i18n.js`
+- `source/public/iso-cafe.js`
+- `source/public/service-state.js`
+- `tests/apple-signature.mjs`
+- `tests/audio.mjs`
+- `tests/i18n.mjs`
+- `tests/seating.mjs`
+- `tests/secure-economy.mjs`
+- `tests/service-orders.mjs`
+- `tests/simulation.mjs`
