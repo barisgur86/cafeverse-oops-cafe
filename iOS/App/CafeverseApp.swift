@@ -954,6 +954,7 @@ private struct CafeAudioSettings {
 
 
 private let cafeEnglish: [String: String] = [
+    "Coin gönder": "Send coins",
     "Hesap doğrulaması tamamlanamadı. Yeniden dene.": "Account verification failed. Try again.",
     "Hesap silme onayı gerekli.": "Confirm account deletion first.",
     "Hesap silme sunucusu hazır değil; hesabın korundu.": "Account deletion is not ready. Your account is safe.",

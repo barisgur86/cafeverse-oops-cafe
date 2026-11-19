@@ -5,7 +5,7 @@ import {adoptBackup} from './cutover.mjs';
 const uuid=s=>typeof s==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 const canonical=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 export class Economy {
- constructor(pool,apple,{clock=Date.now,features={},lifecycle=false,legacyImport=false}={}){this.pool=pool;this.apple=apple;this.clock=clock;this.lifecycleEnabled=lifecycle;this.legacyImport=legacyImport;this.features={iap:false,trades:false,market:false,auctions:false,social:false,...features};}
+ constructor(pool,apple,{clock=Date.now,features={},lifecycle=false,legacyImport=false}={}){this.pool=pool;this.apple=apple;this.clock=clock;this.lifecycleEnabled=lifecycle;this.legacyImport=legacyImport;this.features={iap:false,trades:false,market:false,auctions:false,social:false,coinGifts:false,...features};}
  async assertActive(c,id){if(this.lifecycleEnabled&&(await c.query('select 1 from cafe_account_deletions where user_id=$1',[id])).rows.length)throw problem('Hesap silme işlemi sürüyor. Yeni oyun işlemi yapılamaz.',423);}
  async transaction(fn){const c=await this.pool.connect();try{await c.query('begin');await c.query("set local lock_timeout='5s'");const r=await fn(c);await c.query('commit');return r;}catch(e){await c.query('rollback');throw e;}finally{c.release();}}
  async lock(c,key){await c.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[key]);}
@@ -16,8 +16,8 @@ export class Economy {
   await c.query('insert into cafe_game_accounts(user_id,code,save) values($1,$2,$3) on conflict(user_id) do nothing',[id,code,initial]);
   const a=(await c.query('select * from cafe_game_accounts where user_id=$1 for update',[id])).rows[0];await this.assertActive(c,id);return a;
  }
- async save(c,a){a.revision=Number(a.revision)+1;a.save.version=(a.save.version||0)+1;await c.query('update cafe_game_accounts set save=$2,revision=$3,refund_debt=$4,updated_at=now() where user_id=$1',[a.user_id,a.save,a.revision,a.refund_debt]);}
- state(a){const e=gameEngine(a.user_id,a.save,this.clock),d=e.handle('/api/me');return {...d.state,code:a.code,refundDebt:Number(a.refund_debt)};}
+ async save(c,a){if(this.features.coinGifts){a.giftable_coins=Math.min(Number(a.giftable_coins||0),a.save.coins);await c.query('update cafe_game_accounts set giftable_coins=$2 where user_id=$1',[a.user_id,a.giftable_coins]);}a.revision=Number(a.revision)+1;a.save.version=(a.save.version||0)+1;await c.query('update cafe_game_accounts set save=$2,revision=$3,refund_debt=$4,updated_at=now() where user_id=$1',[a.user_id,a.save,a.revision,a.refund_debt]);}
+ state(a){const e=gameEngine(a.user_id,a.save,this.clock),d=e.handle('/api/me');return {...d.state,code:a.code,refundDebt:Number(a.refund_debt),giftableCoins:Number(a.giftable_coins||0)};}
  response(a,extra={}){return {state:this.state(a),save:a.save,revision:Number(a.revision),features:this.features,...extra};}
  async request(c,id,rid,path,body,fn){
   if(!uuid(rid))throw problem('Geçersiz işlem kimliği.');
@@ -38,6 +38,7 @@ export class Economy {
     a.save=engine.exportSave();
     // Future earned coins first repay consumed/refunded purchase debt.
     const earned=Math.max(0,a.save.coins-before),repay=Math.min(earned,Number(a.refund_debt));a.save.coins-=repay;a.refund_debt=Number(a.refund_debt)-repay;
+    if(this.features.coinGifts)a.giftable_coins=Number(a.giftable_coins||0)+earned-repay;
     await this.save(c,a);const {status,state,...extra}=d;return extra;
    });return this.response(await this.account(c,id),extra);
   });
@@ -100,6 +101,32 @@ export class Economy {
    await c.query('update cafe_apple_transactions set last_event_signed_at=$3 where environment=$1 and transaction_id=$2',[t.environment,t.transactionId,n.signedDate]);
    await c.query('insert into cafe_apple_notifications(notification_id,notification_type,environment,transaction_id) values($1,$2,$3,$4)',[n.notificationUUID,n.notificationType,t.environment,t.transactionId]);return {received:true};
   });
+ }
+ async sendCoins(id,b){
+  const code=String(b.code||'').trim().toUpperCase(),amount=b.amount;
+  if(!/^[A-F0-9]{10}$/.test(code)||!Number.isSafeInteger(amount)||amount<1||amount>1000000)throw problem('Kafe kodunu ve 1–1.000.000 arasında tam coin miktarını yaz.');
+  return this.transaction(async c=>{
+   const result=await this.request(c,id,b.request_id,'coin-gift',{code,amount},async()=>{
+    const target=(await c.query('select user_id from cafe_game_accounts where code=$1',[code])).rows[0];
+    if(!target)throw problem('Kafe bulunamadı.',404);
+    if(target.user_id===id)throw problem('Kendine coin gönderemezsin.');
+    const accounts={};for(const actor of [id,target.user_id].sort())accounts[actor]=await this.account(c,actor);
+    const sender=accounts[id],recipient=accounts[target.user_id];
+    if(Number(sender.giftable_coins||0)<amount||sender.save.coins<amount)throw problem('Gönderebileceğin kazanılmış coin yeterli değil.',409);
+    const repaid=Math.min(amount,Number(recipient.refund_debt)),credited=amount-repaid;
+    if(!Number.isSafeInteger(recipient.save.coins+credited))throw problem('Alıcının coin bakiyesi sınırına ulaşıldı.',409);
+    sender.save.coins-=amount;sender.giftable_coins=Number(sender.giftable_coins)-amount;
+    recipient.save.coins+=credited;recipient.giftable_coins=Number(recipient.giftable_coins||0)+credited;recipient.refund_debt=Number(recipient.refund_debt)-repaid;
+    await this.save(c,sender);await this.save(c,recipient);
+    await c.query('insert into cafe_coin_gifts(id,sender,recipient,amount,credited_amount,debt_repaid) values($1,$2,$3,$4,$5,$6)',[b.request_id,id,target.user_id,amount,credited,repaid]);
+    return {gift:{id:b.request_id,code,amount,credited,debtRepaid:repaid}};
+   });return this.response(await this.account(c,id),result);
+  });
+ }
+ async coinGifts(id){
+  // Previously escrowed ingredient offers can still expire and return stock.
+  await this.expire(id);
+  return this.transaction(async c=>{const a=await this.account(c,id);const gifts=(await c.query("select g.id,g.amount,g.credited_amount,g.debt_repaid,g.created_at,case when g.sender=$1 then 'outgoing' else 'incoming' end as direction,coalesce(case when g.sender=$1 then r.code else s.code end,'—') as code from cafe_coin_gifts g left join cafe_game_accounts s on s.user_id=g.sender left join cafe_game_accounts r on r.user_id=g.recipient where g.sender=$1 or g.recipient=$1 order by g.created_at desc,g.id limit 30",[id])).rows;return this.response(a,{gifts});});
  }
  async find(id,code){if(!/^[A-F0-9]{10}$/.test(code))throw problem('10 karakterli kafe kodunu yaz.');const r=await this.pool.query('select code,save->>\'name\' as name from cafe_game_accounts where code=$1 and user_id<>$2',[code,id]);if(!r.rows[0])throw problem('Kafe bulunamadı.',404);return {cafe:r.rows[0]};}
  async offer(id,b){
