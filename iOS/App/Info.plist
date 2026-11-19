@@ -15,6 +15,8 @@
 	</array>
 	<key>CafeAuthPublishableKey</key>
 	<string>sb_publishable_BS8RKwr8PUv-wyfwH5C-xQ_-zaW3ZT-</string>
+	<key>CafeAccountServerURL</key>
+	<string>$(CAFE_ACCOUNT_SERVER_URL)</string>
 	<key>CafeGameServerURL</key>
 	<string>$(CAFE_GAME_SERVER_URL)</string>
 	<key>CafeAuthURL</key>

@@ -24,11 +24,13 @@ private struct DeviceCafe: UIViewRepresentable {
     let userID: String
     let session: CafeSession
     let onLogout: () -> Void
-    func makeCoordinator() -> Coordinator { Coordinator(userID: userID, session: session, onLogout: onLogout) }
+    let onDelete: () -> Void
+    func makeCoordinator() -> Coordinator { Coordinator(userID: userID, session: session, onLogout: onLogout, onDelete: onDelete) }
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.userContentController.add(context.coordinator, name: "cafeLogout")
+        configuration.userContentController.add(context.coordinator, name: "cafeDelete")
         configuration.userContentController.add(context.coordinator, name: "cafeLanguage")
         configuration.userContentController.add(context.coordinator, name: "cafeSpeak")
         let languageJSON = String(data: try! JSONEncoder().encode(UserDefaults.standard.string(forKey: "cafeverse.language") ?? "tr"), encoding: .utf8)!
@@ -43,6 +45,7 @@ private struct DeviceCafe: UIViewRepresentable {
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeAccountID = " + encoded + ";globalThis.CafeNativeStore = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let view = WKWebView(frame: .zero, configuration: configuration)
         view.navigationDelegate = context.coordinator
+        CafeActiveGame.view = view; CafeActiveGame.userID = userID
         context.coordinator.store.onUpdate = { [weak view] in view?.evaluateJavaScript("window.dispatchEvent(new Event('cafeverse-store-updates'))", completionHandler: nil) }
         view.isOpaque = false
         view.backgroundColor = UIColor(red: 0.98, green: 0.91, blue: 0.97, alpha: 1)
@@ -59,11 +62,12 @@ private struct DeviceCafe: UIViewRepresentable {
     func updateUIView(_ view: WKWebView, context: Context) {}
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKScriptMessageHandlerWithReply {
         let onLogout: () -> Void
+        let onDelete: () -> Void
         let speech = AVSpeechSynthesizer()
         let audio = CafeAudio()
         let store: CafeStore
         let cloud: CafeCloud
-        init(userID: String, session: CafeSession, onLogout: @escaping () -> Void) { self.onLogout = onLogout; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
+        init(userID: String, session: CafeSession, onLogout: @escaping () -> Void, onDelete: @escaping () -> Void) { self.onLogout = onLogout; self.onDelete = onDelete; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
             if message.name == "cafeAudio" {
                 guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url, url.isFileURL, let root,
@@ -107,10 +111,11 @@ private struct DeviceCafe: UIViewRepresentable {
             }
         }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            if message.name == "cafeLogout" { onLogout(); return }
             guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
                   url.isFileURL, let root, url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
                   let value = message.body as? String else { return }
+            if message.name == "cafeLogout" { onLogout(); return }
+            if message.name == "cafeDelete", value == "delete" { onDelete(); return }
             if message.name == "cafeLanguage", ["tr", "en"].contains(value) {
                 UserDefaults.standard.set(value, forKey: "cafeverse.language")
             }
@@ -230,6 +235,7 @@ private enum AccountKeychain {
         } else if result != errSecSuccess { throw URLError(.cannotWriteToFile) }
     }
     static func clear() { SecItemDelete(query as CFDictionary) }
+    static func clearVerifier() { var q = query; q[kSecAttrAccount as String] = "email-pkce"; SecItemDelete(q as CFDictionary) }
     static func verifier(_ value: String? = nil) throws -> String? {
         var q = query; q[kSecAttrAccount as String] = "email-pkce"
         if let value {
@@ -451,6 +457,94 @@ private enum AccountKeychain {
     }
 }
 
+// Deletion receipts survive a lost response even after Auth removes the session.
+private enum CafeDeletionJournal {
+    struct Entry: Codable { let userID: String; let receipt: String }
+    private static var query: [String: Any] { var q = AccountKeychain.query; q[kSecAttrAccount as String] = "account-deletion"; return q }
+    static func read() -> Entry? {
+        var q = query; q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var result: CFTypeRef?
+        guard SecItemCopyMatching(q as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
+        return try? JSONDecoder().decode(Entry.self, from: data)
+    }
+    static func save(_ entry: Entry) throws {
+        guard entry.receipt.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil else { throw URLError(.badServerResponse) }
+        let data = try JSONEncoder().encode(entry), result = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        if result == errSecItemNotFound { var q = query; q[kSecValueData as String] = data; q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly; guard SecItemAdd(q as CFDictionary, nil) == errSecSuccess else { throw URLError(.cannotWriteToFile) } }
+        else if result != errSecSuccess { throw URLError(.cannotWriteToFile) }
+    }
+    static func clear() { SecItemDelete(query as CFDictionary) }
+}
+
+@MainActor private final class CafeAccountClient {
+    private var session: CafeSession?
+    init(session: CafeSession?) { self.session = session }
+    func send(_ path: String, body: [String: Any]? = nil, retry: Bool = true) async throws -> [String: Any] {
+        guard ["/api/account", "/api/account/deletion/start", "/api/account/deletion/finish"].contains(path),
+              let raw = (Bundle.main.object(forInfoDictionaryKey: "CafeAccountServerURL") as? String).flatMap({ $0.hasPrefix("https://") ? $0 : nil }) ?? Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String,
+              let base = URL(string: raw), base.scheme == "https", base.host != nil, base.user == nil, base.password == nil, base.query == nil, base.fragment == nil,
+              let url = URL(string: raw.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + path) else {
+            throw NSError(domain: "CafeAccount", code: 503, userInfo: [NSLocalizedDescriptionKey: L("Hesap silme bağlantısı henüz hazır değil. Hesabın korunuyor.")])
+        }
+        var request = URLRequest(url: url); request.httpMethod = body == nil ? "GET" : "POST"; request.timeoutInterval = 15
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if path != "/api/account/deletion/finish" { guard let session else { throw URLError(.userAuthenticationRequired) }; request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization") }
+        if let body { request.httpBody = try JSONSerialization.data(withJSONObject: body) }
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+        if http.statusCode == 401, retry, path != "/api/account/deletion/finish", let saved = session,
+           let rawAuth = Bundle.main.object(forInfoDictionaryKey: "CafeAuthURL") as? String, let auth = URL(string: rawAuth), auth.scheme == "https",
+           let key = Bundle.main.object(forInfoDictionaryKey: "CafeAuthPublishableKey") as? String {
+            var refresh = URLRequest(url: auth.appendingPathComponent("auth/v1/token")); var parts = URLComponents(url: refresh.url!, resolvingAgainstBaseURL: false)!
+            parts.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]; refresh.url = parts.url; refresh.httpMethod = "POST"
+            refresh.setValue(key, forHTTPHeaderField: "apikey"); refresh.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            refresh.httpBody = try JSONSerialization.data(withJSONObject: ["refresh_token": saved.refresh_token])
+            let (value, result) = try await URLSession.shared.data(for: refresh)
+            guard (result as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.userAuthenticationRequired) }
+            let next = try JSONDecoder().decode(CafeSession.self, from: value); guard next.user.id == saved.user.id else { throw URLError(.userAuthenticationRequired) }
+            if let data = AccountKeychain.read(), let current = try? JSONDecoder().decode(CafeSession.self, from: data), current.user.id == next.user.id { try AccountKeychain.save(try JSONEncoder().encode(next)) }
+            session = next; return try await send(path, body: body, retry: false)
+        }
+        let value = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        guard (200..<300).contains(http.statusCode), let value else { throw NSError(domain: "CafeAccount", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: L(value?["error"] as? String ?? "Hesap silme tamamlanamadı. Güvenle yeniden deneyebilirsin.")]) }
+        return value
+    }
+}
+
+@MainActor private enum CafeActiveGame { static weak var view: WKWebView?; static var userID: String? }
+@MainActor private final class CafeAccountPurger: NSObject, WKNavigationDelegate {
+    private var view: WKWebView?
+    private var continuation: CheckedContinuation<Void, Error>?
+    private var timeout: Task<Void, Never>?
+    private static let command = "window.dispatchEvent(new Event('cafeverse-account-deleted')); window.CafeAccountDeleted === true"
+    static func purge(_ id: String) async throws {
+        if CafeActiveGame.userID == id, let view = CafeActiveGame.view {
+            guard try await view.evaluateJavaScript(command) as? Bool == true else { throw URLError(.cannotWriteToFile) }; return
+        }
+        let task = CafeAccountPurger(); try await task.run(id)
+    }
+    private func run(_ id: String) async throws {
+        defer { timeout?.cancel(); view = nil }
+        try await withCheckedThrowingContinuation { continuation in
+            self.continuation = continuation
+            guard let url = Bundle.main.url(forResource: "account-cleanup", withExtension: "html", subdirectory: "Web") else { finish(URLError(.fileDoesNotExist)); return }
+            let config = WKWebViewConfiguration(); config.websiteDataStore = .default()
+            let encoded = String(data: try! JSONEncoder().encode(id), encoding: .utf8)!
+            let code = SHA256.hash(data: Data(id.utf8)).map { String(format: "%02x", $0) }.joined().prefix(10).uppercased()
+            config.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeAccountID=" + encoded + ";globalThis.CafeDeletedCafeCode='" + code + "';", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+            let view = WKWebView(frame: .zero, configuration: config); self.view = view; view.navigationDelegate = self
+            view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+            timeout = Task { try? await Task.sleep(nanoseconds: 10_000_000_000); if !Task.isCancelled { self.finish(URLError(.timedOut)) } }
+        }
+    }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webView.evaluateJavaScript(Self.command) { result, error in self.finish(error ?? ((result as? Bool) == true ? nil : URLError(.cannotWriteToFile))) }
+    }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { finish(error) }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { finish(error) }
+    private func finish(_ error: Error?) { guard let c = continuation else { return }; continuation = nil; if let error { c.resume(throwing: error) } else { c.resume() } }
+}
+
 private struct AccountGate: View {
     @AppStorage("cafeverse.language") private var selectedLanguage = "tr"
     @StateObject private var auth = CafeAuth()
@@ -460,6 +554,7 @@ private struct AccountGate: View {
     @State private var register = false
     @State private var forgotPassword = false
     @State private var showPassword = false
+    @State private var showDeletion = false
     private let ink = Color(red: 0.29, green: 0.10, blue: 0.31)
     private let pink = Color(red: 0.86, green: 0.10, blue: 0.55)
     private var title: String { auth.awaitingNewPassword ? L("Yeni şifren") : forgotPassword ? L("Şifreni yenile") : register ? L("Kafeni oluşturalım") : L("Kafene hoş geldin!") }
@@ -477,7 +572,7 @@ private struct AccountGate: View {
     var body: some View {
         Group {
             if let session = auth.session, !auth.awaitingNewPassword {
-                DeviceCafe(userID: session.user.id, session: session, onLogout: { Task { await auth.logout() } })
+                DeviceCafe(userID: session.user.id, session: session, onLogout: { Task { await auth.logout() } }, onDelete: { showDeletion = true })
                     .id(session.user.id)
             } else {
                 ScrollView {
@@ -564,7 +659,102 @@ private struct AccountGate: View {
                     }.frame(maxWidth: 640).frame(maxWidth: .infinity)
                 }.scrollDismissesKeyboard(.interactively).background(Color(red: 1, green: 0.93, blue: 0.97))
             }
-        }.task { await auth.restore() }.onOpenURL { url in Task { await auth.emailCallback(url) } }
+        }.sheet(isPresented: $showDeletion) {
+            CafeAccountDeletionView(session: auth.session) { deletedID in
+                showDeletion = false
+                if auth.session?.user.id == deletedID { Task { await auth.logout() } }
+            }
+        }.task {
+            await auth.restore()
+            if let entry = CafeDeletionJournal.read(), auth.session == nil || auth.session?.user.id == entry.userID { showDeletion = true }
+        }.onOpenURL { url in Task { await auth.emailCallback(url) } }
+    }
+}
+
+@MainActor private struct CafeAccountDeletionView: View {
+    let session: CafeSession?
+    let onDeleted: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var available = false
+    @State private var apple = false
+    @State private var confirmed = false
+    @State private var password = ""
+    @State private var nonce: String?
+    @State private var busy = false
+    @State private var message = ""
+    private func finish(_ entry: CafeDeletionJournal.Entry) async throws {
+        let result = try await CafeAccountClient(session: session).send("/api/account/deletion/finish", body: ["receipt": entry.receipt])
+        guard result["deleted"] as? Bool == true else { throw URLError(.badServerResponse) }
+        try await CafeAccountPurger.purge(entry.userID)
+        if let data = AccountKeychain.read(), let current = try? JSONDecoder().decode(CafeSession.self, from: data), current.user.id == entry.userID { AccountKeychain.clear(); AccountKeychain.clearVerifier() }
+        CafeDeletionJournal.clear(); onDeleted(entry.userID)
+    }
+    private func failed(_ error: Error) async {
+        message = error.localizedDescription
+        if (error as NSError).domain == "CafeAccount", (error as NSError).code == 410, session != nil {
+            CafeDeletionJournal.clear(); confirmed = false
+            if let info = try? await CafeAccountClient(session: session).send("/api/account") { available = info["deletionAvailable"] as? Bool == true; apple = info["appleRequired"] as? Bool == true }
+        }
+    }
+    private func begin(_ proof: [String: Any]) async {
+        guard let session, confirmed else { return }
+        busy = true; message = ""; defer { busy = false; password = ""; nonce = nil }
+        do {
+            var body = proof; body["confirmation"] = "DELETE"; body["request_id"] = UUID().uuidString.lowercased()
+            let result = try await CafeAccountClient(session: session).send("/api/account/deletion/start", body: body)
+            guard let receipt = result["receipt"] as? String else { throw URLError(.badServerResponse) }
+            let entry = CafeDeletionJournal.Entry(userID: session.user.id, receipt: receipt)
+            try CafeDeletionJournal.save(entry); try await finish(entry)
+        } catch { await failed(error) }
+    }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(L("Hesabını ve kafe kaydını kalıcı olarak sil")).font(.headline)
+                    Text(L("Coinlerin, envanterin ve kafe kaydın silinir. Bekleyen tekliflerde diğer oyuncuların malzemeleri iade edilir. Bu işlem geri alınamaz."))
+                    if !message.isEmpty { Text(message).foregroundStyle(.red).accessibilityAddTraits(.isStaticText) }
+                    if busy { ProgressView(L("Hesap silme işlemi sürüyor…")) }
+                }
+                if let entry = CafeDeletionJournal.read(), session == nil || session?.user.id == entry.userID {
+                    Button(L("Silme işlemini güvenle yeniden dene")) { Task { busy = true; defer { busy = false }; do { try await finish(entry) } catch { await failed(error) } } }.disabled(busy)
+                } else if available {
+                    Section {
+                        Toggle(L("Hesabımı ve kafe kaydımı silmek istiyorum"), isOn: $confirmed)
+                        if apple {
+                            SignInWithAppleButton(.continue, onRequest: { request in
+                                var bytes = [UInt8](repeating: 0, count: 32)
+                                guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { message = L("Güvenli giriş başlatılamadı."); return }
+                                let value = Data(bytes).base64EncodedString(); nonce = value
+                                request.nonce = SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+                            }, onCompletion: { result in
+                                do {
+                                    guard let credential = try result.get().credential as? ASAuthorizationAppleIDCredential,
+                                          let code = credential.authorizationCode, let value = String(data: code, encoding: .utf8), let nonce else { throw URLError(.userAuthenticationRequired) }
+                                    Task { await begin(["authorization_code": value, "nonce": nonce]) }
+                                } catch {
+                                    nonce = nil
+                                    if (error as? ASAuthorizationError)?.code != .canceled { message = L("Apple doğrulaması tamamlanamadı. Hesabın korunuyor.") }
+                                }
+                            }).frame(height: 48).disabled(!confirmed || busy)
+                        } else {
+                            SecureField(L("Şifreni doğrula"), text: $password).textContentType(.password)
+                            Button(L("Evet, hesabımı kalıcı sil"), role: .destructive) { Task { await begin(["password": password]) } }.disabled(!confirmed || password.isEmpty || busy)
+                        }
+                    }
+                }
+            }.navigationTitle(L("Hesabımı sil"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Kapat")) { dismiss() }.disabled(busy) } }
+                .interactiveDismissDisabled(busy)
+                .task {
+                    if let entry = CafeDeletionJournal.read(), session == nil || session?.user.id == entry.userID {
+                        busy = true; defer { busy = false }; do { try await finish(entry) } catch { await failed(error) }; return
+                    }
+                    busy = true; defer { busy = false }
+                    do { let info = try await CafeAccountClient(session: session).send("/api/account"); available = info["deletionAvailable"] as? Bool == true; apple = info["appleRequired"] as? Bool == true; if !available { message = L("Hesap silme bağlantısı henüz hazır değil. Hesabın korunuyor.") } }
+                    catch { await failed(error) }
+                }
+        }
     }
 }
 
@@ -764,6 +954,33 @@ private struct CafeAudioSettings {
 
 
 private let cafeEnglish: [String: String] = [
+    "Hesap doğrulaması tamamlanamadı. Yeniden dene.": "Account verification failed. Try again.",
+    "Hesap silme onayı gerekli.": "Confirm account deletion first.",
+    "Hesap silme sunucusu hazır değil; hesabın korundu.": "Account deletion is not ready. Your account is safe.",
+    "Apple hesap silme bağlantısı henüz hazır değil. Hesabın korunuyor.": "Apple account deletion is not available yet. Your account is safe.",
+    "Apple ile yeniden doğrula.": "Verify again with Apple.",
+    "Apple doğrulaması tamamlanamadı; hesap silinmedi.": "Apple verification failed. Your account was not deleted.",
+    "Apple doğrulaması eksik; hesap silinmedi.": "Apple verification is incomplete. Your account was not deleted.",
+    "Başka hesabın Apple girişi kullanılamaz.": "Use the Apple account linked to this café.",
+    "Hesabının şifresini doğrula.": "Confirm your account password.",
+    "Başka hesap silinemez.": "You can only delete your own account.",
+    "Apple yetkisi kaldırılamadı; silme güvenle yeniden denenecek.": "Apple authorization could not be revoked. You can safely retry deletion.",
+    "Silme işlemi sürüyor; yeniden kontrol et.": "Deletion is in progress. Check again.",
+    "Yeniden giriş yaparak hesap silmeyi doğrula.": "Sign in again to confirm account deletion.",
+    "Silme makbuzu geçersiz.": "The deletion recovery receipt is invalid.",
+
+    "Hesap silme bağlantısı henüz hazır değil. Hesabın korunuyor.": "Account deletion is not available yet. Your account is safe.",
+    "Hesap silme tamamlanamadı. Güvenle yeniden deneyebilirsin.": "Account deletion could not be completed. You can safely retry.",
+    "Hesabını ve kafe kaydını kalıcı olarak sil": "Permanently delete your account and café save",
+    "Coinlerin, envanterin ve kafe kaydın silinir. Bekleyen tekliflerde diğer oyuncuların malzemeleri iade edilir. Bu işlem geri alınamaz.": "Your coins, inventory and café save will be deleted. Other players receive their reserved ingredients back. This cannot be undone.",
+    "Hesap silme işlemi sürüyor…": "Deleting your account…",
+    "Silme işlemini güvenle yeniden dene": "Safely retry deletion",
+    "Hesabımı ve kafe kaydımı silmek istiyorum": "I want to delete my account and café save",
+    "Apple doğrulaması tamamlanamadı. Hesabın korunuyor.": "Apple verification failed. Your account is safe.",
+    "Şifreni doğrula": "Confirm your password",
+    "Evet, hesabımı kalıcı sil": "Yes, permanently delete my account",
+    "Hesabımı sil": "Delete my account",
+
     "Şifreni gir.": "Enter your password.",
     "Dil seç": "Choose your language",
     "Dil / Language": "Language / Dil",

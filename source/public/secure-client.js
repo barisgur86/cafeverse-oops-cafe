@@ -9,16 +9,31 @@
  const pendingKey='cafeverse-secure-requests:'+(globalThis.CafeAccountID||'device');
  let pending;try{pending=JSON.parse(localStorage.getItem(pendingKey)||'{}');}catch{pending={};}
  const canonical=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x);
- const persistPending=()=>localStorage.setItem(pendingKey,JSON.stringify(pending));
+ const persistPending=()=>{if(!globalThis.CafeAccountDeleted)localStorage.setItem(pendingKey,JSON.stringify(pending));};
  const queue=fn=>{const task=sequence.then(fn);sequence=task.catch(()=>{});return task;};
  function apply(d,restoreBoard=false){
+  if(globalThis.CafeAccountDeleted)throw Error('[410] Hesap silindi.');
   if(d.features){globalThis.CafeFeatures=d.features;globalThis.dispatchEvent?.(new Event('cafeverse-features'));}
-  if(!d.save)return;applying=true;
+  if(!d.save)return;
+  if(d.cutover&&restoreBoard){
+   const key='cafeverse-cutover-ack:'+(globalThis.CafeAccountID||'device'),local=cache.exportSave?.();
+   if(local&&!localStorage.getItem(key)){
+    const fields=['coins','served','pantry','owned','wardrobe','look','bought','preparations','attracted','found','serviceOrders','serviceAdmitted'];
+    const economy=s=>Object.fromEntries(fields.filter(k=>s[k]!==undefined).map(k=>[k,s[k]]));
+    const conflict=local.version>Number(d.cutover.source_version)||(local.version===Number(d.cutover.source_version)&&local.version>0&&canonical(economy(local))!==canonical(economy(d.save)));
+    // Persist a scoped recovery copy before importing anything. A more recent
+    // offline legacy save must never be silently replaced by a 500-coin café.
+    localStorage.setItem('cafeverse-cutover-recovery:'+(globalThis.CafeAccountID||'device'),JSON.stringify(local));
+    if(conflict)throw Error('[409] Çevrimdışı ilerleme sunucu kaydından farklı; iki kayıt da korundu. Geçiş incelemesi gerekli.');
+   }
+  }
+  applying=true;
   try{cache.importSave(d.save);revision=d.revision;
    if(restoreBoard&&d.save._serviceBoard&&d.state?.code)localStorage.setItem('cafe-service-board:'+d.state.code,JSON.stringify(d.save._serviceBoard));
+   if(d.cutover)localStorage.setItem('cafeverse-cutover-ack:'+(globalThis.CafeAccountID||'device'),'1');
   }finally{applying=false;}
  }
- async function invoke(path,body){const d=await bridge.postMessage({action:'game',path,...(body?{body}:{})});apply(d,!initialized);initialized=true;return d;}
+ async function invoke(path,body){if(globalThis.CafeAccountDeleted)throw Error('[410] Hesap silindi.');const d=await bridge.postMessage({action:'game',path,...(body?{body}:{})});apply(d,!initialized);initialized=true;return d;}
  globalThis.fetch=async(input,options={})=>{
   const path=String(input);if(!path.startsWith('/api/'))return originalFetch(input,options);
   return queue(async()=>{
