@@ -1,7 +1,7 @@
 /* Table tickets are device/account scoped; a tray is settled atomically by the API. */
 let serviceMode='table',activeTicket=null,activeTicketSlot=null,serviceBoards={};
 const tableCount=()=>1+['table2','table3','table4'].filter(id=>state.progression?.upgrades.includes(id)).length;
-function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}const board=serviceBoards[key];board.tickets=board.tickets.filter(t=>!['served','left'].includes(state.serviceOrders?.[t.id]?.status));return board}
+function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}const board=serviceBoards[key];return CafeService.reconcile(board,state)}
 function saveBoard(){if(globalThis.CafeAccountDeleted)return;localStorage.setItem('cafe-service-board:'+(state.cafeCode||'device-test'),JSON.stringify(serviceBoard()));globalThis.dispatchEvent(new Event('cafeverse-local-save'));globalThis.dispatchEvent(new Event('cafeverse-board-save'))}
 const waitingCustomers=()=>CafeService.view(serviceBoard(),state).waiting;
 function ticketReady(t){return globalThis.CafeService.ready(t)}
