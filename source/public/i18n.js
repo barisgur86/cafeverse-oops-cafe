@@ -1,6 +1,11 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'Coin gönder':'Send coins',
+ 'Gönderebileceğin kazanılmış coin yeterli değil.':'You do not have enough earned coins available to send.',
+ 'Kendine coin gönderemezsin.':'You cannot send coins to yourself.',
+ 'Alıcının coin bakiyesi sınırına ulaşıldı.':'The recipient has reached the coin balance limit.',
+ 'Kafe kodunu ve 1–1.000.000 arasında tam coin miktarını yaz.':'Enter a café code and a whole coin amount from 1 to 1,000,000.',
  'Misafirler ayrılıyor…':'Guests are leaving…',
  'Satın almalar doğrulama testleri tamamlanana kadar kapalı.':'Purchases are disabled until verification testing is complete.',
 

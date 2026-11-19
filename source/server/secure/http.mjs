@@ -24,8 +24,8 @@ export function handler(economy,authenticate,{lifecycle}={}){
    if(path==='/api/account/deletion/finish'&&req.method==='POST'){if(!lifecycle)throw problem('Hesap silme bağlantısı henüz hazır değil.',503);return Response.json(await lifecycle.finish(b.receipt),{headers:{'Cache-Control':'no-store'}});}
    const id=await authenticate(req.headers.get('authorization'));
    const minute=Math.floor(Date.now()/60000),entry=rates.get(id);if(entry?.minute===minute){if(++entry.count>180)throw problem('Çok fazla istek. Biraz bekle.',429);}else{rates.set(id,{minute,count:1});if(rates.size>10000)for(const [k,v] of rates)if(v.minute<minute)rates.delete(k);}
-   const required=path==='/api/ios-store-credit'?'iap':path.startsWith('/api/trades')?'trades':(path.startsWith('/api/market')||['/api/wallet','/api/transactions','/api/notifications'].includes(path))?'market':path.startsWith('/api/auctions')?'auctions':null;
-   if(required&&economy.features[required]!==true)throw problem('Bu özellik test onayından sonra açılacak.',503);
+   const required=path==='/api/ios-store-credit'?'iap':path.startsWith('/api/coin-gifts')?'coinGifts':path.startsWith('/api/trades')?'trades':(path.startsWith('/api/market')||['/api/wallet','/api/transactions','/api/notifications'].includes(path))?'market':path.startsWith('/api/auctions')?'auctions':null;
+   if(required&&economy.features[required]!==true&&!(required==='trades'&&/^\/api\/trades\/[a-f0-9-]{36}\/cancel$/.test(path)&&req.method==='POST'))throw problem('Bu özellik test onayından sonra açılacak.',503);
    let value;
    const accountPath=path==='/api/account'||path==='/api/account/deletion/start';
    if(!accountPath)await economy.assertActive?.(economy.pool,id);
@@ -44,6 +44,7 @@ export function handler(economy,authenticate,{lifecycle}={}){
    else if(path==='/api/wallet'&&req.method==='GET')value=await economy.wallet(id);
    else if(path==='/api/transactions'&&req.method==='GET')value=await economy.marketHistory(id);
    else if(path==='/api/notifications')value=await economy.notifications(id,b);
+   else if(path==='/api/coin-gifts')value=req.method==='GET'?await economy.coinGifts(id):await economy.sendCoins(id,b);
    else if(path==='/api/trades')value=req.method==='GET'?await economy.trades(id):await economy.offer(id,b);
    else if(/^\/api\/trades\/[a-f0-9-]{36}\/(accept|reject|cancel)$/.test(path)&&req.method==='POST'){const [,,,trade,action]=path.split('/');value=await economy.settle(id,trade,action,b.request_id);}
    else if(req.method==='POST')value=await economy.game(id,path,b);

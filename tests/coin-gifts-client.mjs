@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';import vm from 'node:vm';import fs from 'node:fs';import crypto from 'node:crypto';
+const source=fs.readFileSync(new URL('../source/public/coin-gifts.js',import.meta.url),'utf8');
+const elements=new Map();const root={html:'',set innerHTML(value){this.html=value;elements.clear();for(const m of value.matchAll(/id="([^"]+)"/g))elements.set(m[1],{onclick:null,oninput:null,value:''});},get innerHTML(){return this.html;}};
+let posts=0,ledger=[];const ctx={CafeServerEnabled:true,CafeFeatures:{coinGifts:true},CafeI18n:{language:'tr'},state:{giftableCoins:100,cafeCode:'AAAAAAAAAA'},tab:'players',crypto,navigator:{clipboard:{writeText:async()=>{}}},safe:String,toast(){},$:id=>id==='left'?root:elements.get(id),renderPlayers(){},render(){vm.runInContext('renderPlayers()',ctx)},hydrate(s){Object.assign(ctx.state,s)},api:async(path,body)=>{if(body){posts++;ledger=[{id:body.request_id,direction:'outgoing',amount:25,code:body.code}];ctx.state.giftableCoins=75;throw Error('response lost after commit')}return {state:{giftableCoins:75},gifts:ledger}}};
+vm.createContext(ctx);vm.runInContext(source,ctx);
+vm.runInContext("coinGiftDraft={code:'BBBBBBBBBB',amount:'25'};coinGiftTarget={code:'BBBBBBBBBB',name:'Friend'};coinGiftConfirm=true;renderPlayers()",ctx);
+assert.match(root.html,/id="gift-confirm" >Onayla ve gönder/);assert.match(root.html,/id="gift-amount"[^>]+disabled/);
+const send=vm.runInContext('sendCoinGift',ctx);await Promise.all([send(),send()]);assert.equal(posts,1);assert.match(root.html,/25 coin gönderildi/);assert.equal(vm.runInContext('coinGiftAttempt',ctx),null);assert.equal(vm.runInContext('coinGiftConfirm',ctx),false);assert.match(root.html,/75 coin/);
+ctx.CafeFeatures.coinGifts=false;ctx.render();assert.doesNotMatch(root.html,/id="gift-send"/);assert.match(root.html,/açık değil/);
+ctx.CafeFeatures.coinGifts=true;ctx.CafeI18n.language='en';ctx.render();assert.match(root.html,/Send coins/);assert.match(root.html,/Available to send/);
+console.log('PASS coin gift client: explicit recipient/amount confirmation, frozen review fields, double click once, lost committed response recovered from own history, disabled feature hidden, English labels.');
