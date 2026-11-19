@@ -11,3 +11,7 @@ Local browser 375x667: four seated characters visible, full preparation/delivery
 The current 300-case coverage matrix is qa/0.9.5-cases.json. It reports 91 PASS, 94 BLOCKED, 114 NOT RUN and one FAIL production gate. It does not claim all 300 cases were executed. Actual Apple Sandbox purchases/refunds and two-device trades remain NOT RUN. IAP/trade/market/social flags remain closed. Live saves, balances and assets were preserved.
 
 Release branch: release/0.9.5. The earlier 2026111905 archive does not include these service fixes. Current signed archive/upload/CI results must be recorded after verification. Production 1.0.0 was not published; production merge/tag stays gated by open P0 acceptance.
+
+## Verified signed upload
+
+Code dd73b73cf8e56ce69bef5d74b5e6e2b60ec77cb8 pushed in PR #3. Signed current 2026111906 archive and Web SHA PASS. Xcode reports uploaded; IDEDistribution.standard.log records success 2026-11-19 20:56:48 UTC (23:56:48 Europe/Istanbul). Apple processing/ready email pending verification. Physical tests remain NOT RUN.
