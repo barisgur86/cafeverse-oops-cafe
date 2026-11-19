@@ -14,7 +14,7 @@ const rawPool=new pg.Pool({connectionString:Deno.env.get('SUPABASE_DB_URL'),max:
 // public game tables. Table names are static, values stay parameterized.
 const tables=/\b(cafe_account_deletions|cafe_account_cutovers|cafe_cloud_saves|cafe_game_accounts|cafe_apple_transactions|cafe_trade_offers|cafe_secure_requests|cafe_apple_notifications|cafe_market_listings|cafe_auctions|cafe_auction_bids|cafe_economy_history|cafe_market_notifications|cafe_finalize_auction|cafe_settle_expired_auctions|cafe_expire_market_listings)\b/g;
 const scoped=(sql:string)=>sql.replace(tables,'cafe_stage_062.$1');
-const pool={query:(sql:string,args?:unknown[])=>rawPool.query(scoped(sql),args),async connect(){const c=await rawPool.connect();return {query:(sql:string,args?:unknown[])=>c.query(scoped(sql),args),release:()=>c.release()};}};
+const pool={query:(sql:string,args?:unknown[])=>rawPool.query(scoped(sql),args),async connect(){const c=await rawPool.connect();return {query:(sql:string,args?:unknown[])=>c.query(scoped(sql),args),readLegacyBackup:async(id:string)=>(await c.query('select revision,save from public.cafe_cloud_saves where user_id=$1 for share',[id])).rows[0],release:()=>c.release()};}};
 const keys=JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS')||'{}');
 const key=keys.default||Deno.env.get('SUPABASE_ANON_KEY');
 if(!key||!Deno.env.get('SUPABASE_URL')||!Deno.env.get('SUPABASE_DB_URL'))throw Error('Managed server configuration missing');
