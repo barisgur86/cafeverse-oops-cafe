@@ -16,7 +16,7 @@
  }
  function apply(persist=true,notifyNative=true){if(persist){localStorage.setItem(key,JSON.stringify(settings));revision++;}if(native&&notifyNative)send({action:'configure',...settings});
   if(context){masterGain.gain.value=settings.muted?0:settings.master;musicGain.gain.value=settings.music;effectsGain.gain.value=settings.effects;if(gain('music')===0)element.pause();}
-  if(gain('effects')===0)globalThis.CafeCallVoice?.stop();listeners.forEach(fn=>fn({...settings}));
+  globalThis.CafeCallVoice?.stop();listeners.forEach(fn=>fn({...settings}));
  }
  function play(){unlocked=true;if(native)return send({action:'play'});graph();if(context&&!document.hidden&&gain('music')>0){context.resume().catch(()=>{});element.play().catch(()=>{});}}
  function pause(){if(native)send({action:'pause'});element?.pause();voices.forEach(v=>{try{v.stop();}catch{}});voices=[];}
@@ -35,5 +35,6 @@
  const button=document.createElement('button');button.className='secondary';const label=()=>button.textContent='🔊 '+t('Ses ayarları','Audio settings');label();button.onclick=()=>{play();paint();modal.showModal();};document.querySelector('#app-menu')?.append(button);
  document.addEventListener('pointerdown',()=>{if(!unlocked)play();},{passive:true});document.addEventListener('keydown',()=>{if(!unlocked)play();});document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if(unlocked)play();});globalThis.addEventListener('pagehide',pause);globalThis.addEventListener('cafeverse-language',()=>{label();if(modal.open)paint();});
  if(typeof transact==='function'){const previous=transact;transact=async function(path,body){const before=state.served,level=state.progression?.level;const result=await previous(path,body);if(path==='/api/preparations')effect('prepare');if(path.includes('/serve')&&state.served>before)effect('coin');if(level&&state.progression?.level>level)effect('xp');if(path.includes('/trades/')||path==='/api/npc-trade')effect('trade');return result;};}
+ document.addEventListener('click',e=>{if(e.target?.closest?.('button')&&!e.target?.closest?.('.audio-settings'))effect('menu');});
  apply(false,false);if(native){const before=revision;send({action:'get'}).then(value=>{if(revision!==before)return;if(value?.configured)set(value);else apply();});}
 })();

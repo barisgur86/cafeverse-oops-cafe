@@ -623,7 +623,7 @@ private struct CafeAudioSettings {
         let audio = AVAudioSession.sharedInstance()
         // Ambient respects Ring/Silent and mixes with other apps. Hardware/Control
         // Center volume remains entirely under iOS control.
-        try audio.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        try audio.setCategory(.ambient, mode: .default, options: [])
         try audio.setActive(true)
     }
     func handle(_ body: [String: Any]) throws -> [String: Any] {

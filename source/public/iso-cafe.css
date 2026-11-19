@@ -69,3 +69,11 @@
 
 /* A single empty-table action fills the available row. */
 .iso-actions>button:only-child{flex:1;width:100%}
+
+/* Welcome screen: bounded speech, one count, status is never a fake button. */
+.sim-door-bubble{box-sizing:border-box;left:auto;right:4%;max-width:88%;white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:clamp(17px,3vw,23px)}
+.sim-door-success{padding:8px 12px;border-radius:16px;background:#fff4df;color:#75245c;font-weight:900;font-size:17px}
+.sim-door-controls{min-width:0;gap:10px;padding-bottom:max(16px,env(safe-area-inset-bottom));overflow-y:auto}
+.sim-door-controls p{min-height:0;overflow-wrap:anywhere}.sim-door-count{display:block}.sim-door-hud{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}.sim-door-hud b{min-width:0;font-size:clamp(20px,5vw,29px)}.sim-door-hud span{white-space:nowrap}.sim-door-hud button{flex-shrink:0;min-width:44px;min-height:44px}
+@media(orientation:portrait){.sim-door-art{height:72%}.sim-door-controls{height:auto;max-height:38%;padding-top:10px;gap:6px}.sim-door-controls>button{flex-shrink:0;min-height:44px}.sim-door-controls p{font-size:14px}.sim-door-success{padding:6px 10px;font-size:15px}}
+@media(max-height:600px) and (orientation:portrait){.sim-door-controls{max-height:43%}.sim-door-controls p{font-size:12px}.sim-door-hud{gap:6px}.sim-door-hud span{font-size:13px;padding:7px}}

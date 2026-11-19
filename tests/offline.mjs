@@ -4,13 +4,14 @@ const source=fs.readFileSync(new URL('../offline-runtime.js',import.meta.url),'u
 const context={CafeTestCatalog:catalog,__CAFE_TEST_NODE__:true,structuredClone};vm.createContext(context);vm.runInContext(source,context);
 const values=new Map(),storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};let now=1000000;let engine=context.CafeOfflineFactory(storage,()=>now);
 const call=(url,body)=>engine.handle(url,body?{request_id:crypto.randomUUID(),...body}:undefined);
+const deliverTakeaway=prep=>{const id=crypto.randomUUID(),order={id,mode:'takeaway',table:null,items:[{recipe:prep.recipe,preparation:prep.id}]};assert.equal(call('/api/service-orders/open',{order}).status,200);return call('/api/service-batches/serve',{order_id:id,mode:'takeaway',table:null,customers:[id+':0'],preparations:[prep.id]})};
 assert.equal(call('/api/me').state.coins,500);assert.equal(call('/api/me').state.progression.xp,0);
 const amounts={berry:3,milk:1,ice:4,vanilla:1,cream:1};let p=call('/api/preparations',{amounts});assert.equal(p.status,200);assert.equal(p.state.coins,491);assert.equal(call('/api/preparations/'+p.preparation.id+'/serve',{}).status,409);
-now+=5001;let d=call('/api/preparations/'+p.preparation.id+'/serve',{});assert.equal(d.state.coins,526);assert.equal(d.state.progression.xp,35);assert.equal(call('/api/preparations/'+p.preparation.id+'/serve',{}).state.coins,526);
+now+=5001;let d=deliverTakeaway(p.preparation);assert.equal(d.state.coins,526);assert.equal(d.state.progression.xp,35);assert.equal(call('/api/preparations/'+p.preparation.id+'/serve',{}).status,409);assert.equal(call('/api/me').state.coins,526);
 const id=crypto.randomUUID();d=call('/api/outfit',{item:'bow',request_id:id});assert.equal(d.state.coins,481);assert.equal(d.state.look.head,'bow');assert.equal(call('/api/outfit',{item:'bow',request_id:id}).state.coins,481);
 assert.equal(call('/api/preparations',{amounts:{milk:2,ice:3,vanilla:1,cream:2}}).status,403);
 assert.equal(call('/api/decor',{decor:'bluechick'}).state.coins,381);assert.ok(call('/api/me').state.owned.includes('bluechick'));
-for(let i=0;i<2;i++){p=call('/api/preparations',{amounts});assert.equal(p.status,200);now+=5001;d=call('/api/preparations/'+p.preparation.id+'/serve',{});assert.equal(d.status,200)}
+for(let i=0;i<2;i++){p=call('/api/preparations',{amounts});assert.equal(p.status,200);now+=5001;d=deliverTakeaway(p.preparation);assert.equal(d.status,200)}
 assert.equal(d.state.progression.level,2);assert.equal(d.state.progression.xp,105);
 const expectedCoins=d.state.coins;engine=context.CafeOfflineFactory(storage,()=>now);assert.equal(call('/api/me').state.coins,expectedCoins);assert.equal(call('/api/me').state.look.head,'bow');assert.ok(call('/api/me').state.owned.includes('bluechick'));
 assert.equal(call('/api/upgrades',{upgrade:'table2'}).status,200);assert.equal(call('/api/me').state.progression.capacity,2);
@@ -29,7 +30,9 @@ console.log('PASS: offline prepare/serve/readiness, XP/levels/rewards, retry saf
 const trayValues=new Map();const trayStorage={getItem:k=>trayValues.get(k)||null,setItem:(k,v)=>trayValues.set(k,v)};const tray=context.CafeOfflineFactory(trayStorage,()=>now);
 const tc=(url,body)=>tray.handle(url,body?{request_id:crypto.randomUUID(),...body}:undefined);
 let ids=[];for(let j=0;j<3;j++)ids.push(tc('/api/preparations',{amounts}).preparation.id);now+=5001;ids.push(tc('/api/preparations',{amounts}).preparation.id);
-const cb=tc('/api/me').state.coins;assert.equal(tc('/api/service-batches/serve',{preparations:ids}).status,409);assert.equal(tc('/api/me').state.served,0);assert.equal(tc('/api/me').state.coins,cb);
-assert.equal(tc('/api/service-batches/serve',{preparations:[ids[0],ids[0]]}).status,400);
-now+=5001;const trayID=crypto.randomUUID();let served=tc('/api/service-batches/serve',{preparations:ids,request_id:trayID});assert.equal(served.status,200);assert.equal(served.state.served,4);assert.equal(served.state.coins,cb+240);assert.equal(served.state.progression.xp,140);assert.equal(tc('/api/service-batches/serve',{preparations:ids}).state.coins,served.state.coins);assert.equal(tc('/api/service-batches/serve',{preparations:ids,request_id:trayID}).state.coins,served.state.coins);
+const orderID=crypto.randomUUID();const order={id:orderID,mode:'table',table:1,items:ids.map(id=>({recipe:catalog.FORMULAS.findIndex(f=>JSON.stringify(f)===JSON.stringify(amounts)),preparation:id}))};assert.equal(tc('/api/service-orders/open',{order}).status,200);
+const serveContext={order_id:orderID,mode:'table',table:1,customers:ids.map((_,i)=>orderID+':'+i)};
+const cb=tc('/api/me').state.coins;assert.equal(tc('/api/service-batches/serve',{...serveContext,preparations:ids}).status,409);assert.equal(tc('/api/me').state.served,0);assert.equal(tc('/api/me').state.coins,cb);
+assert.equal(tc('/api/service-batches/serve',{...serveContext,preparations:[ids[0],ids[0]]}).status,400);
+now+=5001;const trayID=crypto.randomUUID();let served=tc('/api/service-batches/serve',{...serveContext,preparations:ids,request_id:trayID});assert.equal(served.status,200);assert.equal(served.state.served,4);assert.equal(served.state.coins,cb+240);assert.equal(served.state.progression.xp,140);assert.equal(tc('/api/service-batches/serve',{...serveContext,preparations:ids}).status,409);assert.equal(tc('/api/service-batches/serve',{...serveContext,preparations:ids,request_id:trayID}).state.coins,served.state.coins);
 console.log('PASS: four-product tray readiness, atomic delivery, no duplicate reward, no coins for door calls.');

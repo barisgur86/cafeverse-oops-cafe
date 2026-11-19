@@ -1,6 +1,6 @@
 import fs from 'node:fs';import path from 'node:path';import http from 'node:http';import assert from 'node:assert/strict';import {fileURLToPath} from 'node:url';
 const {chromium}=await import('/Users/barisgur/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs');
-const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),web=path.join(root,'iOS/App/Web'),out=path.join(root,'../../outputs/qa-1.0.0');fs.mkdirSync(out,{recursive:true});
+const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),web=path.join(root,'iOS/App/Web'),out=path.resolve(root,process.env.CAFE_QA_OUT||'../../outputs/qa-2026-11-19');fs.mkdirSync(out,{recursive:true});
 const mime={'.html':'text/html','.png':'image/png','.svg':'image/svg+xml','.m4a':'audio/mp4'};
 const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname),file=path.resolve(web,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(web+path.sep)){res.writeHead(403).end();return;}try{const bytes=fs.readFileSync(file);res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(bytes);}catch{res.writeHead(404).end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base='http://127.0.0.1:'+server.address().port;let browser;const results=[];
@@ -10,6 +10,15 @@ try{
   const context=await browser.newContext({viewport:{width,height},locale});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{globalThis.__qaGains=[];const Original=window.AudioContext;window.AudioContext=class extends Original{createGain(){const node=super.createGain();globalThis.__qaGains.push(node);return node;}};});
   await page.goto(base);await page.waitForFunction(()=>typeof connected!=='undefined'&&connected);await page.locator('#living-cafe').waitFor({state:'visible'});await page.screenshot({path:path.join(out,label+'-cafe.png')});
+  await page.locator('[data-act="call"]').click();
+  for(let tap=0;tap<3;tap++)await page.locator('#door-call').click();
+  await page.locator('.sim-door-success').waitFor({state:'visible'});
+  assert.equal(await page.locator('.sim-door-count').count(),1);assert.equal(await page.locator('#door-call').count(),0);
+  assert.ok(await page.locator('#door-enter.iso-primary').isVisible());
+  const overflow=await page.locator('.sim-door-bubble,.sim-door-hud,.sim-door-count,.sim-door-success,#door-enter').evaluateAll(els=>els.filter(e=>{const r=e.getBoundingClientRect();return r.x<0||r.y<0||r.right>innerWidth+1||r.bottom>innerHeight+1}).map(e=>e.className));assert.deepEqual(overflow,[]);
+  await page.screenshot({path:path.join(out,label+'-welcome-complete.png')});
+  await page.locator('#door-enter').click();assert.ok(await page.locator('[data-person]').count()>=4);
+  await page.reload();await page.waitForFunction(()=>typeof connected!=='undefined'&&connected);assert.ok(await page.locator('[data-person]').count()>=4);
   await page.locator('[data-act="menu"]').click();const sound=page.getByRole('button',{name:/Ses ayarları|Audio settings/});await sound.click();
   for(const value of [100,50,10,0]){await page.locator('#audio-music').evaluate((el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}));},value);assert.equal(await page.evaluate(()=>CafeAudio.settings.music),value/100);assert.equal(await page.evaluate(()=>__qaGains[1].gain.value),Math.fround(value/100));}
   await page.locator('#audio-effects').evaluate(el=>{el.value='50';el.dispatchEvent(new Event('input',{bubbles:true}));});await page.locator('#audio-master').evaluate(el=>{el.value='40';el.dispatchEvent(new Event('input',{bubbles:true}));});assert.ok(Math.abs(await page.evaluate(()=>CafeAudio.effectsGain)-.2)<.0001);

@@ -6,7 +6,7 @@ const dummy=()=>({setAttribute(){},classList:{toggle(){}},style:{},querySelector
 const ctx={document:{createElement:()=>element,body:{append(){},classList:{toggle(){}}},querySelectorAll:()=>[]},matchMedia:()=>({matches:false}),Date:class extends Date{static now(){return now}},setTimeout:f=>{queueMicrotask(f)},setInterval(){},crypto,state:engine.snapshot(),tab:'cafe',render(){},safe:String,recipes:catalog.FORMULAS.map((formula,i)=>({formula,icon:'🍓',name:'Recipe '+i,color:'#ed80b1'})),serviceBoard:()=>board,tableCount:()=>1,waitingCustomers:()=>Math.max(0,4+(ctx.state.attracted||0)-board.admitted),ticketReady:t=>t.items.every(i=>i.preparation&&i.readyAt<=now),availableRecipeIndices:()=>[0,7],saveBoard(){storage.setItem('board',JSON.stringify(board))},toast(){},navigateGame(){},netBusy:false};
 // Timers advance the real offline engine clock so readiness checks remain meaningful.
 ctx.setTimeout=(f,ms)=>queueMicrotask(()=>{now+=ms;f()});ctx.transact=async(url,body)=>{const d=engine.handle(url,{request_id:crypto.randomUUID(),...body});if(d.status!==200)throw Error(d.error);ctx.state=d.state;return d};
-vm.createContext(ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/appearance.js',import.meta.url),'utf8'),ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/seating.js',import.meta.url),'utf8'),ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/iso-cafe.js',import.meta.url),'utf8'),ctx);
+vm.createContext(ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/service-state.js',import.meta.url),'utf8'),ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/appearance.js',import.meta.url),'utf8'),ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/seating.js',import.meta.url),'utf8'),ctx);vm.runInContext(fs.readFileSync(new URL('../source/public/iso-cafe.js',import.meta.url),'utf8'),ctx);
 const action=()=>buttons.find(b=>b.dataset.act==='action').onclick();assert.equal(board.tickets[0].items.length,4);assert.equal(board.admitted,4);
 const preparing=action();await action();await preparing;assert.equal(board.tickets[0].items.filter(i=>i.preparation).length,4);assert.equal(ctx.state.served,0);const cost=500-ctx.state.coins;assert.ok(cost>0);assert.ok(frames.some(h=>h.includes('Makine çalışıyor')));assert.ok(frames.some(h=>h.includes('tepsiye bırakıyor')));
 const serving=action();await action();await serving;assert.equal(ctx.state.served,4);assert.equal(board.tickets.length,0);assert.equal(ctx.state.progression.xp,140);assert.equal(ctx.state.progression.level,2);const balance=ctx.state.coins;assert.equal(engine.snapshot().coins,balance);assert.ok(frames.some(h=>h.includes('Harika servis!')));assert.ok(frames.every(h=>!h.includes('<dialog')));
@@ -44,3 +44,8 @@ selectors[0].onclick();
 assert.ok(frames.at(-1).includes('Siparişi hazırla'));
 assert.equal((frames.at(-1).match(/data-act="call"/g)||[]).length,1);
 console.log('PASS call-button regression: empty table has one working call action; takeaway and occupied table retain distinct controls.');
+
+const welcome=frames.find(h=>h.includes('sim-door-success'));
+assert.ok(welcome,'completed call renders a status');assert.equal((welcome.match(/class="sim-door-count"/g)||[]).length,1);
+assert.ok(!welcome.includes('id="door-call"'));assert.ok(welcome.includes('id="door-enter" class="iso-primary"'));
+console.log('PASS welcome UI states: one customer count, passive completion status, enter-cafe primary action.');

@@ -1,10 +1,10 @@
 /* Table tickets are device/account scoped; a tray is settled atomically by the API. */
 let serviceMode='table',activeTicket=null,activeTicketSlot=null,serviceBoards={};
 const tableCount=()=>1+['table2','table3','table4'].filter(id=>state.progression?.upgrades.includes(id)).length;
-function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}return serviceBoards[key]}
+function serviceBoard(){const key=state.cafeCode||'device-test';if(!serviceBoards[key]){try{serviceBoards[key]=JSON.parse(localStorage.getItem('cafe-service-board:'+key))}catch{}serviceBoards[key]||={admitted:0,tickets:[]};}const board=serviceBoards[key];board.tickets=board.tickets.filter(t=>!['served','left'].includes(state.serviceOrders?.[t.id]?.status));return board}
 function saveBoard(){localStorage.setItem('cafe-service-board:'+(state.cafeCode||'device-test'),JSON.stringify(serviceBoard()));globalThis.dispatchEvent(new Event('cafeverse-local-save'));globalThis.dispatchEvent(new Event('cafeverse-board-save'))}
 const waitingCustomers=()=>Math.max(0,4+(state.attracted||0)-serviceBoard().admitted);
-function ticketReady(t){return t.items.every(i=>i.preparation&&i.readyAt<=Date.now())}
+function ticketReady(t){return globalThis.CafeService.ready(t)}
 function ticketName(t){return t.mode==='table'?'Masa '+t.table:'Paket #'+t.number}
 function clearTicketPreparation(){pending=null;madeRecipe=null;serverPreparation=null;$('serve').hidden=true;activeTicket=null;activeTicketSlot=null}
 function createTicket(){const board=serviceBoard(),guests=serviceMode==='table'?Number($('table-guests').value):1,table=serviceMode==='table'?Number($('table-choice').value):null;
@@ -37,7 +37,9 @@ function openTicketService(id){
  async function deliver(){
   if(sending||delivered)return;sending=true;draw();const before=state.coins;
   try{
-   await transact('/api/service-batches/serve',{preparations:t.items.map(i=>i.preparation)});
+   if(!serviceBoard().tickets.includes(t)||!ticketReady(t))throw Error('Müşteri siparişi artık masada değil.');
+   await CafeService.register(t,transact);
+   const deliveredResult=await transact('/api/service-batches/serve',{...CafeService.context(t),preparations:t.items.map(i=>i.preparation)});if(!deliveredResult)throw Error('Servis tamamlanamadı.');
    serviceBoard().tickets=serviceBoard().tickets.filter(x=>x.id!==id);saveBoard();clearTicketPreparation();
    earned=state.coins-before;delivered=true;
    const d=await api('/api/me');state.readyQueue=d.preparations||[];render();celebrate();
@@ -51,7 +53,7 @@ const beforeTicketQueue=renderQueue;renderQueue=function(){beforeTicketQueue();c
 setInterval(()=>{if(tab==='cafe'&&document.querySelector('[data-ticket-serve]:disabled')&&!document.querySelector('dialog[open]'))renderServiceBoard()},1000);
 render();
 const beforeTicketRestore=restoreReady;restoreReady=function(prep){if(prep&&serviceBoard().tickets.some(t=>t.items.some(i=>i.preparation===prep.id)))return;return beforeTicketRestore(prep)};
-const beforeTicketService=openService;openService=function(){const t=serverPreparation&&serviceBoard().tickets.find(t=>t.items.some(i=>i.preparation===serverPreparation.id));if(t){if(ticketReady(t))return openTicketService(t.id);return toast('Masanın tüm ürünlerini hazırla; sipariş birlikte servis edilir.')}return beforeTicketService()};
+const beforeTicketService=openService;openService=function(){const t=serverPreparation&&serviceBoard().tickets.find(t=>t.items.some(i=>i.preparation===serverPreparation.id));if(t){if(ticketReady(t))return openTicketService(t.id);return toast('Masanın tüm ürünlerini hazırla; sipariş birlikte servis edilir.')}return toast('Önce masadan veya paket tezgâhından müşteri siparişi seç.')};
 
 // Keep the full recipe readable outside the cropped mixer illustration.
 const readableRecipe=document.querySelector('#prep-screen .studio-recipe');if(readableRecipe)$('prep-stage').before(readableRecipe);
