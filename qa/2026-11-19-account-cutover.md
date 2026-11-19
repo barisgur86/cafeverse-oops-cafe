@@ -39,3 +39,11 @@ Stage health HTTP200: `accountDeletion:true`, `cutover:server-backup-v1`, `apple
 ## Git / sürüm
 
 Branch `fix/account-cutover-20261119`, önceki PR #1 üzerine devam eder. Commit/push/PR, CI ve gerçek imzalı arşiv/TestFlight sonucu `outputs/qa-account-2026-11-19/delivery.json` kaydında tutulur; doğrulanmadan PASS yazılmaz. Ayrıntılı kurulum ve veri yaşam döngüsü `ACCOUNT_LIFECYCLE.md`.
+
+## Son doğrulama
+
+- Kod commit: e91dc15257a78e345bf90c7de6578a9f910ea005; GitHub push doğrulandı. Draft PR: https://github.com/barisgur86/cafeverse-oops-cafe/pull/2 (PR #1 üzerine).
+- Yerel npm test: 69 PASS özet satırı. Native CI (pull_request) PASS. İlk PostgreSQL CI, test fixture session claim'inin farklı pool bağlantısına gitmesini yakaladı; 9ef1ca8 test düzeltmesiyle claim ve RPC aynı transaction bağlantısına alındı. Son CI sonucu ayrıca kontrol edilmeli.
+- Stage v7 ACTIVE, /health 200, yetkisiz /api/account 401. FK indeksleri stage ortamına uygulandı. Apple revocation false; production aktarımı ve tüm ücretli/sosyal flagler kapalı.
+- Xcode Release Swift derlemesi PASS (5.5 saniye), 0.9.5/2026111905 ürün Info.plist ve Web SHA kaynakla eşleşiyor. CodeSign devam ediyor; imzalı arşiv/TestFlight yüklemesi henüz doğrulanmadı.
+- Bu aday için Apple hazır maili gönderildi iddiası yok. Gerçek cihaz ve gerçek satın alma testi NOT RUN.
