@@ -82,7 +82,7 @@ const privileges=await db.query("select has_table_privilege('authenticated','caf
 const guestCafe=crypto.randomUUID();await db.query('insert into auth.users values($1)',[guestCafe]);
 const tableOrder={id:crypto.randomUUID(),mode:'table',table:1,items:Array.from({length:4},()=>({recipe:0}))};
 const game=(path,b)=>economy.game(guestCafe,path,{request_id:crypto.randomUUID(),...b});
-await game('/api/service-orders/open',{order:tableOrder});
+await game('/api/service-orders/open',{order:tableOrder});now+=2200;
 const tray=[];for(let i=0;i<4;i++){const d=await game('/api/preparations',{amounts:(await import('../source/server/secure/engine.mjs')).catalog.FORMULAS[0],order_id:tableOrder.id,customer_id:tableOrder.id+':'+i});tray.push(d.preparation.id)}
 now+=6000;const deliver={order_id:tableOrder.id,mode:'table',table:1,customers:tray.map((_,i)=>tableOrder.id+':'+i),preparations:tray};
 const beforeServe=await economy.me(guestCafe);await assert.rejects(game('/api/service-batches/serve',{...deliver,table:2}),/eşleşmiyor/);

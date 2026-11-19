@@ -10,6 +10,7 @@ try{
   const context=await browser.newContext({viewport:{width,height},locale});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{globalThis.__qaGains=[];const Original=window.AudioContext;window.AudioContext=class extends Original{createGain(){const node=super.createGain();globalThis.__qaGains.push(node);return node;}};});
   await page.goto(base);await page.waitForFunction(()=>typeof connected!=='undefined'&&connected);await page.locator('#living-cafe').waitFor({state:'visible'});await page.screenshot({path:path.join(out,label+'-cafe.png')});
+  await page.locator('[data-act="action"]').click();await page.waitForFunction(()=>!document.querySelector('[data-act="action"]').disabled);
   await page.locator('[data-act="call"]').click();
   for(let tap=0;tap<3;tap++)await page.locator('#door-call').click();
   await page.locator('.sim-door-success').waitFor({state:'visible'});
