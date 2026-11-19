@@ -1,12 +1,12 @@
 import vm from 'node:vm';import fs from 'node:fs';import assert from 'node:assert/strict';
 const code=fs.readFileSync(new URL('../source/public/audio.js',import.meta.url),'utf8');
 function setup({native=false,saved=null}={}){
- let speechStops=0;const values=new Map(saved?[['cafeverse.audio.v1',JSON.stringify(saved)]]:[]),events={},nodes=[],audio=[],messages=[];
- const element=()=>({setAttribute(){},append(){},querySelector(){return {onclick:null,oninput:null,focus(){}};}});
+ let speechStops=0;const values=new Map(saved?[['cafeverse.audio.v1',JSON.stringify(saved)]]:[]),events={},nodes=[],audio=[],messages=[],dom=[];
+ const element=()=>{const fields=new Map(),el={setAttribute(){},append(){},showModal(){this.open=true},close(){this.open=false},querySelector(key){if(!fields.has(key))fields.set(key,{onclick:null,oninput:null,focus(){}});return fields.get(key)}};dom.push(el);return el;};
  class Audio {constructor(){this.loop=false;this.paused=true;audio.push(this);}play(){this.paused=false;return Promise.resolve();}pause(){this.paused=true;}get volume(){return 1;}set volume(v){throw Error('iOS element.volume is not a reliable gain path');}}
  class Context {constructor(){this.destination={};this.currentTime=0;}createGain(){const node={gain:{value:1,setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}};nodes.push(node);return node;}createDynamicsCompressor(){return {threshold:{},ratio:{},connect(){}};}createMediaElementSource(){return {connect(){}};}resume(){return Promise.resolve();}createOscillator(){return {frequency:{},connect(){},disconnect(){},start(){},stop(){}};}}
  const context={localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)},document:{hidden:false,createElement:element,body:{append(){}},querySelector:()=>element(),addEventListener:(n,f)=>events[n]=f},addEventListener:(n,f)=>events[n]=f,Audio,AudioContext:Context,Set,Promise,CafeCallVoice:{stop(){speechStops++}},webkit:native?{messageHandlers:{cafeAudio:{postMessage:async b=>{messages.push(b);return b.action==='get'?{configured:true,master:.2,music:.4,effects:.3,muted:false}:{};}}}}:undefined};
- vm.createContext(context);vm.runInContext(code,context);return {get speechStops(){return speechStops},context,controller:context.CafeAudio,values,events,nodes,audio,messages};
+ vm.createContext(context);vm.runInContext(code,context);return {get speechStops(){return speechStops},context,controller:context.CafeAudio,values,events,nodes,audio,messages,dom};
 }
 const s=setup();s.events.pointerdown();assert.equal(s.audio.length,1);const [master,music,effects]=s.nodes;
 for(const volume of [1,.5,.1,0]){s.controller.set({music:volume});assert.equal(music.gain.value,volume);assert.equal(master.gain.value,.7);}assert.equal(s.audio[0].paused,true);
@@ -21,3 +21,7 @@ console.log('PASS audio control paths: actual gain-node values, 100/50/10/0, mas
 for(const value of [1,.5,.1,0]){const before=s.speechStops;s.controller.set({master:1,effects:value});assert.equal(effects.gain.value,value);assert.equal(s.controller.effectsGain,value);assert.ok(s.speechStops>before,'existing speech is stopped when gain changes');}
 const swift=fs.readFileSync(new URL('../iOS/App/CafeverseApp.swift',import.meta.url),'utf8');assert.ok(swift.includes('setCategory(.ambient, mode: .default, options: [])'));
 console.log('PASS audio regression: effects 100/50/10/0, active speech gain changes and supported ambient session configuration.');
+
+// Exercise the actual slider handlers installed by the settings dialog.
+s.dom[1].onclick();for(const type of ['master','music','effects'])for(const value of [0,10,50,100]){s.dom[0].querySelector('#audio-'+type).oninput({target:{value:String(value)}});assert.equal(s.controller.settings[type],value/100);assert.equal(s.dom[0].querySelector('#audio-value-'+type).textContent,value+'%');}s.dom[0].querySelector('#audio-mute').onclick();assert.equal(s.controller.effectsGain,0);s.dom[0].querySelector('#audio-mute').onclick();assert.equal(s.controller.effectsGain,1);const reload=setup({saved:JSON.parse(s.values.get('cafeverse.audio.v1'))});assert.equal(reload.controller.settings.music,1);assert.equal(reload.controller.settings.effects,1);
+console.log('PASS audio UI regression: actual range input handlers at 0/10/50/100, mute button restoration and restart persistence.');

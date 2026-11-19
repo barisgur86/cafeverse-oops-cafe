@@ -11,3 +11,7 @@ assert.equal(plan({admitted:0,tickets:[]},4,{tables:1,blocked:[1]}),null);assert
 const afterDepartures=plan({admitted:8,sequence:2,tickets:[]},5);assert.equal(afterDepartures.tickets.length,2);assert.equal(afterDepartures.admitted,13);assert.equal(afterDepartures.tickets[1].items.length,1);
 const loaded=JSON.parse(JSON.stringify(all));assert.equal(plan(loaded,1),null);assert.equal(plan({admitted:0,tickets:[takeaway]},5,{tables:1,capacity:0}),null);assert.equal(plan({admitted:0,tickets:[]},5,{recipes:[]}),null);
 console.log('PASS auto seating: 9 waiting fill the empty four-seat table, in-flight orders preserved, no duplicate admissions, all tables full, partial parties, departures block seats, takeover reservation, restart and capacity limits.');
+
+const pair=plan({admitted:0,tickets:[]},2,{takeaway:true,fullTables:false});assert.equal(pair.tickets.length,1);assert.equal(pair.tickets[0].mode,'table');assert.equal(pair.tickets[0].table,1);assert.equal(pair.tickets[0].items.length,2);assert.equal(pair.admitted,2);
+const overflow=plan({admitted:8,tickets:[{id:'a',mode:'table',table:1,items:[{recipe:0}]},{id:'b',mode:'table',table:2,items:[{recipe:0}]}]},2,{takeaway:true,fullTables:false});assert.equal(overflow.tickets.at(-1).mode,'takeaway');assert.equal(overflow.tickets.at(-1).table,null);
+console.log('PASS partial welcome: two guests sit at a free table; takeaway overflow never receives a table ID.');

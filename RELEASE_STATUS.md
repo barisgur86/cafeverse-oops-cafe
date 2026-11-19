@@ -1,6 +1,6 @@
 # Caféverse release status — 19 November 2026
 
-Candidate: **0.9.3 (2026111902)**. Production target: **1.0.0 / 1 December 2026**.
+Candidate: **0.9.4 (2026111904)**. Production target: **1.0.0 / 1 December 2026**.
 
 - P0 service identity fixed in source: every batch is bound to one registered order, table/mode and ordered customer IDs. Readiness and single settlement checked inside the same game/database transaction. Standalone unassigned delivery cannot grant rewards.
 - Tables fill to four before overflow becomes one takeaway order per customer; active/preparing orders are not enlarged. More overflow waits for the next free takeaway slot.
@@ -25,3 +25,7 @@ See qa/2026-11-19-delivery.md and outputs/qa-2026-11-19 for evidence.
 ## P0 service follow-up
 
 Welcome/arrival/order stages, existing table/takeaway reference artwork, live counters and departure cleanup restored. Asset hashes unchanged. See qa/2026-11-19-service-restore.md for the 15-item acceptance matrix and test scope.
+
+## Master stability follow-up
+
+Partial-party seating, world-layer arrival/departure, arriving-slot reservation and dedicated takeaway handoff fixed. Three-pack signed fixtures, UI audio handlers and translations covered. npm test PASS (49 PASS summary lines); native audio/auth math/routing PASS. See qa/2026-11-19-master-fix.md for scoped PASS/BLOCKED and remaining production gates. Final build/upload evidence is recorded separately; no production submission.

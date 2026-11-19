@@ -21,7 +21,7 @@ try{
  // temporary root and disable online checks ONLY for offline cryptographic tests.
  const verifier=new AppleVerifier([certificates[2]],'Sandbox');
  verifier.verifier=new SignedDataVerifier([certificates[2]],false,Environment.SANDBOX,bundleID);
- assert.equal((await verifier.transaction(sign(body),actor)).coins,250);
+ for(const coins of [250,750,2000])assert.equal((await verifier.transaction(sign({...body,productId:'com.cafeverse.oopscafe.coins'+coins}),actor)).coins,coins);
  await assert.rejects(verifier.transaction(sign(body,'root.key'),actor),/imzası/);
  const valid=sign(body),parts=valid.split('.');parts[1]=Buffer.from(JSON.stringify({...body,productId:'com.cafeverse.oopscafe.coins2000'})).toString('base64url');await assert.rejects(verifier.transaction(parts.join('.'),actor),/imzası/);
  await assert.rejects(verifier.transaction(sign({...body,bundleId:'other'}),actor));
