@@ -64,3 +64,7 @@ GitHub push/PR kimlik doğrulamasına bağlı; doğrulanmadan başarılı raporl
 0.9.2 Apple'a yüklenmiştir. 0.9.3 upload durumu RELEASE_STATUS.md ve dış teslim kaydında izlenir.
 
 Kapsam dışı production P0'lar: canlı sunucu otoritesi/cloud cutover, gerçek Apple ödeme/iade, hesap silme/Apple revocation, gizlilik/review bilgileri. Ekonomik flag'ler kapalı; canlı DB/veri silme veya reset yapılmadı. Yeni migration gerekmedi; JSON sipariş alanları geriye uyumlu eklendi.
+
+### Verified distribution update
+
+0.9.3 (2026111902) upload succeeded at 04:03:37 UTC, 19 November. Apple ready-to-test mail reached barisgur@gmail.com at 04:05:21 UTC. Code commit 524de5809406fc3e703e1ad30e51bee03f8efbcb pushed via GitHub Desktop; remote SHA matches. PR creation: BLOCKED, integration HTTP 403 (Resource not accessible by integration). No production submission.
