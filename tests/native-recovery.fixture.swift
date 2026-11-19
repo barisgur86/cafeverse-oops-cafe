@@ -39,6 +39,11 @@ extension CafeAuth { func finishRoutingTest() { finishRequest() } }
   let unrelated=CafeAuth()
   await unrelated.emailCallback(URL(string:"cafeverse://other#access_token=test-only&type=recovery")!)
   precondition(!unrelated.awaitingNewPassword)
+  let entry = CafeDeletionJournal.Entry(userID: "00000000-0000-0000-0000-000000000001", receipt: String(repeating: "a", count: 64))
+  let decoded = try! JSONDecoder().decode(CafeDeletionJournal.Entry.self, from: JSONEncoder().encode(entry))
+  precondition(decoded.userID == entry.userID && decoded.receipt == entry.receipt)
+  do { _ = try await CafeAccountClient(session: nil).send("/api/stock"); preconditionFailure("Account bridge must reject arbitrary game paths") } catch { }
+  print("PASS native deletion receipt encoding and account-only URL whitelist; no network or keychain writes.")
   print("PASS native recovery routing: existing session, busy callback queue, short-password rejection, cancel preservation, unrelated URL ignored. No network or credential writes.")
  }
 }

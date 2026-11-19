@@ -1,9 +1,9 @@
 # Caféverse release status — 19 November 2026
 
-Candidate: **0.9.4 (2026111904)**. Production target: **1.0.0 / 1 December 2026**.
+Candidate: **0.9.5 (2026111905)**. Production target: **1.0.0 / 1 December 2026**.
 
 - P0 service identity fixed in source: every batch is bound to one registered order, table/mode and ordered customer IDs. Readiness and single settlement checked inside the same game/database transaction. Standalone unassigned delivery cannot grant rewards.
-- Tables fill to four before overflow becomes one takeaway order per customer; active/preparing orders are not enlarged. More overflow waits for the next free takeaway slot.
+- Tables have four seats and accept parties of 1–4 before overflow becomes one takeaway order per customer; active/preparing orders are not enlarged. More overflow waits for the next free takeaway slot.
 - Audio and welcome UI fixes verified by automated tests and local browser interaction.
 - Current 0.9.3 Release archive is signed and verified; bundled web hash matches source. Earlier unsigned QA was only a historical build-mirror check.
 - **0.9.2 uploaded successfully** on 19 November; confirmed by Organizer UI and distribution log.
@@ -33,3 +33,7 @@ Partial-party seating, world-layer arrival/departure, arriving-slot reservation 
 ## Verified 0.9.4 delivery
 
 0.9.4 (2026111904) signed Release + matched Web SHA PASS. Uploaded 19 November 2026 10:02:40 Europe/Istanbul; Apple ready-to-test email 10:04:29. Code SHA 96950aaa3188c0b016360852b8b96f7df6b5018e pushed. Draft PR https://github.com/barisgur86/cafeverse-oops-cafe/pull/1 has four passing checks. Xcode UI simulator build/run reached Running on iPhone 17e; simulator gameplay/login and all physical-device acceptance remain NOT RUN. Production preflight remains blocked by missing configured backend URL/cutover; native account deletion/revocation and real purchase/two-device trading remain P0.
+
+## 0.9.5 lifecycle follow-up
+
+Native recoverable account deletion, server reauthentication/Apple code exchange/revoke adapter, atomic escrow cleanup, anonymous refund/replay handling and guarded server-backup cutover implemented. Local account lifecycle suite has 16 scenarios; all game tests and native helper compilation pass. Free isolated stage is deployed with lifecycle metadata/RLS; public live backup is unchanged. Apple revocation is NOT configured, real Auth deletion/physical-device/real-purchase acceptance remains NOT RUN; game-server cutover and IAP/trade flags remain off. See qa/2026-11-19-account-cutover.md and ACCOUNT_LIFECYCLE.md. Current iOS/CI/distribution outcome is recorded separately after verification.

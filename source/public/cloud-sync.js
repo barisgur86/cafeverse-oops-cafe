@@ -9,13 +9,13 @@ const encode=s=>JSON.stringify(s,(_key,value)=>value&&typeof value==='object'&&!
 let meta;try{meta=JSON.parse(localStorage.getItem(metaKey));if(meta)meta.baseline=encode(JSON.parse(meta.baseline))}catch{meta=null}
 let remoteVersion=null,ready=false,busy=false,dirty=false,timer,retryTimer,changes=0,pulling=false,applying=false,initialized=false,activePush=null,activePull=null;
 const status=message=>{g.CafeCloudStatus=message};
-const invoke=(action,save,expectedVersion)=>bridge.postMessage({action,...(save===undefined?{}:{save}),...(expectedVersion===undefined?{}:{expectedVersion})});
+const invoke=async(action,save,expectedVersion)=>{if(g.CafeAccountDeleted)throw Error('Hesap silindi.');const result=await bridge.postMessage({action,...(save===undefined?{}:{save}),...(expectedVersion===undefined?{}:{expectedVersion})});if(g.CafeAccountDeleted)throw Error('Hesap silindi.');return result;};
 function exportLocal(){const save=engine.exportSave();try{const board=localStorage.getItem('cafe-service-board:'+save.code);if(board)save._serviceBoard=JSON.parse(board)}catch{}return save}
-function remember(save,version){meta={version,baseline:encode(save)};localStorage.setItem(metaKey,JSON.stringify(meta))}
+function remember(save,version){if(g.CafeAccountDeleted)return;meta={version,baseline:encode(save)};localStorage.setItem(metaKey,JSON.stringify(meta))}
 function refreshGame(){if(typeof hydrate==='function'){const d=engine.handle('/api/me');hydrate(d.state);if(typeof state!=='undefined')state.readyQueue=d.preparations||[];if(typeof serviceBoards!=='undefined')serviceBoards={};if(typeof clearTicketPreparation==='function')clearTicketPreparation();if(typeof restoreReady==='function')restoreReady(d.preparation);for(const id of ['order-flow','prep-screen','service-screen'])document.getElementById(id)?.close();if(typeof render==='function')render()}}
-function applyRemote(save){const before=exportLocal();localStorage.setItem(metaKey+':recovery',encode(before));applying=true;try{engine.importSave(save);if(save._serviceBoard)localStorage.setItem('cafe-service-board:'+save.code,encode(save._serviceBoard));else localStorage.removeItem('cafe-service-board:'+save.code);refreshGame()}finally{applying=false}}
-function schedule(delay=1200){clearTimeout(timer);timer=setTimeout(push,delay)}
-function retryPull(){if(ready||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;pull()},15000)}
+function applyRemote(save){if(g.CafeAccountDeleted)return;const before=exportLocal();localStorage.setItem(metaKey+':recovery',encode(before));applying=true;try{engine.importSave(save);if(save._serviceBoard)localStorage.setItem('cafe-service-board:'+save.code,encode(save._serviceBoard));else localStorage.removeItem('cafe-service-board:'+save.code);refreshGame()}finally{applying=false}}
+function schedule(delay=1200){if(g.CafeAccountDeleted)return;clearTimeout(timer);timer=setTimeout(push,delay)}
+function retryPull(){if(g.CafeAccountDeleted)return;if(ready||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;pull()},15000)}
 function adopt(result){
  const local=exportLocal(),localText=encode(local),remoteText=encode(result?.save);remoteVersion=result.version;
  if(!result?.save){dirty=true;changes++;return}
@@ -42,7 +42,7 @@ async function ensurePurchaseSaved(transaction){
  let saved;try{saved=JSON.parse(meta?.baseline||'null')?.storePurchases?.[key]}catch{}
  if(!saved||saved.productID!==transaction.productID||saved.coins!==transaction.coins)throw Error('Satın alma buluta kaydedilemedi. Bağlantını kontrol edip yeniden dene.');
 }
-g.addEventListener('cafeverse-local-save',()=>{if(applying)return;dirty=true;changes++;if(ready)schedule()});
+g.addEventListener('cafeverse-local-save',()=>{if(applying||g.CafeAccountDeleted)return;dirty=true;changes++;if(ready)schedule()});
 g.addEventListener('online',()=>{if(!ready){clearTimeout(retryTimer);retryTimer=null;pull()}else if(dirty)schedule(100)});
 g.CafeCloudSync={pull,push,ensurePurchaseSaved,getStatus:()=>({ready,busy,dirty,pulling,applying,initialized,blocked:false,remoteVersion})};
 pull();

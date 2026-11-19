@@ -8,7 +8,7 @@ export function supabaseAuthenticator(url,key,fetcher=fetch){
   if(!/^[0-9a-f-]{36}$/i.test(user.id||''))throw problem('Oturum doğrulanamadı.',401);return user.id.toLowerCase();
  };
 }
-export function handler(economy,authenticate){
+export function handler(economy,authenticate,{lifecycle}={}){
  const rates=new Map();
  return async req=>{
   try{
@@ -19,14 +19,19 @@ export function handler(economy,authenticate){
     const text=await req.text();if(text.length>65000)throw problem('İstek fazla büyük.',413);
     try{b=JSON.parse(text);}catch{throw problem('Geçersiz JSON.');}if(!b||Array.isArray(b)||typeof b!=='object')throw problem('Geçersiz istek.');
    }
-   if(path==='/health'&&req.method==='GET'){await economy.pool.query('select last_event_signed_at from cafe_apple_transactions limit 0');return Response.json({ready:true,schema:'authoritative-economy-v1',environment:economy.apple.environment,features:economy.features});}
+   if(path==='/health'&&req.method==='GET'){await economy.pool.query('select last_event_signed_at from cafe_apple_transactions limit 0');return Response.json({ready:true,schema:'authoritative-economy-v1',environment:economy.apple.environment,features:economy.features,cutover:economy.legacyImport?'server-backup-v1':null,accountDeletion:!!lifecycle?.provider.adminKey,appleRevocation:!!lifecycle?.provider.appleSecret});}
    if(path==='/apple/notifications'&&req.method==='POST')return Response.json(await economy.notification(b.signedPayload));
+   if(path==='/api/account/deletion/finish'&&req.method==='POST'){if(!lifecycle)throw problem('Hesap silme bağlantısı henüz hazır değil.',503);return Response.json(await lifecycle.finish(b.receipt),{headers:{'Cache-Control':'no-store'}});}
    const id=await authenticate(req.headers.get('authorization'));
    const minute=Math.floor(Date.now()/60000),entry=rates.get(id);if(entry?.minute===minute){if(++entry.count>180)throw problem('Çok fazla istek. Biraz bekle.',429);}else{rates.set(id,{minute,count:1});if(rates.size>10000)for(const [k,v] of rates)if(v.minute<minute)rates.delete(k);}
    const required=path==='/api/ios-store-credit'?'iap':path.startsWith('/api/trades')?'trades':(path.startsWith('/api/market')||['/api/wallet','/api/transactions','/api/notifications'].includes(path))?'market':path.startsWith('/api/auctions')?'auctions':null;
    if(required&&economy.features[required]!==true)throw problem('Bu özellik test onayından sonra açılacak.',503);
    let value;
-   if(path==='/api/me'&&req.method==='GET')value=await economy.me(id);
+   const accountPath=path==='/api/account'||path==='/api/account/deletion/start';
+   if(!accountPath)await economy.assertActive?.(economy.pool,id);
+   if(path==='/api/account'&&req.method==='GET'){if(!lifecycle)throw problem('Hesap silme bağlantısı henüz hazır değil.',503);value=await lifecycle.info(req.headers.get('authorization')?.slice(7));}
+   else if(path==='/api/account/deletion/start'&&req.method==='POST'){if(!lifecycle)throw problem('Hesap silme bağlantısı henüz hazır değil.',503);value=await lifecycle.start(req.headers.get('authorization')?.slice(7),b);}
+   else if(path==='/api/me'&&req.method==='GET')value=await economy.me(id);
    else if(path==='/api/ios-store-credit'&&req.method==='POST')value=await economy.credit(id,b.transaction?.signedTransaction);
    else if(path==='/api/board'&&req.method==='POST')value=await economy.board(id,b);
    else if(path==='/api/coin-shop'&&req.method==='GET')value=await economy.history(id);

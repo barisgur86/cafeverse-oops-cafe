@@ -6,7 +6,7 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
  const KEY='cafeverse-device-beta-v1'+(global.CafeAccountID?':'+global.CafeAccountID:'');
  const initial=()=>({code:global.CafeAccountID?'USER-'+global.CafeAccountID:'OFFLINETST',name:'Test Kafesi',character:0,coins:500,served:0,claimed:false,reputation:0,attracted:0,nextCall:0,version:0,pantry:{milk:4,coffee:4,berry:6,ice:0,vanilla:0,cream:0,cocoa:3,star:2,syrup:0},found:[],trades:{},owned:['plant'],decor:'plant',wardrobe:['chef','pink','none'],look:{head:'chef',face:'none',apron:'pink'},bought:[],preparations:[],receipts:{},calls:[],history:[]});
  let s;try{s=JSON.parse(storage.getItem(KEY))}catch{}if(!s)s=initial();
- const persist=()=>{storage.setItem(KEY,JSON.stringify(s));if(!global.__CAFE_TEST_NODE__)global.dispatchEvent?.(new Event('cafeverse-local-save'));};
+ const persist=()=>{if(global.CafeAccountDeleted)throw Error('Hesap silindi.');storage.setItem(KEY,JSON.stringify(s));if(!global.__CAFE_TEST_NODE__)global.dispatchEvent?.(new Event('cafeverse-local-save'));};
  const exportSave=()=>structuredClone(s);
  const importSave=(candidate)=>{
   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!Number.isSafeInteger(candidate.version)||candidate.version<0||!Number.isSafeInteger(candidate.coins)||candidate.coins<0||!Number.isSafeInteger(candidate.served)||candidate.served<0||!Array.isArray(candidate.wardrobe)||!Array.isArray(candidate.owned)||!Array.isArray(candidate.preparations)||!candidate.receipts||typeof candidate.receipts!=='object'||Array.isArray(candidate.receipts))throw Error('Bulut kaydı geçersiz.');

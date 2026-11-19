@@ -24,3 +24,5 @@ html=html.replace('</html>',cloudScript+'</html>');
 const patch=script(`const deviceRender=render;render=function(){deviceRender();const exit=document.querySelector('main > .secondary');if(exit)exit.onclick=()=>globalThis.webkit?.messageHandlers?.cafeLogout?.postMessage('logout');};render();`);
 html=html.replace('</html>',patch+'<style>html,body{user-select:none;-webkit-user-select:none}input,textarea{user-select:text;-webkit-user-select:text}.screen-app>header{padding-top:calc(9px + env(safe-area-inset-top))}.screen-app .screen-app{height:100dvh}</style></html>');
 fs.writeFileSync(path.join(web,'index.html'),html);console.log('Bundled current game, device-only engine and '+Object.keys(svg).length+' SVG assets; no localhost or external fonts.');
+
+fs.copyFileSync(path.join(publicRoot,'account-cleanup.html'),path.join(web,'account-cleanup.html'));fs.copyFileSync(path.join(publicRoot,'account-cleanup.js'),path.join(web,'account-cleanup.js'));
