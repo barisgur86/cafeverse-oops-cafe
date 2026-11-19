@@ -18,3 +18,7 @@ Record build, device/OS, account aliases (no tokens/passwords), initial ingredie
 10. Inject a database failure only in an isolated test harness: neither inventory changes. Production fault injection is forbidden.
 
 Attach actual evidence before marking PASS. Local integration already exercises successful transfer, escrow, replay, insufficient stock, unauthorized settlement, acceptance/cancellation, expiry and rollback. Physical-device results remain pending, and this checklist does not authorize opening public trades.
+
+## Authorized stage enablement
+
+User requested trade enablement. Deployed cafe-secure-stage version 8 with only features.trades=true. Remote health verified ready=true/trades=true; unauthenticated /api/trades returns 401. IAP/market/auctions/social remain false. Existing public beta backend URL is unchanged and public player records were not migrated or modified. Thus this is stage backend enablement, not phone/TestFlight availability or two-device acceptance. Full npm test rerun: PASS. Reversal is redeploying the prior entrypoint without features:{trades:true}.

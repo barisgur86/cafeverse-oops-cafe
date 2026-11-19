@@ -18,7 +18,7 @@ const pool={query:(sql:string,args?:unknown[])=>rawPool.query(scoped(sql),args),
 const keys=JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS')||'{}');
 const key=keys.default||Deno.env.get('SUPABASE_ANON_KEY');
 if(!key||!Deno.env.get('SUPABASE_URL')||!Deno.env.get('SUPABASE_DB_URL'))throw Error('Managed server configuration missing');
-const economy=new MarketEconomy(pool,new AppleVerifier([root],'Sandbox'),{lifecycle:true,legacyImport:true});
+const economy=new MarketEconomy(pool,new AppleVerifier([root],'Sandbox'),{lifecycle:true,legacyImport:true,features:{trades:true}});
 const admin=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}').default;
 // Stage derivation uses an existing managed server-only secret. Production
 // requires a separately managed stable deletion key and reviewed rotation.
