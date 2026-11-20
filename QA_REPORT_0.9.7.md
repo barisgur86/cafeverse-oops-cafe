@@ -17,4 +17,8 @@ Verification:
 
 Commit cb9f929 pushed to feature/coin-gifts-097; draft PR https://github.com/barisgur86/cafeverse-oops-cafe/pull/5 has four passing checks: native/test on push and pull_request. PR run 44636907921, native job 135957639716 and test job 135957640301. This is CI compilation, not a signed uploaded archive or physical-device acceptance.
 
-Local Xcode CUA initialization timed out repeatedly, including a bounded 60-second attempt. Native signing/archive/upload could not be started for 0.9.7. Source ZIP and syntax-checked Mac upload command are ready in outputs. No TestFlight upload or tester mail is claimed for 0.9.7.
+Local Xcode window control timed out. The reviewed upload command was launched through Finder instead. Signed Release archive passed codesign deep/strict verification and bundled Web matched source. Apple upload and export succeeded on 20 November 2026 at 02:59:45 Europe/Istanbul. Apple processing and tester mail are separate verification steps. Terminal UI access was denied by the computer-use safety policy; only generated build/distribution logs were read. No passwords or keys were entered by the agent.
+
+## Final TestFlight availability
+
+Verified App Store Connect: 0.9.7 (2026112002) is in Gelistirici Testi, status Testing, expires in 90 days. Signed archive and upload PASS. This resolves the earlier local UI blocker through the reviewed Finder-launched upload script. Physical-device coin gift acceptance remains NOT RUN.
