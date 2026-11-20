@@ -1,6 +1,8 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'Paketler ve fiyatlar Apple’dan alınır. Satın alma doğrulama testlerinden sonra açılacak.':'Packages and prices come from Apple. Purchases will open after verification testing.',
+ 'Test onayı bekleniyor':'Awaiting test approval',
  'Coin gönder':'Send coins',
  'Gönderebileceğin kazanılmış coin yeterli değil.':'You do not have enough earned coins available to send.',
  'Kendine coin gönderemezsin.':'You cannot send coins to yourself.',
