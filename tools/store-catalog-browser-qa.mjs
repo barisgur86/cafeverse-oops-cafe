@@ -1,7 +1,7 @@
 // Isolated offline fixtures. StoreKit responses are mocked; no Apple payment occurs.
 import fs from 'node:fs';import path from 'node:path';import http from 'node:http';import assert from 'node:assert/strict';import {fileURLToPath} from 'node:url';
 const {chromium}=await import('/Users/barisgur/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs');
-const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),web=path.join(root,'iOS/App/Web'),out=path.resolve(root,'../../outputs/qa-0.9.9/browser-catalog');fs.mkdirSync(out,{recursive:true});
+const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),web=path.join(root,'iOS/App/Web'),out=path.resolve(root,process.env.CAFE_QA_CATALOG_OUT||'../../outputs/qa-0.9.9/browser-catalog');fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname),f=path.resolve(web,'.'+(pathname==='/'?'/index.html':pathname));if(!f.startsWith(web+path.sep)){res.writeHead(403).end();return;}try{res.setHeader('Content-Type',f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.png')?'image/png':'application/octet-stream');res.end(fs.readFileSync(f));}catch{res.writeHead(404).end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser,page;const results=[];
 try{
@@ -15,5 +15,5 @@ try{
   const r=await page.locator('.shop-close').boundingBox();assert.ok(r&&r.x>=0&&r.y>=0&&r.x+r.width<=width+1&&r.y+r.height<=height+1,'close must remain reachable');
   await page.locator('.shop-close').click();await page.evaluate(()=>__storeQA.fail=true);await page.locator('[data-destination="shop"]').click();await page.locator('#shop-reload').waitFor();await page.evaluate(()=>__storeQA.fail=false);await page.locator('#shop-reload').click();await page.locator('.coin-pack').first().waitFor();assert.equal(await page.locator('.coin-pack:disabled').count(),3);assert.deepEqual(errors,[]);results.push({viewport:label,status:'PASS',checks:['three read-only fixture products','TR/EN status','disabled purchase/recovery','direct-call gate','unchanged balance','reachable close','catalog retry','no runtime errors']});console.log('PASS catalog UI',label);await context.close();
  }
- fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({version:'0.9.9',build:'2026112004',layer:'isolated browser, mocked StoreKit catalog, no real Apple product/purchase claim',results},null,2));
+ fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({version:JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version,build:fs.readFileSync(path.join(root,'iOS/Cafeverse.xcodeproj/project.pbxproj'),'utf8').match(/CURRENT_PROJECT_VERSION = (\d+);/)[1],layer:'isolated browser, mocked StoreKit catalog, no real Apple product/purchase claim',results},null,2));
 }catch(e){if(page)await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});fs.writeFileSync(path.join(out,'error.txt'),e.stack||String(e));throw e;}finally{await browser?.close();server.close();}
