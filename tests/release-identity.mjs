@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const read = name => fs.readFileSync(new URL('../' + name, import.meta.url), 'utf8');
+const version = JSON.parse(read('package.json')).version;
+const project = read('iOS/Cafeverse.xcodeproj/project.pbxproj');
+assert.deepEqual([...new Set([...project.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map(m => m[1]))], [version]);
+const builds = [...new Set([...project.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map(m => m[1]))];
+assert.equal(builds.length, 1);
+const bundled = read('iOS/App/Web/index.html');
+const context = {}; vm.createContext(context);
+vm.runInContext(bundled.match(/globalThis.CafeRelease=(\{[^;]+\});/)[0], context);
+assert.equal(context.CafeRelease.version, version);
+assert.equal(context.CafeRelease.build, builds[0]);
+assert.ok(bundled.includes('class="release-version"'), 'menu must include release identity');
+console.log('PASS release identity: package, Debug/Release and generated menu metadata agree; no save migration or balance changes.');

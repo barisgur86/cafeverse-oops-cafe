@@ -14,7 +14,7 @@
   if(departure){const q=Math.max(0,Math.min(1,(now-departure.at-2000)/2200));return {progress:q,walking:q>0&&q<1,opacity:1-q,phase:q?'leaving':'thanking'}}
   const q=Math.max(0,Math.min(1,(now-(arrival(t,order)-2200))/2200));return {progress:q,walking:q<1,opacity:1,phase:q<1?'arriving':'seated'};
  }
- function destination(t,locations){if(!valid(t))throw Error('Geçersiz müşteri konumu.');if(t.mode==='takeaway')return [1050,350];const point=locations[t.table-1];if(!point)throw Error('Masa konumu bulunamadı.');return [...point];}
+ function destination(t,locations){if(!valid(t))throw Error('Geçersiz müşteri konumu.');if(t.mode==='takeaway')return [1050,350];const point=locations[t.table-1];if(!Array.isArray(point)||point.length!==2||!point.every(Number.isFinite))throw Error('Masa konumu bulunamadı.');return [...point];}
  function deliveryPoint(t,locations){const point=destination(t,locations);return t.mode==='takeaway'?[960,300]:[point[0]-130,point[1]+70];}
  function customers(t){return valid(t)?t.items.map((_,i)=>t.id+':'+i):[];}
  function stage(t,now=Date.now(),order){if(!valid(t)||['served','left'].includes(order?.status))return 'empty';if(now<arrival(t,order))return 'arriving';if(t.items.every(i=>typeof i.preparation==='string'&&Number.isFinite(i.readyAt)&&i.readyAt<=now))return 'ready';return t.items.some(i=>i.preparation)?'preparing':'ordered';}

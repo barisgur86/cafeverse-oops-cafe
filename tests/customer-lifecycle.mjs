@@ -29,3 +29,6 @@ for(let at=0;at<1800000;at+=80){
 }
 S.reconcile(board,world,1805000);assert.equal(board.tickets.length,0);assert.equal(board.departures.length,0);assert.equal(parties,180);
 console.log('PASS customer lifecycle: 1/2/3/4 people, opaque seating, shared arrival clock, delayed registration, restart during departure, independent takeaway and 30-minute VIRTUAL soak (180 parties); not a 30-minute physical-device run.');
+
+for(const point of [[NaN,1],[1,Infinity],[1],null])assert.throws(()=>S.destination(ticket('bad-route'),[point]),/konumu/);
+console.log('PASS invalid route rejects non-finite coordinates before movement; no invented delivery or reward.');
