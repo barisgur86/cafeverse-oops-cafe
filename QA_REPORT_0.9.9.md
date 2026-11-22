@@ -59,3 +59,11 @@ P0 release gates: authenticated push/CI; current signed/native builds and full n
 P1: physical audio/background/resume, iPhone/iPad visuals, full wardrobe/decor scene checks and full native 20-step scenario; stable release merge/tag/distribution.
 P2: Apple-side processing/email and beta notes after upload; remaining production privacy/review/support readiness must be checked rather than inferred.
 1.0.0 production remains separately authorized for 1 December 2026; nothing was submitted to production.
+
+## Verified delivery update — 22 November 2026
+
+Normal Mac Finder-launched QA resolved process-access blockers. All checks exit 0: gameplay, browser (three viewports/audio), catalog fixtures, compiled auth/audio helpers, Simulator build and Release build. Gameplay includes wardrobe/decor, two called guests, preparation, 2/3 reload recovery, table reward and independent takeaway. Simulator build PASS is not a native authenticated Simulator UI or physical-device test.
+
+Signed archive PASS and codesign deep/strict verification exit 0. Info.plist confirms 0.9.9 /2026112101. Bundled Web SHA-256 matches generated source: deacdb7ceb83041a47b36347a2b0406cb20482368a25f242ec1a1fa5b5247a4d. Archive/upload evidence: outputs/release-0.9.9-2026112101. Xcode reports Upload succeeded / EXPORT SUCCEEDED.
+
+Apple TestFlight ready-to-test email verified: 22 November 2026 14:24:17 Europe/Istanbul, recipient barisgur@gmail.com, subject Cafeverse OOPS Cafe 0.9.9 (2026112101) for iOS is now available to test. Message ID 1a202fff1e6a9c9c. Thus Apple processing and tester availability are confirmed. Physical-device installation is not claimed. Real Sandbox purchases/refunds and two-device acceptance remain NOT RUN; IAP/trades stay gated. Production/stable merge/tag remain separate gates.
