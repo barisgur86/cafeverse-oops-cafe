@@ -34,3 +34,5 @@ Simulator build PASS (exit 0); app installed/launched on dedicated Cafeverse QA 
 MP4: task outputs/qa-0991/Cafeverse-0.9.9.1-browser-demo.mp4, encoded from actual isolated-browser UI video (18.6 seconds, 393x852). This is a browser demo, with documented disposable setup, not a native/physical device recording. No live account was used.
 
 Git branch published through Desktop; source remote d7b6a20 confirmed before follow-up test/docs push. Signed archive /2026112201 currently at codesign; upload outcome tracked separately. Earlier BLOCKED entries are superseded only where explicitly verified above.
+
+Draft PR created: https://github.com/barisgur86/cafeverse-oops-cafe/pull/8 (initial source d7b6a20; later local harness/report commits not yet confirmed pushed). Archive remains blocked at macOS codesign private-key permission since 19:21 local time. No upload.log or success marker; user notified via permission handoff. MP4 exists and conversion exited 0.
