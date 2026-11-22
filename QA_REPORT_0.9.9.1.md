@@ -24,3 +24,13 @@ NOT RUN — physical iPhone and current signed Release archive/TestFlight upload
 
 ## Delivery
 Code committed locally. CLI push attempted and failed (no authenticated username); GitHub Desktop UI timed out. No PR/remote success claimed. No user data or live backend modified, no new money flow enabled. Source ZIP is provided separately at task outputs/Cafeverse-0.9.9.1-source.zip. QA runner prepared at task outputs/Cafeverse-0.9.9.1-QA.command.
+
+## Normal-Mac verification update
+
+Finder-launched runner resolved sandbox process restrictions. Browser suite PASS at 393x852 and 375x667: one start/three existing taps, no guest API before gesture, 12 programmatic repeated taps ignored, fixed visible anchor, exact two-person order gate and exit cancellation (no additional call). Initial test read the tray between engine and DOM repaint; harness now waits for rendered order icons (5706229); production logic unchanged.
+
+Simulator build PASS (exit 0); app installed/launched on dedicated Cafeverse QA simulator. Native screenshot shows real login screen. No authenticated native gameplay or Simulator MP4 is claimed. The Simulator is a two-display device; screenshot required explicit display=1.
+
+MP4: task outputs/qa-0991/Cafeverse-0.9.9.1-browser-demo.mp4, encoded from actual isolated-browser UI video (18.6 seconds, 393x852). This is a browser demo, with documented disposable setup, not a native/physical device recording. No live account was used.
+
+Git branch published through Desktop; source remote d7b6a20 confirmed before follow-up test/docs push. Signed archive /2026112201 currently at codesign; upload outcome tracked separately. Earlier BLOCKED entries are superseded only where explicitly verified above.
