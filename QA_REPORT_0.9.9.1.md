@@ -36,3 +36,11 @@ MP4: task outputs/qa-0991/Cafeverse-0.9.9.1-browser-demo.mp4, encoded from actua
 Git branch published through Desktop; source remote d7b6a20 confirmed before follow-up test/docs push. Signed archive /2026112201 currently at codesign; upload outcome tracked separately. Earlier BLOCKED entries are superseded only where explicitly verified above.
 
 Draft PR created: https://github.com/barisgur86/cafeverse-oops-cafe/pull/8 (initial source d7b6a20; later local harness/report commits not yet confirmed pushed). Archive remains blocked at macOS codesign private-key permission since 19:21 local time. No upload.log or success marker; user notified via permission handoff. MP4 exists and conversion exited 0.
+
+## Verified TestFlight delivery — 22 November 2026
+
+Signing permission granted by user. Signed archive PASS, codesign deep/strict verification exit 0, build 2026112201 confirmed. Archive Web hash matches current generated source: 47203cf48856862bce07d022a2ce8d1b7d773c26dc5d93814e18a2e37d90b600. Upload succeeded / EXPORT SUCCEEDED at 21:26:22 Europe/Istanbul.
+
+Apple ready-to-test email verified at **21:28:07 Europe/Istanbul**, recipient barisgur@gmail.com, subject Cafeverse OOPS Cafe 0.9.9 (2026112201) for iOS is now available to test. Gmail message 1a20483fea42df5e. TestFlight https://testflight.apple.com/v1/app/6833898140. This is the requested Cafeverse 0.9.9.1 delivery label; Apple marketing version remains 0.9.9. Physical-device installation/acceptance is not claimed.
+
+Branch pushed through Desktop: remote b9de42b verified before this delivery-documentation commit. PR #8 tracks the change. No production submission, real purchase, or authentication bypass. Earlier upload blockers are resolved by this verified update.
