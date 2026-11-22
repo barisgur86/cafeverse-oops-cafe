@@ -12,5 +12,6 @@ const context = {}; vm.createContext(context);
 vm.runInContext(bundled.match(/globalThis.CafeRelease=(\{[^;]+\});/)[0], context);
 assert.equal(context.CafeRelease.version, version);
 assert.equal(context.CafeRelease.build, builds[0]);
+assert.equal(context.CafeRelease.label, JSON.parse(read("package.json")).cafeverseReleaseLabel || "Cafeverse " + version);
 assert.ok(bundled.includes('class="release-version"'), 'menu must include release identity');
 console.log('PASS release identity: package, Debug/Release and generated menu metadata agree; no save migration or balance changes.');
