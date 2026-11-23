@@ -1,12 +1,12 @@
 # Release identity
 
-`release.json` is the single editable version/build/label configuration. Current target: 0.9.11 /2026112302. The intermediate 0.9.10 /2026112301 was prepared but never uploaded.
+`release.json` is the single editable version/build/label configuration. Current target: 0.9.15 /15. The intermediate 0.9.10 /2026112301 was prepared but never uploaded.
 
 1. Choose a three-part marketing version and increasing numeric build in release.json. Never delete older TestFlight builds/tags.
 2. Run `npm run version:sync` to update package.json, lockfile and both Xcode configurations.
-3. `npm run version:check` runs before generated builds, tests and CI. Package/lock/Xcode mismatches, a build no greater than published history, or an existing local build/<number> tag fail the check.
+3. `npm run version:check` runs before generated builds, tests and CI. Package/lock/Xcode mismatches, a build no greater than published history for the same marketing version (unversioned history is conservatively checked), or an existing local build/<number> tag fail the check.
 4. Run full QA and signed archive; inspect actual Info.plist and bundled source hash. Upload only the tested source.
-5. Confirm Apple processing/tester availability, then record the build in released-builds.json and publish build/<number> with the verified release. Move configuration to the next build before attempting another upload.
+5. Confirm Apple processing/tester availability, then record the build in released-builds.json and publish build/<number> with the verified release. A new iOS marketing version may use its own build sequence; App Store Connect availability still requires live verification. Move configuration to the next build before attempting another upload.
 
 The ledger checks known published builds; it does not query Apple automatically. App Store Connect history and uniqueness must still be verified by the release operator/API before final upload. CI does not invent a successful Apple history check. A runner retry before successful upload is allowed; a previously registered published build is rejected. GitHub Secrets are not printed or stored in source.
 

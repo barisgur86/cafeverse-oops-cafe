@@ -1,6 +1,10 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'koltuk dolu':'seats occupied','masa dolu':'tables occupied','aktif sipariş':'active orders','aktif':'active','Bekleyen:':'Waiting:','Hazırlanan:':'Preparing:','Teslimata hazır:':'Ready for pickup:',
+ 'Satın alma ilk oyun hesabında bekliyor. O hesapla yeniden giriş yap.':'The purchase is waiting on the original game account. Sign in to that account again.',
+ 'Ödeme Apple onayı bekliyor. Henüz coin eklenmedi.':'Payment is awaiting Apple approval. No coins have been added yet.',
+
  'Coin paketleri ve fiyatları görüntülenebilir. Satın alma şu anda kapalı.':'Coin packages and prices are available to view. Purchases are currently disabled.',
  'Satın alma kapalı':'Purchases disabled','Bu paket için Apple işlemi bekleniyor.':'An Apple transaction is pending for this package.','Bu ürün şu anda satın alınamıyor.':'This product cannot be purchased right now.',
  'Coin gönder':'Send coins',

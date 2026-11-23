@@ -33,3 +33,13 @@ for(const [server,enabled] of [[false,true],[true,false],[false,false]]){
 }
 assert.equal(purchaseCalls,0);
 console.log('PASS store recovery isolation: failed receipt does not block later delivery, recovery lock releases, and direct purchase calls require server authority plus enabled IAP.');
+
+// Late credit responses must not hydrate or finish against a replacement login.
+ctx.CafeServerEnabled=true;ctx.CafeFeatures={iap:true};ctx.connected=true;
+let releaseLate,hydrations=0,lateFinishes=0;ctx.hydrate=()=>hydrations++;
+ctx.api=async()=>{await new Promise(resolve=>releaseLate=resolve);return {state:{coins:750},purchase:{id:'late-account',coins:250}}};
+bridge.postMessage=async body=>{if(body.action==='finish')lateFinishes++;return {finished:true}};
+const late=deliver({...tx,transactionID:'late-account'});ctx.CafeAccountID='replacement-account';releaseLate();await assert.rejects(late,/ilk oyun hesabında/);assert.equal(hydrations,0);assert.equal(lateFinishes,0);
+await assert.rejects(deliver({...tx,transactionID:'wrong-login'}),/ilk oyun hesabında/);assert.equal(lateFinishes,0);
+ctx.CafeAccountID='test-account';ctx.api=async()=>({state:{coins:750},purchase:{id:'late-account',coins:250,duplicate:true}});await deliver({...tx,transactionID:'late-account'});assert.equal(hydrations,1);assert.equal(lateFinishes,1);
+console.log('PASS store account switch: late server credit cannot hydrate/finish in new login; original account retry recovers duplicate result then finishes. Server ownership/atomic credit separately tested.');

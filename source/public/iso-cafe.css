@@ -100,3 +100,5 @@
 @media(prefers-reduced-motion:reduce){.sim-balloon-rig .tube-lower{transition:none}.sim-door.balloon-active .sim-door-melo,.sim-balloon-rig .pump-handle,.sim-balloon-rig .tube-upper,.sim-balloon-rig .tube-dancer *{animation:none!important}}
 
 .iso-table-targets [data-select="takeaway"] small{display:block;font-size:.65em;line-height:1.25}.iso-takeaway-detail{margin:.2rem 0;font-weight:700}
+
+.iso-table-targets button small{display:block;font-size:.65em;line-height:1.25}.iso-objectives{overflow-wrap:anywhere}.iso-table-targets button{min-width:0;overflow-wrap:anywhere}

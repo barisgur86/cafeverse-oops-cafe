@@ -1,7 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
 export function validateRelease(release,history){
  if(!/^\d+\.\d+\.\d+$/.test(release.version)||!/^\d{1,18}$/.test(release.build)||!release.label)throw Error('Invalid release identity');
- if(history.some(r=>BigInt(r.build)>=BigInt(release.build)))throw Error('Build is already published or not greater than published history');
+ if(history.some(r=>(!r.version||r.version===release.version)&&BigInt(r.build)>=BigInt(release.build)))throw Error('Build is already published or not greater than published history');
 }
 export function checkRelease({write=false}={}){
  const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');

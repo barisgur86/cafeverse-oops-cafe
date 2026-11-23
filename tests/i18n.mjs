@@ -11,3 +11,5 @@ console.log('PASS TR/EN: translated live messages, native preference precedence,
 for(const [source,want] of [['Dört kişilik masaya servis','Table service'],['Teslim ediliyor…','Delivering…']])assert.equal(boot('en').api.translate(source),want);
 assert.equal(boot('en').api.translate('0 kapıda · 2 masada · 1 yolda · 3 ayrılıyor'),'0 waiting at entrance · 2 seated · 1 arriving · 3 leaving');
 assert.equal(boot('en').api.translate('🥡 Teslim Et!'),'🥡 Hand over!');assert.equal(boot('en').api.translate('Paket servis'),'Takeaway service');
+
+for(const [tr,en] of [['5/12 koltuk dolu · 2/3 masa dolu','5/12 seats occupied · 2/3 tables occupied'],['Paket · 1 aktif, 1 hazır','Takeaway · 1 active, 1 ready'],['Bekleyen: 0 · Hazırlanan: 1 · Teslimata hazır: 0','Waiting: 0 · Preparing: 1 · Ready for pickup: 0'],['Ödeme Apple onayı bekliyor. Henüz coin eklenmedi.','Payment is awaiting Apple approval. No coins have been added yet.']])assert.equal(boot('en').api.translate(tr),en);
