@@ -1,6 +1,6 @@
 # QA — 0.9.11 Performance /2026112401
 
-24 November2026. Baseline shipped source e2ea065 (0.9.15 /18). Branch release/0.9.11; performance baseline commit1ec0e24. Final implementation commit is available from `git log -1 --format=%H --grep='^perf: optimize game engine rendering animations assets and startup$'` after delivery commit. No physical device result inferred from a VM test.
+24 November2026. Baseline shipped source e2ea065 (0.9.15 /18). Branch release/0.9.11; performance baseline commit1ec0e24. Implementation commit: `ad06292b0c6b325d8b0d98c3f7977e7d21312aa7`. It is also available from `git log -1 --format=%H --grep='^perf: optimize game engine rendering animations assets and startup$'` after delivery commit. No physical device result inferred from a VM test.
 
 ## Executed
 
