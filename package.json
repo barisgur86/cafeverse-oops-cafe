@@ -15,11 +15,12 @@
   },
   "dependencies": {
     "@apple/app-store-server-library": "3.1.0",
-    "pg": "8.23.1",
-    "jsrsasign": "11.1.5"
+    "jsrsasign": "11.1.5",
+    "pg": "8.23.1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.16"
+    "@electric-sql/pglite": "0.5.16",
+    "linkedom": "0.18.12"
   },
   "cafeverseReleaseLabel": "Cafeverse 0.9.15"
 }
