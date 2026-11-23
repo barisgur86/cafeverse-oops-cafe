@@ -22,6 +22,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: npm run version:check
       - run: npm test
         env:
           CAFE_TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/cafeverse_test
@@ -34,6 +35,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: npm run version:check
       - run: npm run build
       - run: npm run test:auth-routing
       - name: Unsigned Release compile

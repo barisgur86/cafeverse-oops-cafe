@@ -1,3 +1,4 @@
+import {checkRelease} from './release-version.mjs';
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';
 import {upgrades,recipeLevels} from '../source/server/progression.mjs';
 import {weeklySets,weeklyItems,weeklyOutfits,weeklyDecor} from '../source/server/collections.mjs';
@@ -17,9 +18,8 @@ html=html.replace(/<script src="([^"]+)"><\/script>/g,(_,src)=>script(fs.readFil
 html=html.replace(/<link rel="stylesheet" href="([^"]+)">/g,(_,src)=>'<style>'+fs.readFileSync(path.join(publicRoot,src.replace(/^\//,'')),'utf8')+'</style>');
 html=html.replaceAll('/assets/','assets/');
 const runtime=fs.readFileSync(path.join(root,'offline-runtime.js'),'utf8');
-const releaseVersion=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
-const releaseBuild=fs.readFileSync(path.join(root,'iOS/Cafeverse.xcodeproj/project.pbxproj'),'utf8').match(/CURRENT_PROJECT_VERSION = (\d+);/)[1];
-const prefix=script('globalThis.CafeRelease='+JSON.stringify({version:releaseVersion,label:JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8")).cafeverseReleaseLabel||("Cafeverse "+releaseVersion),build:releaseBuild})+';globalThis.CafeTestCatalog='+JSON.stringify(catalog)+';globalThis.CafeTestSVG='+JSON.stringify(svg)+';'+runtime);
+const release=checkRelease();
+const prefix=script('globalThis.CafeRelease='+JSON.stringify(release)+';globalThis.CafeTestCatalog='+JSON.stringify(catalog)+';globalThis.CafeTestSVG='+JSON.stringify(svg)+';'+runtime);
 html=html.replace('<title>',prefix+'<title>');
 const cloudScript=script(fs.readFileSync(path.join(root,'source/public/cloud-sync.js'),'utf8'));
 html=html.replace('</html>',cloudScript+'</html>');
