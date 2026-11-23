@@ -43,3 +43,6 @@ const late=deliver({...tx,transactionID:'late-account'});ctx.CafeAccountID='repl
 await assert.rejects(deliver({...tx,transactionID:'wrong-login'}),/ilk oyun hesabında/);assert.equal(lateFinishes,0);
 ctx.CafeAccountID='test-account';ctx.api=async()=>({state:{coins:750},purchase:{id:'late-account',coins:250,duplicate:true}});await deliver({...tx,transactionID:'late-account'});assert.equal(hydrations,1);assert.equal(lateFinishes,1);
 console.log('PASS store account switch: late server credit cannot hydrate/finish in new login; original account retry recovers duplicate result then finishes. Server ownership/atomic credit separately tested.');
+
+vm.runInContext("pendingStoreProducts.add('legacy');approvalStoreProducts.clear();creditedStoreProducts.clear()",ctx);assert.equal(vm.runInContext("pendingStoreLabel('legacy')",ctx),'İşlem durumu kontrol edilmeli');vm.runInContext("approvalStoreProducts.add('legacy')",ctx);assert.equal(vm.runInContext("pendingStoreLabel('legacy')",ctx),'Apple onayı bekleniyor');vm.runInContext("creditedStoreProducts.add('legacy')",ctx);assert.equal(vm.runInContext("pendingStoreLabel('legacy')",ctx),'Coinler eklendi · Apple işlemi kapanıyor');
+console.log('PASS store phase labels: legacy unknown never claims Apple approval; actual deferred approval and durable credited/unfinished are distinct; no cache reset or economic write.');

@@ -1,0 +1,7 @@
+# Pending purchase phase labels — 23 November 2026
+
+The currently installed 0.9.15 (15) uses one cached product flag for both deferred Apple approval and unfinished delivery. That flag alone cannot establish which state applies. Read-only server checks confirmed one credited transaction each for 250, 750 and 2000 coins, and a 3137-coin balance; the latest Check purchases action produced no additional server credit request. This does not prove a newly requested deferred Apple payment is absent, nor that native finish was observed.
+
+Source correction separates known deferred approval, durable credit awaiting native finish, and legacy/unknown cached status. A confirmed server credit updates visible balance/status before awaiting StoreKit finish, so it no longer falsely says Apple approval is pending during finalization. Unknown legacy flags are retained conservatively and labelled unknown; they are not cleared on an empty unfinished-transaction response, which cannot disprove Ask to Buy. No second credit, fake finish or manual balance mutation is introduced.
+
+Full npm test PASS (task outputs/qa-store-phase.log), including phase labels, durable-credit-before-finish, retries, duplicate callbacks, recovery and account isolation. Changes are source-only and require a new signed iOS build to reach the phone. Installed Build 15 has NOT been modified or replaced; no new upload or physical UI verification is claimed.

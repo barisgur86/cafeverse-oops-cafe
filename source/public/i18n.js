@@ -1,6 +1,7 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'Coinler eklendi · Apple işlemi kapanıyor':'Coins added · finishing the Apple transaction','İşlem durumu kontrol edilmeli':'Transaction status needs checking',
  'koltuk dolu':'seats occupied','masa dolu':'tables occupied','aktif sipariş':'active orders','aktif':'active','Bekleyen:':'Waiting:','Hazırlanan:':'Preparing:','Teslimata hazır:':'Ready for pickup:',
  'Satın alma ilk oyun hesabında bekliyor. O hesapla yeniden giriş yap.':'The purchase is waiting on the original game account. Sign in to that account again.',
  'Ödeme Apple onayı bekliyor. Henüz coin eklenmedi.':'Payment is awaiting Apple approval. No coins have been added yet.',
