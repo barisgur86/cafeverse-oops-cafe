@@ -1,1 +1,1 @@
-{"imports":{"pg":"npm:pg@8.23.1","@apple/app-store-server-library":"npm:@apple/app-store-server-library@3.1.0","jsrsasign":"npm:jsrsasign@11.1.5","jsonwebtoken":"npm:jsonwebtoken@9.0.3"}}
+{"imports":{"pg":"npm:pg@8.23.1","@apple/app-store-server-library":"npm:@apple/app-store-server-library@3.1.0","jsrsasign":"npm:jsrsasign@11.1.5"}}

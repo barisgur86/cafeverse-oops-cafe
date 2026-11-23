@@ -6,7 +6,7 @@ export const products=Object.freeze({'com.cafeverse.oopscafe.coins250':250,'com.
 export function problem(message,status=400){return Object.assign(new Error(message),{status});}
 // Log only bounded verifier codes; never receipts, account IDs or signed payloads.
 export function verificationDiagnostic(error){
- const chain=[];for(let e=error;e&&chain.length<4;e=e.cause){chain.push({name:typeof e.name==='string'?e.name.replace(/[^a-zA-Z0-9_]/g,'').slice(0,40):'Error',status:Number.isInteger(e.status)?e.status:null,code:typeof e.code==='string'?e.code.replace(/[^A-Z0-9_]/g,'').slice(0,40):null});}
+ const chain=[];for(let e=error;e&&chain.length<4;e=e.cause){chain.push({name:typeof e.name==='string'?e.name.replace(/[^a-zA-Z0-9_]/g,'').slice(0,40):'Error',status:Number.isInteger(e.status)?e.status:null,frames:String(e.stack||'').split('\n').slice(1,5).map(line=>line.match(/^\s+at ([A-Za-z0-9_.<>]+)/)?.[1]||'').filter(Boolean),code:typeof e.code==='string'?e.code.replace(/[^A-Z0-9_]/g,'').slice(0,40):null});}
  return chain;
 }
 function verificationFailure(error,kind){console.error('cafe_apple_verification',JSON.stringify({kind,chain:verificationDiagnostic(error)}));}

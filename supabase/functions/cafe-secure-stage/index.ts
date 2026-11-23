@@ -2,7 +2,8 @@ import pg from 'pg';
 import crypto from 'node:crypto';
 import {Buffer} from 'node:buffer';
 import {EdgeCertificate} from '../../../source/server/secure/apple-edge-verifier.mjs';
-import {AppleVerifier} from '../../../source/server/secure/apple.mjs';
+import {appleIntermediateDER} from './apple-intermediate.mjs';
+import {AppleVerifier,verificationDiagnostic} from '../../../source/server/secure/apple.mjs';
 import {MarketEconomy} from '../../../source/server/secure/marketplace.mjs';
 import {handler,supabaseAuthenticator} from '../../../source/server/secure/http.mjs';
 import {AccountProvider,DeletionVault} from '../../../source/server/secure/account-provider.mjs';
@@ -30,8 +31,14 @@ const admin=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||JSON.parse(Deno.env.get('
 // requires a separately managed stable deletion key and reviewed rotation.
 const deletionKey=Deno.env.get('CAFE_DELETION_KEY')||(admin?Buffer.from(crypto.hkdfSync('sha256',Buffer.from(admin),Buffer.from(Deno.env.get('SUPABASE_URL')!),Buffer.from('cafeverse-stage-deletion-v1'),32)).toString('hex'):null);
 const lifecycle=admin&&deletionKey?new AccountLifecycle(economy,new AccountProvider({url:Deno.env.get('SUPABASE_URL')!,key,adminKey:admin,appleSecret:Deno.env.get('APPLE_AUTH_CLIENT_SECRET')}),new DeletionVault(deletionKey)):undefined;
+let appleCertificateProbe:Promise<unknown>|undefined;
 const app=handler(economy,supabaseAuthenticator(Deno.env.get('SUPABASE_URL')!,key),{lifecycle});
 Deno.serve(async(req:Request)=>{
  const url=new URL(req.url);url.pathname=url.pathname.replace(/^\/(?:functions\/v1\/)?cafe-secure-stage(?=\/|$)/,'')||'/';
+ if(url.pathname==='/health/apple-certificate'&&req.method==='GET'){
+  // Fixed public certificates only; accepts no receipt/account/key input.
+  appleCertificateProbe??=(async()=>{try{const cert=new EdgeCertificate(Buffer.from(appleIntermediateDER,'base64'));if(!cert.verify(edgeRoot.publicKey))throw Error('Pinned intermediate signature failed');await economy.apple.verifier.checkOCSPStatus(cert,edgeRoot);return {ready:true,check:'public-apple-intermediate-ocsp'}}catch(error){return {ready:false,diagnostic:verificationDiagnostic(error)}}})();
+  return Response.json(await appleCertificateProbe);
+ }
  return app(new Request(url,req));
 });

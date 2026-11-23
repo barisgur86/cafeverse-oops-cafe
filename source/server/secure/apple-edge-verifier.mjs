@@ -5,7 +5,6 @@
 import {Buffer} from 'node:buffer';
 import {createPublicKey,createHash,verify} from 'node:crypto';
 import jsrsasign from 'jsrsasign';
-import jwt from 'jsonwebtoken';
 import {SignedDataVerifier,VerificationException,VerificationStatus} from '@apple/app-store-server-library';
 const {X509,KEYUTIL}=jsrsasign;
 const MAX_SKEW=60000;
@@ -30,21 +29,24 @@ export class EdgeCertificate {
  verify(publicKey){try{return this.x509.verifySignature(KEYUTIL.getKey(publicKey.export({type:'spki',format:'pem'})))===true}catch{return false}}
 }
 export class EdgeSignedDataVerifier extends SignedDataVerifier {
- constructor(roots,online,environment,bundleId,appAppleId){
+ constructor(roots,online,environment,bundleId,appAppleId,transport=fetch){
   super(roots,online,environment,bundleId,appAppleId);
-  this.rootCertificates=roots.map(root=>new EdgeCertificate(root));
+  this.rootCertificates=roots.map(root=>new EdgeCertificate(root));this.ocspFetch=transport;
  }
  // Only certificate decoding changes. The inherited official chain verifier
  // still verifies pinned roots, CA flag, both Apple OIDs, dates and live OCSP.
  async verifyJWT(value,validator,signedDateExtractor){
   try{
    if(typeof value!=='string'||value.split('.').length!==3)throw new VerificationException(VerificationStatus.FAILURE);
-   const decoded=jwt.decode(value);if(!validator.validate(decoded))throw new VerificationException(VerificationStatus.FAILURE);
+   const parts=value.split('.');const decoded=JSON.parse(Buffer.from(parts[1],'base64url').toString('utf8'));if(!validator.validate(decoded))throw new VerificationException(VerificationStatus.FAILURE);
    const header=JSON.parse(Buffer.from(value.split('.')[0],'base64url').toString('utf8'));
    if(header.alg!=='ES256'||!Array.isArray(header.x5c)||header.x5c.length!==3)throw new VerificationException(VerificationStatus.INVALID_CERTIFICATE);
    const [leaf,intermediate]=header.x5c.slice(0,2).map(cert=>{if(typeof cert!=='string'||cert.length>20000)throw new VerificationException(VerificationStatus.INVALID_CERTIFICATE);return new EdgeCertificate(Buffer.from(cert,'base64'))});
    const key=await this.verifyCertificateChain(this.rootCertificates,leaf,intermediate,this.enableOnlineChecks?new Date():signedDateExtractor(decoded));
-   jwt.verify(value,key.export({type:'spki',format:'pem'}),{algorithms:['ES256']});return decoded;
+   const publicKey=await globalThis.crypto.subtle.importKey('spki',Buffer.from(key.export({type:'spki',format:'der'})),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+   const signature=Buffer.from(parts[2],'base64url');
+   if(signature.length!==64||!await globalThis.crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},publicKey,signature,new TextEncoder().encode(parts[0]+'.'+parts[1])))throw new VerificationException(VerificationStatus.VERIFICATION_FAILURE);
+   return decoded;
   }catch(error){if(error instanceof VerificationException)throw error;throw new VerificationException(VerificationStatus.VERIFICATION_FAILURE,error)}
  }
  // jsrsasign emits OCSP GeneralizedTime as YYYYMMDDTHHmmssZ. Reject
@@ -66,11 +68,11 @@ export class EdgeSignedDataVerifier extends SignedDataVerifier {
         headers.append('Content-Type', 'application/ocsp-request');
         let response;
         try {
-            response = await fetch(matchResult[1], {
+            response = await this.ocspFetch(matchResult[1], {
                 headers: headers,
                 method: 'POST',
                 body: Buffer.from(request.getEncodedHex(), 'hex'),
-                signal: AbortSignal.timeout(30000)
+                signal: AbortSignal.timeout(8000)
             });
             if (!response.ok) {
                 throw new VerificationException(VerificationStatus.RETRYABLE_VERIFICATION_FAILURE);

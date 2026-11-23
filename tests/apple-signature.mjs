@@ -48,6 +48,7 @@ try{
  const adapter=new EdgeCertificate(certificates[2]);assert.equal(adapter.verify(adapter.publicKey),true);assert.equal(adapter.raw.equals(certificates[2]),true);
  const marker=fs.readFileSync(path.join(dir,'leaf.ext'),'utf8');fs.writeFileSync(path.join(dir,'leaf.ext'),'basicConstraints=critical,CA:FALSE\nkeyUsage=digitalSignature');openssl(['x509','-req','-in','leaf.csr','-CA','intermediate.pem','-CAkey','intermediate.key','-CAcreateserial','-days','2','-extfile','leaf.ext','-out','leaf-no-marker.pem']);
  const original=certificates[0];certificates[0]=new crypto.X509Certificate(fs.readFileSync(path.join(dir,'leaf-no-marker.pem'))).raw;const noMarker=new AppleVerifier([certificates[2]],'Sandbox');noMarker.verifier=new EdgeSignedDataVerifier([certificates[2]],false,Environment.SANDBOX,bundleID);await assert.rejects(noMarker.transaction(sign(body),actor));certificates[0]=original;
+ if(process.env.CAFE_EDGE_PROBE_FIXTURE)fs.writeFileSync(process.env.CAFE_EDGE_PROBE_FIXTURE,JSON.stringify({root:certificates[2].toString('base64'),jws:sign(body),leafOCSP:ocspResponse('intermediate','leaf').toString('base64'),intermediateOCSP:ocspResponse('root','intermediate').toString('base64')}));
  const originalFetch=globalThis.fetch;let responseOptions={};let ocspRequests=0;
  globalThis.fetch=async url=>{ocspRequests++;return new Response(String(url).includes('leaf.fixture')?ocspResponse('intermediate','leaf',responseOptions):ocspResponse('root','intermediate'))};
  try{
