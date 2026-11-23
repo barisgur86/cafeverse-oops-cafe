@@ -1,0 +1,5 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const c={};vm.createContext(c);vm.runInContext(fs.readFileSync(new URL('../source/public/service-state.js',import.meta.url),'utf8'),c);
+for(const count of [1,2,3,4]){const t={id:'group',mode:'table',table:2,items:Array.from({length:count},()=>({recipe:0}))},p=c.CafeService.presentation(t);assert.equal(p.tableCapacity,4);assert.equal(p.seatedGuestCount,count);assert.equal(p.orderedItems.length,count);assert.equal(p.quantities[0].quantity,count);assert.deepEqual(Array.from(p.guestIds),Array.from(c.CafeService.customers(t)));}
+const pair={id:'pair',mode:'table',table:2,guestCount:2,items:[{recipe:0},{recipe:1},{recipe:0}]},p=c.CafeService.presentation(pair);assert.equal(p.seatedGuestCount,2);assert.equal(p.orderedItems.length,3);assert.equal(p.quantities[0].quantity,2);assert.equal(p.quantities[1].quantity,1);
+console.log('PASS service presentation: capacity/real group/order quantities are distinct, 1–4 guests, shared IDs, repeated recipe amounts; two-person three-item model; server admission separately covered by service contract test.');

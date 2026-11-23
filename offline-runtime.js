@@ -42,16 +42,17 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
   else if(path==='/api/service-orders/open'){
    const t=body.order,uuid=v=>typeof v==='string'&&/^[a-f0-9-]{36}$/i.test(v);
    if(!t||!uuid(t.id)||!['table','takeaway'].includes(t.mode)||!Array.isArray(t.items)||t.items.length<1||t.items.length>4||t.mode==='takeaway'&&t.items.length!==1||t.mode==='table'&&!integer(t.table,1,1+['table2','table3','table4'].filter(id=>s.bought.includes(id)).length)||t.mode==='takeaway'&&t.table!==null)failure('Masa veya müşteri kaydı geçersiz.');
-   const customers=t.items.map((it,i)=>t.id+':'+i),definition=JSON.stringify([t.mode,t.table,t.items.map(it=>it.recipe)]);
+   const guestCount=t.guestCount??t.items.length;if(!integer(guestCount,1,t.mode==='table'?4:1))failure('Müşteri sayısı geçersiz.');
+   const customers=t.items.map((it,i)=>t.id+':'+i),guestIds=Array.from({length:guestCount},(_,i)=>t.id+':'+i),definition=JSON.stringify([t.mode,t.table,t.items.map(it=>it.recipe),...(t.guestCount===undefined?[]:[guestCount])]);
    if(t.items.some(it=>!integer(it.recipe,0,C.FORMULAS.length-1)||progress().level<C.recipeLevels[it.recipe]))failure('Sipariş tarifi geçersiz.');
    s.serviceOrders??={};const old=s.serviceOrders[t.id];
    if(old){if(old.definition!==definition||!['arriving','seated','served'].includes(old.status))failure('Sipariş artık bu masada beklemiyor.',409);if(old.status!=='served')t.items.forEach((it,i)=>{if(!it.preparation)return;const prep=s.preparations.find(p=>p.id===it.preparation);if(!prep||prep.status!=='ready'||prep.recipe!==it.recipe||prep.order_id&&prep.order_id!==t.id||prep.customer_id&&prep.customer_id!==customers[i])failure('Hazırlık başka müşteriye ait.',409);prep.order_id=t.id;prep.customer_id=customers[i];});extra.order=old;}
    else{
     if(Object.values(s.serviceOrders).some(o=>['arriving','seated'].includes(o.status)&&o.mode===t.mode&&(t.mode==='takeaway'||o.table===t.table)))failure('Bu masanın başka siparişi var.',409);
     const used=s.serviceAdmitted??Math.max(0,(s._serviceBoard?.admitted||0)-(s._serviceBoard?.tickets||[]).reduce((n,o)=>n+(o.items?.length||0),0));
-    if(used+t.items.length>4+(s.attracted||0))failure('Masaya oturacak müşteri yok.',409);
+    if(used+guestCount>4+(s.attracted||0))failure('Masaya oturacak müşteri yok.',409);
     const items=t.items.map((it,i)=>{if(it.preparation){const prep=s.preparations.find(p=>p.id===it.preparation);if(!prep||prep.status!=='ready'||prep.recipe!==it.recipe||prep.order_id&&prep.order_id!==t.id)failure('Eski sipariş hazırlığı eşleşmiyor.',409);prep.order_id=t.id;prep.customer_id=customers[i];}return {recipe:it.recipe,customer_id:customers[i]};});
-    extra.order=s.serviceOrders[t.id]={id:t.id,mode:t.mode,table:t.table,customers,items,definition,status:t.items.some(it=>it.preparation)?'seated':'arriving',arrives_at:t.items.some(it=>it.preparation)?clock():clock()+2200};s.serviceAdmitted=used+items.length;
+    extra.order=s.serviceOrders[t.id]={id:t.id,mode:t.mode,table:t.table,customers,guestIds,guestCount,items,definition,status:t.items.some(it=>it.preparation)?'seated':'arriving',arrives_at:t.items.some(it=>it.preparation)?clock():clock()+2200};s.serviceAdmitted=used+guestCount;
    }
   }else if(path==='/api/service-orders/leave'){
    const o=s.serviceOrders?.[body.order_id];if(!o||!['arriving','seated'].includes(o.status))failure('Müşteri artık masada değil.',409);o.status='left';extra.order=o;
