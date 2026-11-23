@@ -57,3 +57,10 @@ assert.deepEqual(Array.from(ctx.CafeService.deliveryPoint(pack,[[705,375],[1015,
 
 const pairFrame=frames.at(-1);assert.ok(pairFrame.indexOf('href="/assets/sim-table.png"')<pairFrame.indexOf('data-person="pair-visible:0"'),'table artwork must not cover seated customer faces');
 console.log('PASS customer layer regression: rear-seat characters render above the supplied chair artwork; DOM harness clears removed people on every paint.');
+
+// Package counts remain visible when a table is selected, using the same model.
+ctx.tableCount=()=>3;board.departures=[];board.admitted=4+(ctx.state.attracted||0);ctx.state.serviceOrders={};
+board.tickets=[{id:'counter-two',mode:'table',table:1,items:[{recipe:0},{recipe:0}]},{id:'counter-three',mode:'table',table:2,items:[{recipe:0},{recipe:0},{recipe:0}]},{id:'counter-pack',mode:'takeaway',table:null,items:[{recipe:0}]}];
+selectors[0].onclick();ctx.render();assert.ok(frames.at(-1).includes('2/3 dolu masa · 5/12 koltuk'));assert.ok(frames.at(-1).includes('Paket · 1 aktif, 0 hazır'));assert.ok(frames.at(-1).includes('data-takeaway-count>1 aktif sipariş'));
+const counterPack=board.tickets[2];counterPack.items[0].preparation='counter-ready';counterPack.items[0].readyAt=now;ctx.render();assert.ok(frames.at(-1).includes('Paket · 1 aktif, 1 hazır'));selectors[1].onclick();assert.ok(frames.at(-1).includes('Bekleyen: 0 · Hazırlanan: 0 · Teslimata hazır: 1'));ctx.state.serviceOrders['counter-pack']={status:'served'};ctx.render();assert.ok(frames.at(-1).includes('Paket · 0 aktif, 0 hazır'));assert.ok(frames.at(-1).includes('2/3 dolu masa · 5/12 koltuk'));
+console.log('PASS takeaway UI: live tab badge on table selection, shared top-card/detail totals, 5/12 seats and 2/3 tables preserved after delivery.');

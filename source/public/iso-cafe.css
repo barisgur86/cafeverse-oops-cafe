@@ -98,3 +98,5 @@
 @keyframes balloon-come{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}
 @media(orientation:landscape){.sim-balloon-rig{left:58%;width:40%;height:205px;max-height:65%}}
 @media(prefers-reduced-motion:reduce){.sim-balloon-rig .tube-lower{transition:none}.sim-door.balloon-active .sim-door-melo,.sim-balloon-rig .pump-handle,.sim-balloon-rig .tube-upper,.sim-balloon-rig .tube-dancer *{animation:none!important}}
+
+.iso-table-targets [data-select="takeaway"] small{display:block;font-size:.65em;line-height:1.25}.iso-takeaway-detail{margin:.2rem 0;font-weight:700}
