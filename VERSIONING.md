@@ -1,6 +1,6 @@
 # Release identity
 
-`release.json` is the single editable version/build/label configuration. Current target: 0.9.15 /16. Build 15 was successfully uploaded and made available to testers. The intermediate 0.9.10 /2026112301 was prepared but never uploaded.
+`release.json` is the single editable version/build/label configuration. Current target: 0.9.15 /17. Builds 15 and 16 were successfully uploaded and made available to testers. The intermediate 0.9.10 /2026112301 was prepared but never uploaded.
 
 1. Choose a three-part marketing version and increasing numeric build in release.json. Never delete older TestFlight builds/tags.
 2. Run `npm run version:sync` to update package.json, lockfile and both Xcode configurations.

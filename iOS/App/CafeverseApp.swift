@@ -874,6 +874,12 @@ private struct CafeAudioSettings {
     private var finishedTransactions: Set<String> = []
     private var deliveredTransactions: Set<String> = []
     func confirmDelivery(_ id: String) { deliveredTransactions.insert(id) }
+    private var intentKey: String { "cafeverse.store.intents." + (account?.uuidString ?? "unknown") }
+    private var paymentIntents: [String: String] { UserDefaults.standard.dictionary(forKey: intentKey) as? [String: String] ?? [:] }
+    private func paymentIntent(_ productID: String, _ phase: String?) {
+        var intents = paymentIntents; intents[productID] = phase
+        UserDefaults.standard.set(intents, forKey: intentKey)
+    }
     private var purchaseBusy = false
     private var updates: Task<Void, Never>?
     var onUpdate: (() -> Void)?
@@ -883,6 +889,7 @@ private struct CafeAudioSettings {
             for await result in StoreKit.Transaction.updates {
                 guard let self else { return }
                 if let transaction = try? self.verified(result), !self.finishedTransactions.contains(String(transaction.id)) {
+                    self.paymentIntent(transaction.productID, nil)
                     self.transactions[String(transaction.id)] = transaction
                     self.signedTransactions[String(transaction.id)] = result.jwsRepresentation
                     self.onUpdate?()
@@ -925,21 +932,23 @@ private struct CafeAudioSettings {
             guard let product = try await Product.products(for: [id]).first, product.type == .consumable else {
                 throw problem(L("Ürün App Store'da henüz kullanıma açık değil."))
             }
+            paymentIntent(id, "requested")
             switch try await product.purchase(options: [.appAccountToken(account)]) {
             case .success(let result):
                 let transaction = try verified(result)
+                paymentIntent(transaction.productID, nil)
                 transactions[String(transaction.id)] = transaction
                 signedTransactions[String(transaction.id)] = result.jwsRepresentation
                 return ["status": "purchased", "transaction": payload(transaction)]
-            case .pending: return ["status": "pending"]
-            case .userCancelled: return ["status": "cancelled"]
+            case .pending: paymentIntent(id, "approval"); return ["status": "pending"]
+            case .userCancelled: paymentIntent(id, nil); return ["status": "cancelled"]
             @unknown default: throw problem(L("Satın alma sonucu alınamadı."))
             }
         case "pending":
             for await result in StoreKit.Transaction.unfinished {
-                if let transaction = try? verified(result), !finishedTransactions.contains(String(transaction.id)) { transactions[String(transaction.id)] = transaction; signedTransactions[String(transaction.id)] = result.jwsRepresentation }
+                if let transaction = try? verified(result), !finishedTransactions.contains(String(transaction.id)) { paymentIntent(transaction.productID, nil); transactions[String(transaction.id)] = transaction; signedTransactions[String(transaction.id)] = result.jwsRepresentation }
             }
-            return ["transactions": transactions.values.map(payload)]
+            return ["transactions": transactions.values.map(payload), "inventoryVersion": 2, "approvalProducts": paymentIntents.filter { $0.value == "approval" }.map { $0.key }, "unresolvedProducts": paymentIntents.filter { $0.value == "requested" }.map { $0.key }]
         case "finish":
             guard let id = body["transactionID"] as? String else { throw problem(L("Teslim bekleyen işlem bulunamadı.")) }
             if finishedTransactions.contains(id) { return ["finished": true] }
