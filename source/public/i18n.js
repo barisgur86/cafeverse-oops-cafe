@@ -1,8 +1,8 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
- 'Paketler ve fiyatlar Apple’dan alınır. Satın alma doğrulama testlerinden sonra açılacak.':'Packages and prices come from Apple. Purchases will open after verification testing.',
- 'Test onayı bekleniyor':'Awaiting test approval',
+ 'Coin paketleri ve fiyatları görüntülenebilir. Satın alma şu anda kapalı.':'Coin packages and prices are available to view. Purchases are currently disabled.',
+ 'Satın alma kapalı':'Purchases disabled','Bu paket için Apple işlemi bekleniyor.':'An Apple transaction is pending for this package.','Bu ürün şu anda satın alınamıyor.':'This product cannot be purchased right now.',
  'Coin gönder':'Send coins',
  'Gönderebileceğin kazanılmış coin yeterli değil.':'You do not have enough earned coins available to send.',
  'Kendine coin gönderemezsin.':'You cannot send coins to yourself.',
