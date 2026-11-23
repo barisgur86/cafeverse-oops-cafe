@@ -880,6 +880,8 @@ private struct CafeAudioSettings {
         var intents = paymentIntents; intents[productID] = phase
         UserDefaults.standard.set(intents, forKey: intentKey)
     }
+    private var productCache: [String: Product] = [:]
+    private var productCacheDate = Date.distantPast
     private var purchaseBusy = false
     private var updates: Task<Void, Never>?
     var onUpdate: (() -> Void)?
@@ -920,6 +922,7 @@ private struct CafeAudioSettings {
         switch body["action"] as? String {
         case "products":
             let products = try await Product.products(for: Array(Self.amounts.keys))
+            productCache = Dictionary(uniqueKeysWithValues: products.map { ($0.id, $0) }); productCacheDate = Date()
             return ["products": products.sorted { Self.amounts[$0.id]! < Self.amounts[$1.id]! }.map {
                 ["id": $0.id, "coins": Self.amounts[$0.id]!, "name": $0.displayName, "price": $0.displayPrice] as [String: Any]
             }, "canPay": AppStore.canMakePayments]
@@ -929,7 +932,19 @@ private struct CafeAudioSettings {
             guard AppStore.canMakePayments else { throw problem(L("Bu cihazda satın alma kapalı.")) }
             guard let account, let id = body["productID"] as? String, Self.amounts[id] != nil else { throw problem(L("Ürün veya hesap geçersiz.")) }
             purchaseBusy = true; defer { purchaseBusy = false }
-            guard let product = try await Product.products(for: [id]).first, product.type == .consumable else {
+            // Reuse a matching unfinished receipt rather than charge for another.
+            for await result in StoreKit.Transaction.unfinished {
+                if let transaction = try? verified(result), transaction.productID == id, !finishedTransactions.contains(String(transaction.id)) {
+                    transactions[String(transaction.id)] = transaction; signedTransactions[String(transaction.id)] = result.jwsRepresentation
+                    paymentIntent(id, nil)
+                    return ["status": "purchased", "transaction": payload(transaction)]
+                }
+            }
+            if paymentIntents[id] == "approval" { return ["status": "pending"] }
+            let cached = Date().timeIntervalSince(productCacheDate) < 120 ? productCache[id] : nil
+            let product: Product?
+            if let cached { product = cached } else { product = try await Product.products(for: [id]).first }
+            guard let product, product.type == .consumable else {
                 throw problem(L("Ürün App Store'da henüz kullanıma açık değil."))
             }
             paymentIntent(id, "requested")
