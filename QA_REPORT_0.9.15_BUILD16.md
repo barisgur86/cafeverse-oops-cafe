@@ -11,3 +11,7 @@ BLOCKED signed Release archive: xcodebuild attempted generic/platform=iOS with c
 Prepared normal-Mac helper: task outputs/Cafeverse-0.9.15-Build16-TestFlight-Yukle.command. Runs tests, exact version/build guard, Release signing, archive codesign/plist validation and upload using the existing Xcode account. Separate output/success markers; automatic version renumbering off. Apple processing/internal group availability still require post-upload confirmation.
 
 Server-only fix already deployed as cafe-secure-stage v20. Real Sandbox transactions for 250,750,2000 were previously verified credited once each; last observed balance 3137. This is evidence for server delivery, not physical validation of the new Build 16 UI.
+
+## Verified distribution update
+
+Normal Mac run completed signed archive and upload successfully: archive.log ARCHIVE SUCCEEDED; upload.log Upload succeeded / EXPORT SUCCEEDED at 23:44 on 23 November 2026. Archived Info.plist confirms 0.9.15 (16); archived Web/index.html includes the credited/finalizing label correction. Apple tester email received by barisgur@gmail.com at 23:46:48 Europe/Istanbul: Cafeverse OOPS Cafe 0.9.15 (16) for iOS is now available to test. This confirms tester availability for that recipient, not installation/physical UI testing or availability for every tester.
