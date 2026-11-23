@@ -1,0 +1,7 @@
+# perf: optimize game engine rendering animations assets and startup
+
+Repeated wallet/sync renders replaced the entire café scene and allocated hidden preview canvases; the80ms scene interval also ran behind menus and in the background. Preserve the world and patch changed HUD/appearance regions, cache frame nodes/preview assets, schedule moving frames with rAF and suspend hidden work. Remove rollback copies only for explicit read-only routes, coalesce passive sync, and losslessly recompress generated PNGs. Melo movement duration falls25%; reward/guest departure and StoreKit durable delivery rules are preserved.
+
+Validation: full npm test passes, including scene identity/lifecycle, all existing service/economy/security regressions, and exact PNG filtered-data/non-IDAT equality. Measured fixture counts: unchanged100 complete scene replacements100→0; background/menu callbacks750→0; passive concurrent sync100→1; compressed artwork saves987588bytes. Node/linkedom measurements are not physical FPS or GPU results; moving frames run more frequently and do not imply lower total moving CPU.
+
+Native archive and Simulator attempted but blocked by sandboxed Swift macro processes. Physical Instruments/Sandbox-on-candidate remains unrun. Candidate requested marketing version0.9.11 /build2026112401 is based on shipped0.9.15 /18; Apple acceptance is pending. No production deployment or backend migration.

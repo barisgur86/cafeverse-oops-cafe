@@ -102,3 +102,6 @@
 .iso-table-targets [data-select="takeaway"] small{display:block;font-size:.65em;line-height:1.25}.iso-takeaway-detail{margin:.2rem 0;font-weight:700}
 
 .iso-table-targets button small{display:block;font-size:.65em;line-height:1.25}.iso-objectives{overflow-wrap:anywhere}.iso-table-targets button{min-width:0;overflow-wrap:anywhere}
+
+/* Stop scene-only CSS work when its scheduler is suspended. */
+#living-cafe.scene-paused .iso-world *{animation-play-state:paused!important}

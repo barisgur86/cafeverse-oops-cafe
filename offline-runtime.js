@@ -91,7 +91,7 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
   }else failure('Bu işlem çevrimdışı testte kullanılamıyor.',404);
   s.version++;s.receipts[rid]={fingerprint,extra:structuredClone(extra)};persist();return stateResult(extra);
  }
- function handle(path,body){const before=structuredClone(s);try{return {status:200,...route(path,body)}}catch(e){s=before;return {status:e.status||500,error:e.status?e.message:'Kayıt tamamlanamadı; tekrar dene.'}}}
+ function handle(path,body){const readOnly=!body&&['/api/me','/api/coin-shop','/api/trades'].includes(path);const before=readOnly?null:structuredClone(s);try{return {status:200,...route(path,body)}}catch(e){if(before)s=before;return {status:e.status||500,error:e.status?e.message:'Kayıt tamamlanamadı; tekrar dene.'}}}
  persist();return {handle,snapshot,exportSave,importSave};
 }
 global.CafeOfflineFactory=createOfflineCafe;

@@ -1,0 +1,315 @@
+{
+  "scope": "Node deterministic fixtures, no physical performance claim",
+  "engine": {
+    "cloneCalls": 100,
+    "storageWrites": 0,
+    "saveBytes": 208239,
+    "jsCpuMs": 1.8692550000000026,
+    "p50": 0.011500000000005173,
+    "p95": 0.020291999999997756,
+    "p99": 0.025833000000005768,
+    "calls": 100
+  },
+  "previewHidden": {
+    "images": 0,
+    "decodeCalls": 0,
+    "fetches": 0,
+    "canvases": 0,
+    "encodes": 0,
+    "jsCpuMs": 0.1352499999999992,
+    "scope": "API work counts; image decode/canvas are stubs, not measured GPU/encoding time"
+  },
+  "previewVisible": {
+    "images": 0,
+    "decodeCalls": 0,
+    "fetches": 0,
+    "canvases": 0,
+    "encodes": 0,
+    "jsCpuMs": 0.18945899999999938,
+    "scope": "API work counts; image decode/canvas are stubs, not measured GPU/encoding time"
+  },
+  "assets": {
+    "totalBytes": 49472491,
+    "files": [
+      {
+        "file": "flow-mixer.png",
+        "bytes": 2939463,
+        "sha256": "2b8aa03495a73e39e2a689f6e12983677c9f794c72ff165bb6846bab11a6e26e",
+        "width": 902,
+        "height": 1600,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "flow-serve.png",
+        "bytes": 2892135,
+        "sha256": "8721105c55d16de84f9f58fecc45eb7bde7affa809be185feb68793882526c15",
+        "width": 900,
+        "height": 1600,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "flow-ready.png",
+        "bytes": 2737709,
+        "sha256": "962c707d33e7eed7baeb602a4be992ef1512920ddf0ff237b6383749a7b7375a",
+        "width": 901,
+        "height": 1600,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "cafe-isometric-candy.png",
+        "bytes": 2530093,
+        "sha256": "2ced8f60d8ca630762c67dc62bca9328305b40da5ba3700d29652bb281200010",
+        "width": 1672,
+        "height": 941,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "cafe-customers-candy.png",
+        "bytes": 2406864,
+        "sha256": "c7f066c36fe173cc3206e3f4b1e0541a524a5863e3fe65de0f413d4921a414c2",
+        "width": 2172,
+        "height": 724,
+        "colorType": 6,
+        "alpha": true
+      },
+      {
+        "file": "universe.png",
+        "bytes": 2385080,
+        "sha256": "296a620430653cccb2689d83bc9cdb25564fb97e849756c2cc5e762ef74e1de5",
+        "width": 1536,
+        "height": 1024,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "door-exterior-clean.png",
+        "bytes": 2317536,
+        "sha256": "b63b91e2f506794fc8b5c534ba1615c1eed819fb200295991bcc80415108b542",
+        "width": 941,
+        "height": 1671,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-4.png",
+        "bytes": 2309748,
+        "sha256": "172436fa426d882a8d68c1d4a400a18c57533be5a413c1d5376f37a5a599c8af",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "sim-table.png",
+        "bytes": 2302356,
+        "sha256": "d32f4c6788c1c4f2832a5bda6afd2de3616b49963ec5abaab2cf6071282f6a71",
+        "width": 1536,
+        "height": 1024,
+        "colorType": 6,
+        "alpha": true
+      },
+      {
+        "file": "table-service-done.png",
+        "bytes": 2190807,
+        "sha256": "015abdaf62f9707bd5ba7f8da740aaf728f4f39d1d32d2446213314e1f5826cd",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "table-service-ready.png",
+        "bytes": 2179480,
+        "sha256": "285dd508cbb13010f69e34b41a8d120d6e9b43a23534fd0e403081007ce9a32e",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-1.png",
+        "bytes": 2117073,
+        "sha256": "15d4a4e87ef9ef2dc705490933bb5afda1016c725b335eac9e6c2bceb0fae41b",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-5.png",
+        "bytes": 2065912,
+        "sha256": "cb9f46947c45932ef13bcad1b8454d7e10948100081ddb93e14ddfb6739a3f86",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-2.png",
+        "bytes": 2052388,
+        "sha256": "84de005ca175b173faccd5fe5a59c38f438373f8c294c31c8788ec00fff6cf3c",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "takeaway-service.png",
+        "bytes": 2029410,
+        "sha256": "80f7b5939f50989e58d3137a0be3b518e7044caf9fcb2e2b11e9e8441205e254",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-3.png",
+        "bytes": 2018578,
+        "sha256": "9bb068b21ff4a055c84257491b35abfea02fced1d92e67bd6d768c410f52ff4d",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-7.png",
+        "bytes": 1931575,
+        "sha256": "af12fdbe29937dd46c64572edf664d67b683064d8cf11818502f636dd850c81a",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "screen-6.png",
+        "bytes": 1900507,
+        "sha256": "e23ff5ececf84fd07fd27ab24dfc422d57450036f7379380d908ea2bd8e4f24a",
+        "width": 941,
+        "height": 1672,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "cafe-interior.png",
+        "bytes": 1854286,
+        "sha256": "891feacdeb1e7ab9d2a8d40fca8fa5a5f7fcc2ae190d5d1a796d464436d72861",
+        "width": 1672,
+        "height": 941,
+        "colorType": 2,
+        "alpha": false
+      },
+      {
+        "file": "audio/cafe-verse.m4a",
+        "bytes": 1832602,
+        "sha256": "bd2942bbd5a4e8557b6ca155bc8cd7feb890221c3b00d89d471769960e767e06"
+      },
+      {
+        "file": "sim-blender.png",
+        "bytes": 1703382,
+        "sha256": "90bacae0f29f1268e8369484e9f359193aa6cda181e6365b987e86f6243de052",
+        "width": 1073,
+        "height": 1465,
+        "colorType": 6,
+        "alpha": true
+      },
+      {
+        "file": "characters.png",
+        "bytes": 1597642,
+        "sha256": "1e32c49b974783342828dfbb2d23ad14c6f15c6c211fdaee4eaf76186d84ced4",
+        "width": 1752,
+        "height": 897,
+        "colorType": 6,
+        "alpha": true
+      },
+      {
+        "file": "melo-wave.png",
+        "bytes": 1097338,
+        "sha256": "9de7e819426cdc90dd2dc9ed0957f21e77ab5faaf5e96f1a521231ea7256c007",
+        "width": 1774,
+        "height": 887,
+        "colorType": 6,
+        "alpha": true
+      },
+      {
+        "file": "melo.jpeg",
+        "bytes": 64807,
+        "sha256": "c186fc61cb6b86020275b0fe88b69ba4eb35cced511000514cbc9e12c7bd560e"
+      },
+      {
+        "file": "decor-flower.svg",
+        "bytes": 1684,
+        "sha256": "9797743d7ebdd560abbab52e59d88ace267e9c2c973196bc4d9207edc5b685a2"
+      },
+      {
+        "file": "decor-cat.svg",
+        "bytes": 1425,
+        "sha256": "2cf512b5e8b7bf735d2765b972537271d11ade4c655919938fd08cb328b344c9"
+      },
+      {
+        "file": "decor-cherryjelly.svg",
+        "bytes": 1401,
+        "sha256": "9e68e556073ff4ebd031bc0b3b3d5e9419ec41c41ad65badea5723f64c5e0319"
+      },
+      {
+        "file": "decor-pineapple.svg",
+        "bytes": 1285,
+        "sha256": "f32fa8bb218d6059be35e454fb07671944ed72adc5eb6dca9a5ee37a60428ea1"
+      },
+      {
+        "file": "decor-sadcupcake.svg",
+        "bytes": 1278,
+        "sha256": "6118c21921c600b883366f6912dbabd2102022138b8364eacd65e2d9d3987573"
+      },
+      {
+        "file": "decor-bluechick.svg",
+        "bytes": 1251,
+        "sha256": "b9a7977213d76bb5a6eea7447be722ef6380a0a2e602bb2130f3af6f81f66fe4"
+      },
+      {
+        "file": "decor-mushroom.svg",
+        "bytes": 1216,
+        "sha256": "e5d8fc5f80b003224cea447cdee449f7b7e240cc004730f2a885d1ea09806bda"
+      },
+      {
+        "file": "decor-piranha.svg",
+        "bytes": 1210,
+        "sha256": "d2639cbc4b8a6046eed9237a5a336a2d392c24bbb5f047a84231b1ee2e7c5903"
+      },
+      {
+        "file": "table-four.svg",
+        "bytes": 1095,
+        "sha256": "0554e59974407bb4c676e2991b42ce2e69f3bed7e48159111d5ae191d3bda0c5"
+      },
+      {
+        "file": "decor-plant.svg",
+        "bytes": 1015,
+        "sha256": "c63f41e9bf078dea65caf1fe468b40413616341158c54847c38a118f1be9203f"
+      },
+      {
+        "file": "decor-rosefountain.svg",
+        "bytes": 831,
+        "sha256": "b6c9881f83311fa036a68d16379b9d402baeeafe56f121ba22e3c54198b0e9ac"
+      },
+      {
+        "file": "decor-royalstand.svg",
+        "bytes": 710,
+        "sha256": "4422808e8ffcb580ea75386582eb4e33e6b8546c7d4f71cfeb928f0f0e26d87a"
+      },
+      {
+        "file": "decor-cloudlamp.svg",
+        "bytes": 680,
+        "sha256": "8a2f3affdb69143f8e1a8d4c0e7f2b554c17eec62c964bde74660cde9b4420b8"
+      },
+      {
+        "file": "decor-moonclock.svg",
+        "bytes": 639,
+        "sha256": "8c3de2838e5e11af9302218dd378c840d2652dc793f448ee08dc88d943b728d2"
+      }
+    ],
+    "duplicates": []
+  }
+}

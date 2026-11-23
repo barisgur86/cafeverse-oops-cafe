@@ -1,3 +1,4 @@
+import {optimizeGeneratedPNGs} from './lossless-png.mjs';
 import {checkRelease} from './release-version.mjs';
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';
 import {upgrades,recipeLevels} from '../source/server/progression.mjs';
@@ -9,6 +10,7 @@ function literal(name){const source=api.match(new RegExp('const '+name+'=(.*?);'
 const catalog={ITEMS:literal('ITEMS'),PRICE:literal('PRICE'),FORMULAS:literal('FORMULAS'),NPC:literal('NPC'),outfits:{...literal('catalog'),...weeklyOutfits},decor:{...literal('prices'),...weeklyDecor},weekly:weeklyItems,upgrades,recipeLevels,coinPacks};
 fs.writeFileSync(path.join(root,'tests/catalog.json'),JSON.stringify(catalog,null,2));
 fs.rmSync(web,{recursive:true,force:true});fs.mkdirSync(web,{recursive:true});fs.cpSync(path.join(publicRoot,'assets'),path.join(web,'assets'),{recursive:true});
+const pngSavings=optimizeGeneratedPNGs(path.join(web,'assets'));console.log('Lossless generated PNG savings:',pngSavings.before-pngSavings.after,'bytes; source assets preserved.');
 const svg=Object.fromEntries(fs.readdirSync(path.join(web,'assets')).filter(f=>f.endsWith('.svg')).map(f=>[f,fs.readFileSync(path.join(web,'assets',f),'utf8')]));
 const script=code=>'<script>'+code.replace(/<\/script/gi,'<\\/script')+'</script>';
 fs.writeFileSync(path.join(publicRoot,'weekly-data.js'),'globalThis.CafeWeeklySets='+JSON.stringify(weeklySets)+';');

@@ -1,0 +1,12 @@
+{
+  "visible": {
+    "calls": 1,
+    "renders": 1,
+    "scope": "100 concurrent read-only sync calls; stub network, no latency/FPS claim"
+  },
+  "hidden": {
+    "calls": 0,
+    "renders": 0,
+    "scope": "100 concurrent read-only sync calls; stub network, no latency/FPS claim"
+  }
+}
