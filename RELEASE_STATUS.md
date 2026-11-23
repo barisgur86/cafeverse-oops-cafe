@@ -1,15 +1,22 @@
-# Release status — 24 November 2026
+# Release status — Cafeverse0.9.19 (19)
 
-Candidate **Cafeverse0.9.11 Performance /2026112401**, branch `release/0.9.11`, based on shipped0.9.15 /18 (`e2ea065`). Marketing0.9.11 is the explicit current request; main remains an older0.3.7 source. Known published0.9.11 /2026112302 and0.9.15 /18 are recorded; candidate build is higher, but Apple acceptance is unverified.
+24 November2026. Candidate branch `release/0.9.19` includes performance commit `ad06292` and all shipped0.9.15 (18) StoreKit fixes. Supersedes the unpublished0.9.11 performance candidate. Main fetched successfully and still contains0.3.7; newer code was preserved.
 
-- PASS: full `npm test` exit0, new performance regressions, native auth routing/audio fixture checks, version sync, source artwork hash checks and lossless PNG equality.
-- Measured: unchanged100 full scene replacements→0; hidden/menu scene callbacks→0; concurrent passive100 sync requests→1; generated assets987588bytes smaller. See PERFORMANCE_REPORT_0.9.11.md for scope, full metrics and CPU trade-offs.
-- BLOCKED: signed Release archive and Simulator build attempted, exit65: `sandbox-exec: sandbox_apply: Operation not permitted`; Swift State macro plugin unavailable in this execution environment. CoreSimulator also unavailable. No successful archive claimed.
-- BLOCKED: Git push credential missing (`could not read Username ... terminal prompts disabled`). Connected GitHub write fallback also returns403 Resource not accessible by integration. PR cannot be created without publishing candidate branch. No merge performed.
-- NOT RUN: physical iPhone/Instruments metrics, fresh Sandbox purchase/refund on candidate, Apple processing/group distribution/email. Last confirmed shipped release remains0.9.15 (18).
+## Completed
 
-Dedicated normal-Mac uploader prepared at task outputs/Cafeverse-0.9.11-Performance-TestFlight-Yukle.command. It rebuilds/tests, verifies candidate identity and codesign, archives with the existing secure backend, and uploads only to internal TestFlight. Production publishing is not requested or performed. Build folder is separate from older0.9.11 helpers so a previous success marker cannot skip this candidate.
+- **PASS** full `npm test`, exit0, including new performance regressions and all existing service/economy/Apple signature fixtures/account/audio/appearance/table/takeaway suites. Log: task outputs/release-0.9.19-19/npm-test.log.
+- **PASS** central release config, package/lock, Debug/Release Xcode and rebuilt bundled Web all identify0.9.19 /19.
+- **PASS** dedicated uploader shell syntax and archive identity guards. Prepared at task outputs/Cafeverse-0.9.19-TestFlight-Yukle.command. Separate output folder prevents an old success marker skipping this version.
+- Existing measured gains retained: unchanged100 root replacements100→0; background/menu callbacks750→0; passive concurrent sync100→1; generated PNGs987588bytes smaller with unchanged filtered pixels/metadata/source hashes. Melo movement duration reduced25%. See PERFORMANCE_REPORT_0.9.11.md for measurement limits; same implementation, release identity changed.
 
-Delivery implementation commit: `git log -1 --format=%H --grep='^perf: optimize game engine rendering animations assets and startup$'`. Prior baseline commit1ec0e24. Full changed-file list is available in that commit. Review draft is PR_DESCRIPTION_0.9.11.md; physical acceptance checklist is QA_REPORT_0.9.11.md.
+## Distribution blockers
 
-Implementation commit: `ad06292b0c6b325d8b0d98c3f7977e7d21312aa7`. Actual push attempted and failed; connected GitHub blob-write fallback403 confirmed. Launching normal Terminal was also attempted by application name and absolute app path: LaunchServices reports `kLSNoExecutableErr (-10827)`. The prepared helper has not started and no candidate upload success marker exists.
+- **BLOCKED** actual Release archive attempted for0.9.19 /19, exit65. `sandbox-exec: sandbox_apply: Operation not permitted` prevents Swift macro plugins; `SwiftUIMacros.StateMacro` responds malformed. No successful signed archive or installable IPA was produced. Log: task outputs/release-0.9.19-19/archive-attempt.log.
+- Distribution identities are visible in this turn, but that does not resolve the Swift plugin process restriction. Earlier normal Terminal launch failed with LaunchServices kLSNoExecutableErr; no normal-Mac upload is running from this session.
+- GitHub CLI writes require an authenticated credential; connected fallback previously confirmed403 Resource not accessible by integration. Actual push result is recorded separately; no remote PR/merge success is assumed.
+- **NOT RUN** Apple server acceptance/processing, group assignment and TestFlight email. Build19 absent from the local published ledger, but live App Store Connect uniqueness is unverified. Last confirmed shipped release remains0.9.15 (18).
+- **NOT RUN** physical iPhone/Instruments, fresh Sandbox purchase/refund on candidate, actual frame rate/energy/leaks/thermal and30/60min wall-clock soak. Automated signed fixture tests are not live Sandbox purchases.
+
+No production deployment, backend migration, wallet mutation, save reset, replacement artwork or security gate relaxation. Prepared uploader runs tests, Release archive, codesign and exact0.9.19 /19 checks before internal TestFlight export/upload. It cannot complete while the native build process remains blocked in this environment.
+
+See QA_REPORT_0.9.19.md for phone acceptance checklist. Find release commit using `git log -1 --format=%H --grep='^release: prepare Cafeverse 0.9.19 build 19$'`.
