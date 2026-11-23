@@ -50,3 +50,9 @@ P0: actual three-package Sandbox purchase/refund/pending/recovery acceptance; cu
 Prepared task outputs/Cafeverse-0.9.11-QA.command and Cafeverse-0.9.11-TestFlight-Yukle.command. Uploader runs version consistency and full tests before archive, targets 0.9.11/2026112302 and uses a separate output directory, so older success markers cannot masquerade as this release. Running it in the normal Mac session is still required; file preparation is not upload success.
 
 1.0.0 production has not been submitted; separate production approval remains required.
+
+## Verified TestFlight delivery update — 23 November 2026
+
+Normal Mac upload runner completed: ARCHIVE SUCCEEDED, signed bundle verification exit 0, actual Info.plist version 0.9.11 /2026112302. Archive Web SHA-256 equals generated source: 51e63ef5f18de445841cf0213be8c578f4ba62ac657a1b035dbaf568fd17de58. Xcode reported Upload succeeded /EXPORT SUCCEEDED at 20:00:17 Europe/Istanbul.
+
+Apple ready-to-test mail verified at **20:02:42 Europe/Istanbul** to barisgur@gmail.com: Cafeverse OOPS Cafe 0.9.11 (2026112302) for iOS is now available to test. Message ID 1a2095c20033be30. Apple processing and tester availability are confirmed; native acceptance/actual purchase/refund outcomes remain pending. Earlier local archive/upload blockers are historical and superseded by this normal Mac evidence, not a claim of current automated native UI PASS.

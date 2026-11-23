@@ -1,9 +1,7 @@
 # Release status — 23 November 2026
 
-Target **0.9.11 (2026112302)**. Source fixes committed on release/0.9.11. **NOT uploaded / not declared stable.** 0.9.10 was an unshipped intermediate target. Last verified TestFlight remains 0.9.9 (2026112201).
+**0.9.11 (2026112302) is available in TestFlight.** Signed archive, matching generated Web hash and Apple upload verified. Apple ready-to-test email confirmed at 20:02:42 Europe/Istanbul to barisgur@gmail.com.
 
-Full local suite: 87 PASS summary lines; real-party service rendering, quantities/admission and centralized versioning implemented. Sandbox stage v13 is healthy and IAP enabled following explicit user authorization to test; verifier rejects Production transactions. Actual Apple purchase/refund acceptance not yet performed.
+Full local suite: 87 PASS summary lines. Dynamic real-party service rendering, order quantities/admission, central versioning and StoreKit preflight included. Sandbox stage v13 healthy and IAP enabled on explicit user request; Production JWS rejected. Actual Apple purchase/refund and physical device acceptance pending user test.
 
-Current archive/Simulator/Chrome automation blocked by process sandbox; GitHub push lacks terminal authentication and connector returns 403. Normal-Mac upload runner prepared. No production release, stable merge/tag, new TestFlight mail or physical-device PASS claimed.
-
-Full evidence and limits: QA_REPORT_0.9.11.md. Version management: VERSIONING.md. Prior shipped sources and asset inventory: QA_BASELINE_0.9.10.md /QA_BASELINE_0.9.11.md.
+Current branch release/0.9.11, source through ff559a7 (delivery documentation f7fda44). GitHub push/PR remains blocked by missing terminal auth /connector 403. No stable merge/tag or production submission claimed. Full evidence: QA_REPORT_0.9.11.md.
