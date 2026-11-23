@@ -21,3 +21,7 @@ PASS isolated CafeStore Swift typecheck with real iPhoneOS SDK, arm64 iOS16 targ
 PASS upload helper zsh syntax and git diff check. BLOCKED full signed Release archive: Xcode exit 65, sandbox_apply Operation not permitted and SwiftUI StateMacro plugin-server malformed response. Log: task outputs/release-0.9.15-17/archive-agent.log. No archive/export/upload, Apple processing, tester email or physical iPhone UI success for build 17 is claimed.
 
 Normal Mac handoff: task outputs/Cafeverse-0.9.15-Build17-TestFlight-Yukle.command performs full tests, exact build check, Release archive, signature/plist checks and TestFlight upload, using independent build17 output/success markers and no auto-renumbering. Current installed build16 does not contain these changes until the new binary is uploaded and installed.
+
+## Verified distribution — 24 November 2026
+
+Normal Mac signing/archive/upload succeeded: archive.log ARCHIVE SUCCEEDED; upload.log Upload succeeded / EXPORT SUCCEEDED at 00:06:22 Europe/Istanbul. Archived CFBundleVersion is 17; archived Web/index.html contains no manual recovery button. Apple's email to barisgur@gmail.com at 00:08:05 confirms Cafeverse OOPS Cafe 0.9.15 (17) is available to test. Physical installation and automatic legacy-flag cleanup on the user's iPhone remain unobserved.
