@@ -17,3 +17,7 @@ Final automated result: complete npm test exit 0. StoreKit isolated typecheck ex
 Signed Release archive attempted with the normal configured team/profile; Xcode exited 65 because this tool session could not load the Cafeverse App Store Distribution provisioning profile. Its security utility also reported zero accessible signing identities and could not decode the previous archive's embedded profile. This session-level signing access failure is not evidence that the previously successful profile/certificate should be replaced. No new credentials were imported or signing controls disabled.
 
 No successful signed archive, export, TestFlight upload, processing result or tester notification for build 18 is claimed. The prepared normal-Mac helper runs tests, archive/signature/plist checks and upload using the Mac user's existing signing session and separate build18 output markers. Latest previously confirmed available TestFlight build remains 0.9.15 (17).
+
+## Distribution verified — 24 November 2026
+
+Normal Mac archive/export/upload succeeded at 00:39:01 Europe/Istanbul. Archived CFBundleVersion is 18. Archived Web/index.html SHA-256 f344c8457e35755fc1d838bb75cca66f0f3e5a4bde1701844fbb92d3d37b1c2b exactly matches the tested generated web bundle. Apple's TestFlight email to barisgur@gmail.com at 00:42:23 confirms Cafeverse OOPS Cafe 0.9.15 (18) is available to test. This verifies tester access for that recipient; phone installation and perceived purchase latency remain unobserved.
