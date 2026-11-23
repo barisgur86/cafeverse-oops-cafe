@@ -1,3 +1,7 @@
+# Confirmed update — 0.9.19 (19) available in TestFlight
+
+24 November 2026: normal-Mac uploader completed ARCHIVE SUCCEEDED and EXPORT SUCCEEDED; upload-succeeded.txt confirms 0.9.19 (19). Archived Info.plist verified. Apple TestFlight email to barisgur@gmail.com confirms this exact build is now available to test (message 1a20a9102b74b08d). Previous execution-session blockers below are historical; upload/distribution is now successful. Physical gameplay/Sandbox checks remain NOT RUN for this build.
+
 # Release status — Cafeverse0.9.19 (19)
 
 24 November2026. Candidate branch `release/0.9.19` includes performance commit `ad06292` and all shipped0.9.15 (18) StoreKit fixes. Supersedes the unpublished0.9.11 performance candidate. Main fetched successfully and still contains0.3.7; newer code was preserved.
