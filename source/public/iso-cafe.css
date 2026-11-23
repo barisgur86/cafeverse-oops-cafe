@@ -77,8 +77,24 @@
 .sim-door-controls p{min-height:0;overflow-wrap:anywhere}.sim-door-count{display:block}.sim-door-hud{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}.sim-door-hud b{min-width:0;font-size:clamp(20px,5vw,29px)}.sim-door-hud span{white-space:nowrap}.sim-door-hud button{flex-shrink:0;min-width:44px;min-height:44px}
 @media(orientation:portrait){.sim-door-art{height:72%}.sim-door-controls{height:auto;max-height:38%;padding-top:10px;gap:6px}.sim-door-controls>button{flex-shrink:0;min-height:44px}.sim-door-controls p{font-size:14px}.sim-door-success{padding:6px 10px;font-size:15px}}
 @media(max-height:600px) and (orientation:portrait){.sim-door-controls{max-height:43%}.sim-door-controls p{font-size:12px}.sim-door-hud{gap:6px}.sim-door-hud span{font-size:13px;padding:7px}}
-/* Pump and anchor share one ground coordinate; only the body inflates. */
-.sim-balloon-rig{position:absolute;left:64%;bottom:9%;width:25%;height:62%;pointer-events:none;z-index:3}.sim-balloon-rig svg{width:100%;height:100%;overflow:visible}.balloon-body{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(var(--inflate,.12));transition:transform .55s ease-out}.balloon-tip{transform-box:fill-box;transform-origin:50% 100%}.sim-balloon-rig[data-phase=beckoning] .balloon-tip{animation:balloon-come .7s ease-in-out 2}.sim-balloon-rig[data-phase=pumping] .pump-handle{animation:balloon-pump .65s ease-in-out 4}.sim-door.balloon-active .sim-door-melo{animation:melo-pump .65s ease-in-out 4;transform-origin:50% 100%;background-position:0 0}.sim-door.balloon-active .sim-door-guests{animation:none}
-@keyframes balloon-pump{50%{transform:translateY(18px)}}@keyframes melo-pump{50%{transform:translateY(5px) rotate(7deg)}}@keyframes balloon-come{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}
-@media(orientation:portrait){.sim-balloon-rig{bottom:10%;height:57%;left:70%;width:26%}.sim-door.balloon-active .sim-door-melo{bottom:15%;left:40%;width:40%}}
-@media(prefers-reduced-motion:reduce){.balloon-body{transition:none}.sim-door.balloon-active .sim-door-melo,.sim-balloon-rig .pump-handle,.sim-balloon-rig .balloon-tip{animation:none!important}}
+/* Reuse original pink/mint tube characters. Only their fabric inflates;
+   original fan feet and attached floor pump never move with the fabric. */
+.sim-balloon-rig{position:absolute;left:58%;bottom:10%;width:40%;height:220px;max-height:57%;pointer-events:none;z-index:3}
+.sim-balloon-rig .tube-dancer{bottom:0;right:0;left:auto;height:205px;width:68px;max-width:48%}
+.sim-balloon-rig .tube-dancer.tube-mint{left:0;right:auto}
+.sim-balloon-rig .tube-fan{animation:none!important;transform:none!important}
+.sim-balloon-rig .tube-lower{animation:none;transform:scaleY(var(--inflate,.12));transform-origin:50% 100%;transition:transform .55s ease-out}
+.sim-balloon-rig .tube-upper{animation:none;transform:none;transform-origin:50% 95%}
+.sim-balloon-rig .tube-arm,.sim-balloon-rig .tube-arm i,.sim-balloon-rig .tube-hair i,.sim-balloon-rig .tube-fan i,.sim-balloon-rig .tube-air{animation-play-state:paused}
+.sim-balloon-rig[data-phase=beckoning] .tube-upper{animation:balloon-come .7s ease-in-out 2}
+.sim-balloon-rig[data-phase=beckoning] .tube-arm,.sim-balloon-rig[data-phase=beckoning] .tube-arm i,.sim-balloon-rig[data-phase=beckoning] .tube-hair i{animation-play-state:running}
+.sim-balloon-rig>.floor-pump{position:absolute;bottom:0;left:-45px;width:80px;height:62px;overflow:visible}
+.sim-balloon-rig[data-phase=pumping] .pump-handle{animation:balloon-pump .65s ease-in-out 1}
+.sim-door .sim-door-melo{left:34%;width:40%;bottom:10%}
+.sim-door.balloon-active .sim-door-melo{animation:melo-pump .65s ease-in-out 1;transform-origin:50% 100%;background-position:0 0;left:34%;width:40%;bottom:10%}
+.sim-door.balloon-active .sim-door-guests{animation:none}
+@keyframes balloon-pump{50%{transform:translateY(15px)}}
+@keyframes melo-pump{50%{transform:translateY(5px) rotate(7deg)}}
+@keyframes balloon-come{0%,100%{transform:rotate(0)}50%{transform:rotate(-55deg)}}
+@media(orientation:landscape){.sim-balloon-rig{left:58%;width:40%;height:205px;max-height:65%}}
+@media(prefers-reduced-motion:reduce){.sim-balloon-rig .tube-lower{transition:none}.sim-door.balloon-active .sim-door-melo,.sim-balloon-rig .pump-handle,.sim-balloon-rig .tube-upper,.sim-balloon-rig .tube-dancer *{animation:none!important}}

@@ -12,7 +12,7 @@ try{
   await page.goto(base);await page.waitForFunction(()=>typeof connected!=='undefined'&&connected);await page.locator('#living-cafe').waitFor({state:'visible'});await page.screenshot({path:path.join(out,label+'-cafe.png')});
   await page.locator('[data-act="action"]').click();await page.waitForFunction(()=>!document.querySelector('[data-act="action"]').disabled);
   await page.locator('[data-act="call"]').click();
-  await page.locator('#door-call').click();
+  for(let press=0;press<3;press++){await page.locator('#door-call').click();if(press<2)await page.waitForFunction(()=>!document.querySelector('#door-call').disabled);}
   await page.locator('.sim-door-success').waitFor({state:'visible'});
   assert.equal(await page.locator('.sim-door-count').count(),1);assert.equal(await page.locator('#door-call').count(),0);
   assert.ok(await page.locator('#door-enter.iso-primary').isVisible());
