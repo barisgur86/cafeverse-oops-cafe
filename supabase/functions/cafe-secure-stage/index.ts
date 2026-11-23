@@ -1,6 +1,7 @@
 import pg from 'pg';
 import crypto from 'node:crypto';
 import {Buffer} from 'node:buffer';
+import {EdgeCertificate} from '../../../source/server/secure/apple-edge-verifier.mjs';
 import {AppleVerifier} from '../../../source/server/secure/apple.mjs';
 import {MarketEconomy} from '../../../source/server/secure/marketplace.mjs';
 import {handler,supabaseAuthenticator} from '../../../source/server/secure/http.mjs';
@@ -9,6 +10,10 @@ import {AccountLifecycle} from '../../../source/server/secure/account-lifecycle.
 import {appleRootDER} from './apple-root.mjs';
 const root=Buffer.from(appleRootDER,'base64');
 if(crypto.createHash('sha256').update(root).digest('hex')!=='63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179')throw Error('Apple root mismatch');
+const edgeRoot=new EdgeCertificate(root);
+if(!edgeRoot.verify(edgeRoot.publicKey))throw Error('Apple root certificate verification failed');
+let nativeX509Ready=false;try{const cert=new crypto.X509Certificate(root);cert.toString();nativeX509Ready=cert.verify(cert.publicKey);}catch{}
+console.info('cafe_apple_certificate_runtime',JSON.stringify({edgeVerified:true,nativeX509Ready}));
 const rawPool=new pg.Pool({connectionString:Deno.env.get('SUPABASE_DB_URL'),max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:10000,ssl:{rejectUnauthorized:true}});
 // All economy statements are scoped to the isolated stage; never fall back to
 // public game tables. Table names are static, values stay parameterized.

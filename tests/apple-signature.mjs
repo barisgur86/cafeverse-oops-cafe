@@ -1,5 +1,6 @@
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import crypto from 'node:crypto';import {execFileSync} from 'node:child_process';import assert from 'node:assert/strict';
-import {SignedDataVerifier,Environment} from '@apple/app-store-server-library';
+import {SignedDataVerifier,Environment,VerificationException,VerificationStatus} from '@apple/app-store-server-library';
+import {EdgeSignedDataVerifier,EdgeCertificate} from '../source/server/secure/apple-edge-verifier.mjs';
 import {AppleVerifier,bundleID} from '../source/server/secure/apple.mjs';
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'cafe-jws-'));
 const openssl=args=>execFileSync('openssl',args,{cwd:dir,stdio:'pipe'});
@@ -19,13 +20,28 @@ try{
  }
  // Production construction keeps OCSP enabled. Fixtures substitute a private
  // temporary root and disable online checks ONLY for offline cryptographic tests.
+ for(const Verifier of [SignedDataVerifier,EdgeSignedDataVerifier]){
  const verifier=new AppleVerifier([certificates[2]],'Sandbox');
- verifier.verifier=new SignedDataVerifier([certificates[2]],false,Environment.SANDBOX,bundleID);
+ verifier.verifier=new Verifier([certificates[2]],false,Environment.SANDBOX,bundleID);
  for(const coins of [250,750,2000])assert.equal((await verifier.transaction(sign({...body,productId:'com.cafeverse.oopscafe.coins'+coins}),actor)).coins,coins);
  await assert.rejects(verifier.transaction(sign(body,'root.key'),actor),/imzası/);
  const valid=sign(body),parts=valid.split('.');parts[1]=Buffer.from(JSON.stringify({...body,productId:'com.cafeverse.oopscafe.coins2000'})).toString('base64url');await assert.rejects(verifier.transaction(parts.join('.'),actor),/imzası/);
  await assert.rejects(verifier.transaction(sign({...body,bundleId:'other'}),actor));
  await assert.rejects(verifier.transaction(sign({...body,environment:'Production'}),actor));
- const untrusted=new AppleVerifier([certificates[0]],'Sandbox');untrusted.verifier=new SignedDataVerifier([certificates[0]],false,Environment.SANDBOX,bundleID);await assert.rejects(untrusted.transaction(valid,actor));
+ const untrusted=new AppleVerifier([certificates[0]],'Sandbox');untrusted.verifier=new Verifier([certificates[0]],false,Environment.SANDBOX,bundleID);await assert.rejects(untrusted.transaction(valid,actor));
+ await assert.rejects(verifier.transaction(sign({...body,signedDate:946684800000}),actor));
+ }
+ const edge=new AppleVerifier([certificates[2]],'Sandbox');let ocsp=0;edge.verifier.checkOCSPStatus=async()=>{ocsp++};await edge.transaction(sign(body),actor);assert.equal(ocsp,2);
+ const unavailable=new AppleVerifier([certificates[2]],'Sandbox');unavailable.verifier.checkOCSPStatus=async()=>{throw new VerificationException(VerificationStatus.RETRYABLE_VERIFICATION_FAILURE)};await assert.rejects(unavailable.transaction(sign(body),actor),e=>e.status===503);
+ const adapter=new EdgeCertificate(certificates[2]);assert.equal(adapter.verify(adapter.publicKey),true);assert.equal(adapter.raw.equals(certificates[2]),true);
+ const marker=fs.readFileSync(path.join(dir,'leaf.ext'),'utf8');fs.writeFileSync(path.join(dir,'leaf.ext'),'basicConstraints=critical,CA:FALSE\nkeyUsage=digitalSignature');openssl(['x509','-req','-in','leaf.csr','-CA','intermediate.pem','-CAkey','intermediate.key','-CAcreateserial','-days','2','-extfile','leaf.ext','-out','leaf-no-marker.pem']);
+ const original=certificates[0];certificates[0]=new crypto.X509Certificate(fs.readFileSync(path.join(dir,'leaf-no-marker.pem'))).raw;const noMarker=new AppleVerifier([certificates[2]],'Sandbox');noMarker.verifier=new EdgeSignedDataVerifier([certificates[2]],false,Environment.SANDBOX,bundleID);await assert.rejects(noMarker.transaction(sign(body),actor));certificates[0]=original;
+ // Reproduce the hosted runtime gap: these native methods throw, while the
+ // adapter must still validate a full fixture chain and signature.
+ const descriptors=new Map(['raw','toString','verify','infoAccess','checkIssued'].map(k=>[k,Object.getOwnPropertyDescriptor(crypto.X509Certificate.prototype,k)]));
+ try{for(const k of descriptors.keys())Object.defineProperty(crypto.X509Certificate.prototype,k,{configurable:true,get(){throw Object.assign(new Error('Not implemented'),{code:'ERR_NOT_IMPLEMENTED'})}});
+  const limited=new AppleVerifier([certificates[2]],'Sandbox');limited.verifier=new EdgeSignedDataVerifier([certificates[2]],false,Environment.SANDBOX,bundleID);assert.equal((await limited.transaction(sign(body),actor)).coins,250);
+ }finally{for(const [k,d] of descriptors)if(d)Object.defineProperty(crypto.X509Certificate.prototype,k,d);else delete crypto.X509Certificate.prototype[k]}
+ console.log('PASS Apple edge adapter: matches official verifier fixture decisions; pinned chain, ES256, Apple marker, expiry and account policy retained; online OCSP called for both certificates; temporary verification outage remains pending (503).');
  console.log('PASS Apple JWS cryptography: official verifier accepts signed fixture chain, rejects wrong key, changed payload, wrong bundle/environment and untrusted root. Not an Apple Sandbox payment.');
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
