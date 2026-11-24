@@ -106,7 +106,7 @@
  "Teslim bekleyen satın almalar yeniden açılışta kontrol edilir.":"Pending purchases are checked the next time you open the game.",
  "coin eklendi":"coins added"
  };
- Object.assign(en,{'Silinmiş kafe':'Deleted café','Paket servis':'Takeaway service','Teslim Et!':'Hand over!','Dört kişilik masaya servis':'Table service','Teslim ediliyor…':'Delivering…','Coin bakiyesi':'Coin balance','yolda':'arriving','ayrılıyor':'leaving','ürün teslim edildi':'items delivered'});
+ Object.assign(en,{'Silinmiş kafe':'Deleted café','Paket servis':'Takeaway service','Teslim Et!':'Hand over!','Dört kişilik masaya servis':'Table service','Teslim ediliyor…':'Delivering…','Coin bakiyesi':'Coin balance','dolu':'occupied','yolda':'arriving','ayrılıyor':'leaving','ürün teslim edildi':'items delivered'});
  const ordered=Object.keys(en).sort((a,b)=>b.length-a.length);
  let language=['tr','en'].includes(globalThis.CafeLanguage)?globalThis.CafeLanguage:localStorage.getItem('cafeverse.language');
  const valid=['tr','en'].includes(language);if(!valid)language=(globalThis.navigator?.languages?.[0]||globalThis.navigator?.language||'en').toLowerCase().startsWith('tr')?'tr':'en';

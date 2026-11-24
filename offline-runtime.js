@@ -50,7 +50,8 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
    else{
     if(Object.values(s.serviceOrders).some(o=>['arriving','seated'].includes(o.status)&&o.mode===t.mode&&(t.mode==='takeaway'||o.table===t.table)))failure('Bu masanın başka siparişi var.',409);
     const used=s.serviceAdmitted??Math.max(0,(s._serviceBoard?.admitted||0)-(s._serviceBoard?.tickets||[]).reduce((n,o)=>n+(o.guestCount??o.items?.length??0),0));
-    if(used+guestCount>4+(s.attracted||0))failure('Masaya oturacak müşteri yok.',409);
+    const packageAdmissions=Object.values(s.serviceOrders).filter(o=>o.mode==='takeaway').reduce((n,o)=>n+(o.guestCount||1),0);
+    if(t.mode==='table'&&Math.max(0,used-packageAdmissions)+guestCount>4+(s.attracted||0))failure('Masaya oturacak müşteri yok.',409);
     const items=t.items.map((it,i)=>{if(it.preparation){const prep=s.preparations.find(p=>p.id===it.preparation);if(!prep||prep.status!=='ready'||prep.recipe!==it.recipe||prep.order_id&&prep.order_id!==t.id)failure('Eski sipariş hazırlığı eşleşmiyor.',409);prep.order_id=t.id;prep.customer_id=customers[i];}return {recipe:it.recipe,customer_id:customers[i]};});
     extra.order=s.serviceOrders[t.id]={id:t.id,mode:t.mode,table:t.table,customers,guestIds,guestCount,items,definition,status:t.items.some(it=>it.preparation)?'seated':'arriving',arrives_at:t.items.some(it=>it.preparation)?clock():clock()+2200};s.serviceAdmitted=used+guestCount;
    }

@@ -4,6 +4,7 @@ const url=new URL(raw);if(url.protocol!=='https:'||url.username||url.password||u
 url.pathname=url.pathname.replace(/\/$/,'')+'/';
 const response=await fetch(new URL('health',url),{signal:AbortSignal.timeout(10000)});
 const value=await response.json();if(!response.ok||!value.ready||value.schema!=='authoritative-economy-v1'||!['Sandbox','Production'].includes(value.environment))throw Error('Secure backend migration/Apple configuration not ready');
+if(value.serviceQueue!=='independent-pickup-v1')throw Error('Backend pickup queue policy is not deployed');
 if(value.cutover!=='server-backup-v1'||value.accountDeletion!==true||value.appleRevocation!==true)throw Error('Account migration/deletion/Apple revocation production gates are not ready');
 
 

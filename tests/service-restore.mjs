@@ -2,7 +2,7 @@ import fs from 'node:fs';import vm from 'node:vm';import crypto from 'node:crypt
 const assetManifest=JSON.parse(fs.readFileSync(new URL('service-assets.json',import.meta.url),'utf8'));
 for(const [file,hash] of Object.entries(assetManifest))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(new URL('../'+file,import.meta.url))).digest('hex'),hash,'Existing asset changed: '+file);
 const iso=fs.readFileSync(new URL('../source/public/iso-cafe.js',import.meta.url),'utf8'),source=fs.readFileSync(new URL('../source/public/service-board.js',import.meta.url),'utf8');
-for(const name of ['sim-table.png','cafe-customers-candy.png','characters.png','cafe-isometric-candy.png','table-service-ready.png','table-service-done.png','takeaway-service.png'])assert.ok((iso+source).includes(name),'Asset unlinked: '+name);
+for(const name of ['sim-table.png','cafe-customers-candy.png','characters.png','cafe-isometric-candy.png','table-service-ready.png','table-service-done.png','takeaway-service.png'])assert.ok((iso+source+fs.readFileSync(new URL('../source/public/service-state.js',import.meta.url),'utf8')).includes(name),'Asset unlinked: '+name);
 assert.ok(iso.includes('openTicketService(t.id,{deliver:()=>serve(t)})'),'Live scene must open existing service artwork');
 let now=10000,board,dialog,created,callbackCount=0;
 const nodes=new Map();
@@ -30,7 +30,7 @@ dialog=null;nodes.clear();const cached=ticket();board={tickets:[cached]};context
 context.openTicketService(cached.id,{deliver:async()=>{state.coins+=140;board.tickets=[];return {served:true}}});await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,cacheBefore+140);await new Promise(r=>setTimeout(r,710));assert.ok(dialog.innerHTML.includes('Devam Et'));context.saveBoard=()=>{};
 // Invalid and arriving orders never expose the service art/action.
 for(const t of [null,{...ticket(),enteredAt:now-1000},{...ticket(),items:[]}]){dialog=null;created=0;board={tickets:t?[t]:[]};context.openTicketService(t?.id||'missing');assert.equal(created,0)}
-const t=ticket(),packed=ticket('takeaway',null,1),b={admitted:8,tickets:[t,packed]},v=context.CafeService.view(b,{attracted:5},now);assert.equal(v.waiting,1);assert.equal(v.seated,4);assert.equal(v.takeaway,1);
+const t=ticket(),packed=ticket('takeaway',null,1),b={admitted:8,tickets:[t,packed]},v=context.CafeService.view(b,{attracted:5},now);assert.equal(v.waiting,2);assert.equal(v.seated,4);assert.equal(v.takeaway,1);
 assert.equal(context.CafeService.stage({...t,enteredAt:now},now),'arriving');assert.equal(context.CafeService.stage(t,now,{status:'left'}),'empty');
 const saved=JSON.stringify(b);context.CafeService.view(JSON.parse(saved),{attracted:5},now);assert.equal(JSON.stringify(b),saved);
 console.log('PASS restore service: '+Object.keys(assetManifest).length+' asset hashes unchanged, references linked, existing table/takeaway art shown, single reward, stale modal rejection, arrival gate, separate waiting/seated/package counts and old-save purity.');

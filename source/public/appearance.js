@@ -20,7 +20,7 @@
  function serviceOutfitSvg(look,mode){
   // Existing service illustrations remain intact. Their chef gets the same
   // account-owned cosmetic overlays as the moving café sprite.
-  const transform=mode==='takeaway'?'translate(235 1055) scale(2.75)':'translate(235 1040) scale(2.35)';
+  const transform=mode==='takeaway'?'translate(235 1055) scale(2.75)':'translate(110 1090) scale(1.6)';
   return `<svg class="service-reference-outfit" viewBox="0 0 941 1672" aria-hidden="true" focusable="false"><g transform="${transform}">${outfitSvg(look)}</g></svg>`;
  }
  globalThis.CafeAppearance=Object.freeze({aprons:Object.freeze(aprons),ownedDecor,decorSvg,apronSvg,outfitSvg,serviceOutfitSvg});

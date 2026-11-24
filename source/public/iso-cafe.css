@@ -105,3 +105,13 @@
 
 /* Stop scene-only CSS work when its scheduler is suspended. */
 #living-cafe.scene-paused .iso-world *{animation-play-state:paused!important}
+
+/* Queue and pickup customer have independent identities and visual lanes. */
+.sim-door-queue{z-index:4;gap:0!important;animation:none!important}.sim-door-queue svg{width:40%;height:100%;flex:0 0 40%;overflow:visible}.sim-door-queue{max-width:34%;overflow:hidden}.sim-package-guest{position:absolute;left:39%;bottom:5%;width:19%;height:31%;z-index:5;pointer-events:none}.sim-package-guest svg{width:100%;height:100%;overflow:visible}.sim-package-guest small{display:block;background:#fff0fa;color:#712459;border-radius:8px;padding:2px;font-size:10px;text-align:center}.sim-package-guest.arriving{animation:door-approach 2.2s ease-out both}.sim-package-guest.leaving{animation:door-enter 2s ease-in both}.sim-door-controls:has([data-package-state]){gap:5px}.sim-door-controls [data-package-state]{min-height:0;font-size:14px}.sim-door-controls:has([data-package-state])>button{min-height:40px;font-size:17px}.sim-door-bubble[hidden]{display:none!important}.sim-door .sim-door-melo{left:9%;width:32%}.sim-door.balloon-active .sim-door-melo{left:9%;width:32%}.sim-balloon-rig{left:62%;width:34%}.sim-balloon-rig[data-phase=idle] .tube-lower,.sim-balloon-rig[data-phase=idle] .tube-air{visibility:hidden}.sim-balloon-rig[data-phase=deflating] .tube-lower{transform:scaleY(0);opacity:0;transition:transform .45s ease-in,opacity .45s ease-in}.sim-balloon-rig[data-phase=deflating] .tube-air{visibility:hidden}.sim-balloon-rig[data-phase=idle] .tube-arm,.sim-balloon-rig[data-phase=idle] .tube-face,.sim-balloon-rig[data-phase=idle] .tube-hair{visibility:hidden}.sim-balloon-rig[data-phase=idle] .tube-dancer{--inflate:0}
+
+.sim-balloon-rig>.floor-pump{left:0;bottom:-7px;width:55px;height:43px}.sim-balloon-rig>.floor-pump[data-pump=pink]{left:auto;right:0}
+
+.sim-package-guest.arriving,.sim-package-guest.leaving{animation-delay:var(--pickup-delay,0ms)}
+
+.sim-balloon-rig .tube-dancer{transform:scale(.85);transform-origin:50% 100%;right:14px}.sim-balloon-rig .tube-dancer.tube-mint{left:-8px;right:auto}.sim-balloon-rig>.floor-pump[data-pump=pink]{right:20px}
+@media(orientation:portrait) and (max-height:740px){.sim-door-controls:has([data-package-state]){height:38%;padding-top:8px;gap:4px}.sim-door-art:has(.sim-package-guest) .sim-package-guest{bottom:18%}.sim-door-art:has(.sim-package-guest) .sim-balloon-rig{bottom:23%}}

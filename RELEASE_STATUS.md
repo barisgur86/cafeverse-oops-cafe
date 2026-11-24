@@ -1,18 +1,13 @@
-Confirmed availability: **Cafeverse0.9.19 (20) is available to test on iOS.** Apple TestFlight email to barisgur@gmail.com received24 November2026 at05:52 Türkiye time (message1a20b77fe7f944e2). Upload, processing and tester access are confirmed; physical gameplay remains unrun.
+# Cafeverse 0.9.19 (21) — candidate
 
-# Confirmed:0.9.19 (20) uploaded
+Fixes canonical seated guests/occupancy, independent door pickup and arrival retry, synchronized entrance queue and complete balloon reset while retaining Build20 delivery idempotency/timeout controls. Branch `fix/seating-pickup-door-build21`; based on verified TestFlight20.
 
-Normal-Mac run completed full npm test, actual browser recording, signed archive and Apple upload. Exact0.9.19 /20 identity and byte-identical tested/archived Web confirmed. `upload-succeeded.txt` and `EXPORT SUCCEEDED` confirm upload; Apple processing/tester availability is pending verification. Video: task outputs/release-0.9.19-20/video/build20-service-delivery-browser.webm (browser fixture, not physical iPhone). Earlier blockers below are historical.
+Tests: **PASS**, full npm test exit0 and expanded acceptance results in task outputs/release-0.9.19-21/npm-test-final.log, acceptance.log and delivery.log. Original artwork hashes preserved. See BUILD_21_REPORT.md for actual coverage and limitations.
 
-# Cafeverse0.9.19 — Build20 candidate
+TestFlight backend: deployed cafe-secure-stage Edge version21; health contract PASS, unauthorized access401, all non-engine/non-health modules unchanged. No direct player data writes or schema migration. Existing production deletion/revocation prerequisites remain unconfigured; production preflight blocked and no production release performed.
 
-Prepared on24 November2026 from confirmed available TestFlight0.9.19 (19). Branch `fix/service-delivery-build20`. Build20 restores an immediate700ms tray/bag service animation and separates authoritative settlement from visual completion;8s timeout, status-first recovery and persistent request UUID prevent a stalled Delivering state and duplicate settlement. See BUILD_20_REPORT.md.
+Native Release attempt: BLOCKED by sandboxed Swift macro plugin, exit65. Physical iPhone/Simulator and recording: NOT RUN. Static shared-SVG preview inspected; browser recording runner prepared but Chrome cannot launch in this execution session.
 
-- **PASS**, exit0: full automated suite and delivery-specific regressions are recorded in task outputs/release-0.9.19-20/npm-test-final.log and delivery-regression.log.
-- Browser screen recording attempted but Chrome exited at launch (SIGABRT/EPERM); no video exists yet. `tools/service-delivery-browser.mjs` prepares a real browser UI recording on a normal Mac; no device recording claimed.
-- Native Release archive attempted; Swift macro subprocess blocked by execution sandbox, exit65. No successful Build20 archive/upload/processing/group/email claimed. Last confirmed TestFlight remains0.9.19 (19).
-- Prepared uploader: task outputs/Cafeverse-0.9.19-Build20-TestFlight-Yukle.command. It requires full tests and browser video check before signed archive/export/upload; exact marketing0.9.19 /build20 guards remain.
-- Source artwork, saves, account validation and server economic gates preserved. No backend migration/deployment, real payment, wallet mutation or production publication.
-- GitHub push status recorded after commit; no PR or merge assumed without successful remote publication.
+Build21 uploader prepared at task outputs/Cafeverse-0.9.19-Build21-TestFlight-Yukle.command, with automated tests, Sandbox policy, video check, archive codesign and exact0.9.19 /21 guards. No Build21 upload or Apple mail confirmed. Last confirmed TestFlight available remains20.
 
-GitHub push failed: HTTPS credential unavailable. After the full-suite pass, synchronous local-save error cleanup was additionally tested with service simulation and delivery regressions; final Web bundle regenerated. No PR created.
+Git commit/push/PR status is recorded after final validation; no remote success is assumed.

@@ -1,5 +1,9 @@
 # 0.9.11 — candidate, 23 November 2026
 
+## 0.9.19 — Build21
+
+Canonical seated guest IDs/cushion slots across scene and service; explicit rear/front layers and original-art seated composition; independent product quantities. Independent pickup queue/quota, persistent exterior customer, arrival retry and door bag handoff. Entrance sprites/count share the queue; cooldown-aware repeat calls and complete text-free balloon deflation. Full evidence and unverified native/video/release checks: BUILD_21_REPORT.md.
+
 ## 0.9.19 — Build20 service delivery
 
 Restore an immediate700ms tray/bag transfer to the service modal. Separate animation and authoritative settlement; remove serial delivery walks and the post-success blocking refresh. Bound uncertain waits, preserve request UUIDs across retries, check order status before resending, and prevent duplicate reward presentation. Add Table2 pair/triple, takeaway, delayed/error/lost response, double-tap and close/reopen regressions. See BUILD_20_REPORT.md for actual tests, video/native build limitations and distribution status.
