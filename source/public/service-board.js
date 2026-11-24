@@ -27,35 +27,46 @@ function openTicketService(id,{deliver:customDeliver}={}){
  if(document.querySelector('.ticket-service[open]'))return;
  const t=serviceBoard().tickets.find(t=>t.id===id);if(!t||!ticketReady(t))return;
  const dialog=document.createElement('dialog');dialog.className='ticket-service service-reference';
- let sending=false,delivered=false,earned=0;
+ let sending=false,delivered=false,earned=0,animationDone=true,animationUntil=0,animationTimer=null,closed=false,completion=null;
+ const account=state.cafeCode||'',english=()=>globalThis.CafeI18n?.language==='en';
+ const text=(tr,en)=>english()?en:tr;
  function draw(){
   const table=t.mode==='table',asset=table?(delivered?'table-service-done.png':'table-service-ready.png'):'takeaway-service.png';
   const model=CafeService.presentation(t,state.serviceOrders?.[t.id]);
   const people=model.guestIds.map((id,i)=>`<svg data-service-guest="${safe(id)}" x="${[160,620,80,700][i]}" y="${i<2?400:700}" width="160" height="220" viewBox="${i%4*543} 0 543 560" overflow="hidden"><image href="/assets/cafe-customers-candy.png" width="2172" height="724"/></svg>`).join('');
   const cups=model.orderedItems.map((item,i)=>`<g data-service-item="${item.index}" transform="translate(${300+i*110} 765)"><text text-anchor="middle" font-size="60">${safe(recipes[item.recipe].icon||'🥤')}</text></g>`).join('');
-  const tableScene=`<svg class="service-dynamic-scene" viewBox="0 0 941 1672" role="img" aria-label="${model.seatedGuestCount} misafire masa servisi" data-order-id="${safe(t.id)}" data-table-id="${t.table}" data-table-capacity="${model.tableCapacity}" data-seated-guests="${model.seatedGuestCount}"><image href="/assets/cafe-interior.png" width="941" height="1672" preserveAspectRatio="xMidYMid slice"/><image href="/assets/sim-table.png" x="150" y="550" width="650" height="450"/>${people}${cups}<g transform="translate(235 1040) scale(2.35)"><svg x="-83" y="-163" width="166" height="170" viewBox="${state.character===1?868:0} 0 868 897" overflow="hidden"><image href="/assets/characters.png" width="1737" height="897"/></svg></g></svg>`;
+  const tableScene=`<svg class="service-dynamic-scene" viewBox="0 0 941 1672" role="img" aria-label="${model.seatedGuestCount} misafire masa servisi" data-order-id="${safe(t.id)}" data-table-id="${t.table}" data-table-capacity="${model.tableCapacity}" data-seated-guests="${model.seatedGuestCount}"><image href="/assets/cafe-interior.png" width="941" height="1672" preserveAspectRatio="xMidYMid slice"/><image href="/assets/sim-table.png" x="150" y="550" width="650" height="450"/>${people}<g opacity="${delivered?1:0}">${cups}</g><g transform="translate(235 1040) scale(2.35)"><svg x="-83" y="-163" width="166" height="170" viewBox="${state.character===1?868:0} 0 868 897" overflow="hidden"><image href="/assets/characters.png" width="1737" height="897"/></svg></g></svg>`;
   const summary=model.quantities.map(row=>`${safe(recipes[row.recipe].name)} ×${row.quantity}`).join(' · ');
-  dialog.innerHTML=`<div class="service-reference-stage ${table?'table-art dynamic-table-art':'takeaway-art'}">${table?tableScene:`<img class="service-reference-image" src="/assets/${asset}" alt="Paket servis">`}${globalThis.CafeAppearance?.serviceOutfitSvg(state.look,t.mode)||''}<button class="service-reference-close" aria-label="Kafeye dön" ${sending?'disabled':''}>×</button><div class="service-reference-wallet" aria-label="Coin bakiyesi">🪙 ${state.coins.toLocaleString('tr-TR')}</div><div class="service-reference-gems">${ticketName(t)}</div><div class="service-reference-detail">${table?`${model.seatedGuestCount} misafir · `:''}${delivered?`✓ ${model.orderedItems.length} ürün teslim edildi · +${earned} coin · +${t.items.length*35} XP`:`${model.orderedItems.length} ürün · ${summary}`}</div><p class="service-reference-status" role="status" aria-live="polite"></p><button class="service-reference-action" ${sending?'disabled':''}>${sending?'Teslim ediliyor…':delivered?'Devam Et ▶':table?'🔔 Servis Et!':'🥡 Teslim Et!'}</button></div>`;
+  dialog.innerHTML=`<div class="service-reference-stage ${table?'table-art dynamic-table-art':'takeaway-art'}">${table?tableScene:`<img class="service-reference-image" src="/assets/${asset}" alt="Paket servis">`}${globalThis.CafeAppearance?.serviceOutfitSvg(state.look,t.mode)||''}${!animationDone?`<svg class="service-handoff" viewBox="0 0 941 1672" aria-hidden="true" data-delivery-target="${table?'table-'+t.table:'takeaway-counter'}"><g transform="translate(235 1000)"><g class="service-transfer ${table?'table-transfer':'takeaway-transfer'}">${table?`<ellipse rx="160" ry="24" fill="#f177b9" stroke="#ffe5a4" stroke-width="9"/>${model.orderedItems.map((it,i)=>`<text x="${(i-(model.orderedItems.length-1)/2)*70}" y="-12" font-size="64" text-anchor="middle">${safe(recipes[it.recipe].icon||'🥤')}</text>`).join('')}`:'<svg x="-100" y="-200" width="200" height="260" viewBox="340 710 270 400"><image href="/assets/takeaway-service.png" width="941" height="1672"/></svg>'}</g></g></svg>`:''}<button class="service-reference-close" aria-label="Kafeye dön">×</button><div class="service-reference-wallet" aria-label="Coin bakiyesi">🪙 ${state.coins.toLocaleString('tr-TR')}</div><div class="service-reference-gems">${ticketName(t)}</div><div class="service-reference-detail">${table?`${model.seatedGuestCount} misafir · `:''}${delivered?`✓ ${model.orderedItems.length} ürün teslim edildi · +${earned} coin · +${t.items.length*35} XP`:`${model.orderedItems.length} ürün · ${summary}`}</div><p class="service-reference-status" role="status" aria-live="polite"></p><button class="service-reference-action" ${sending?'disabled':''}>${sending?text('Teslim ediliyor…','Delivering…'):delivered?text('Devam Et ▶','Continue ▶'):t.deliveryUncertain?text('Sonucu kontrol et · Tekrar dene','Check result · Retry'):table?text('🔔 Servis Et!','🔔 Serve!'):text('🥡 Teslim Et!','🥡 Deliver!')}</button></div>`;
   dialog.querySelector('.service-reference-close').onclick=close;
   dialog.querySelector('.service-reference-action').onclick=()=>delivered?close():deliver();
  }
- function close(){if(sending)return;dialog.close();dialog.remove()}
+ function detach(){if(closed)return;closed=true;clearTimeout(animationTimer);document.removeEventListener?.('visibilitychange',resume);dialog.remove();}
+ function close(){dialog.close();detach();render();}
+ function displaySuccess(){if(closed||!completion||!animationDone||(state.cafeCode||'')!==account)return;earned=completion.earned;delivered=true;sending=false;if(!t.deliveryCelebrated){t.deliveryCelebrated=true;render();celebrate();}draw();}
+ function resume(){if(!animationDone&&Date.now()>=animationUntil){animationDone=true;clearTimeout(animationTimer);if(completion)displaySuccess();else if(!closed)draw();}}
  async function deliver(){
-  if(sending||delivered)return;sending=true;draw();const before=state.coins;
+  if(sending||delivered)return;sending=true;completion=null;animationDone=false;animationUntil=Date.now()+700;draw();
+  animationTimer=setTimeout(()=>{animationDone=true;if(completion)displaySuccess();else if(!closed)draw();},700);
+  const before=state.coins;
   try{
-   if(!serviceBoard().tickets.includes(t)||!ticketReady(t))throw Error('Müşteri siparişi artık masada değil.');
-   if(customDeliver){const result=await customDeliver(t);if(!result?.served)throw Error('Servis tamamlanamadı.');}else{
-   await CafeService.register(t,transact);
-   const deliveredResult=await transact('/api/service-batches/serve',{...CafeService.context(t),preparations:t.items.map(i=>i.preparation)});if(!deliveredResult)throw Error('Servis tamamlanamadı.');}
-   earned=state.coins-before;delivered=true;
-   serviceBoard().tickets=serviceBoard().tickets.filter(x=>x.id!==id);saveBoard();clearTicketPreparation();
-   const d=await api('/api/me');state.readyQueue=d.preparations||[];render();celebrate();
-  }catch(e){if(!delivered){sending=false;draw();dialog.querySelector('[role=status]').textContent=e.message;return}}
-  sending=false;draw();
+   if(!serviceBoard().tickets.includes(t)&&!t.deliveryUncertain||!ticketReady(t))throw Error('Müşteri siparişi artık masada değil.');
+   const operation=customDeliver?customDeliver(t):CafeService.deliver(t,{transact,getState:()=>state,account,currentAccount:()=>state.cafeCode||'',persist:saveBoard,readStatus:async()=>{const d=await api('/api/me');if((state.cafeCode||'')!==account)throw Error('Hesap değişti.');if(d.state&&typeof hydrate==='function')hydrate(d.state);return d;}});
+   const confirmed=Promise.resolve(operation).then(result=>{
+    if(!result?.served||(state.cafeCode||'')!==account)throw Error('Servis tamamlanamadı.');
+    completion={earned:result.earned??t.deliveryEarned??Math.max(0,state.coins-before)};delivered=true;
+    try{serviceBoard().tickets=serviceBoard().tickets.filter(x=>x.id!==id);saveBoard();clearTicketPreparation();}catch{}
+    displaySuccess();return result;
+   });
+   await CafeService.deadline(confirmed);
+   // Animation is visual only; it never delays or retries the economic operation.
+  }catch(e){if(!delivered){sending=false;animationDone=true;clearTimeout(animationTimer);if(!closed){draw();dialog.querySelector('[role=status]').textContent=text(e.message,'Delivery not confirmed. Check the result and retry.');}}}
  }
- dialog.addEventListener('cancel',e=>{if(sending)e.preventDefault();else dialog.remove()});
+ dialog.addEventListener('cancel',detach);dialog.addEventListener('close',detach);
+ document.addEventListener?.('visibilitychange',resume);
  document.body.appendChild(dialog);draw();dialog.showModal();
 }
+
 const beforeTicketQueue=renderQueue;renderQueue=function(){beforeTicketQueue();const assigned=new Set(serviceBoard().tickets.flatMap(t=>t.items.map(i=>i.preparation)));const root=$('queue-items');if(!root)return;[...root.children].forEach((b,i)=>{if(assigned.has(state.readyQueue?.[i]?.id))b.remove()})};
 setInterval(()=>{if(tab==='cafe'&&document.querySelector('[data-ticket-serve]:disabled')&&!document.querySelector('dialog[open]'))renderServiceBoard()},1000);
 render();

@@ -1,5 +1,9 @@
 # 0.9.11 — candidate, 23 November 2026
 
+## 0.9.19 — Build20 service delivery
+
+Restore an immediate700ms tray/bag transfer to the service modal. Separate animation and authoritative settlement; remove serial delivery walks and the post-success blocking refresh. Bound uncertain waits, preserve request UUIDs across retries, check order status before resending, and prevent duplicate reward presentation. Add Table2 pair/triple, takeaway, delayed/error/lost response, double-tap and close/reopen regressions. See BUILD_20_REPORT.md for actual tests, video/native build limitations and distribution status.
+
 ## 0.9.19 — build19 (2026-11-24)
 
 Supersedes the unpublished0.9.11 performance candidate at the user’s requested version. Includes the full scene/scheduler/preview/read-only-sync and lossless PNG performance changes without changing saves, artwork or verified StoreKit delivery policy. Both iOS configurations and bundled release identity now use0.9.19 /19. See QA_REPORT_0.9.19.md and RELEASE_STATUS.md for final validation and actual distribution status.

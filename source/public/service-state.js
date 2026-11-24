@@ -37,5 +37,16 @@
  }
  function context(t){return {order_id:t.id,mode:t.mode,table:t.table,customers:customers(t)};}
  async function register(t,transact,{waitForArrival=true}={}){if(!valid(t))throw Error('Bu masada geçerli müşteri siparişi yok.');t.registered=true;const d=await transact('/api/service-orders/open',{order:{id:t.id,mode:t.mode,table:t.table,...(t.guestCount===undefined?{}:{guestCount:t.guestCount}),items:t.items.map(i=>({recipe:i.recipe,preparation:i.preparation}))}});if(!d?.order)throw Error('Müşteri siparişi doğrulanamadı.');const delay=Math.max(0,(d.order.arrives_at||0)-Date.now());if(delay&&waitForArrival)await new Promise(resolve=>setTimeout(resolve,delay));return d.order;}
- globalThis.CafeService=Object.freeze({valid,guestIds,presentation,reconcile,arrival,motion,destination,deliveryPoint,customers,stage,view,welcome,ready,context,register});
+ const deliveries=new Map();
+ function deadline(task,ms=8000){let timer;const expired=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(Error('Teslim sonucu henüz alınamadı. Aynı siparişi yeniden kontrol et.'),{uncertain:true})),ms)});return Promise.race([task,expired]).finally(()=>clearTimeout(timer));}
+ function deliver(t,{transact,readStatus,getState,persist=()=>{},account='',currentAccount=()=>account}){
+  const key=account+':'+t.id;let record=deliveries.get(key);
+  const checkAccount=()=>{if(currentAccount()!==account)throw Error('Hesap değişti. Sipariş eski hesabında kontrol edilecek.');};
+  const finish=result=>{checkAccount();if(result?.state?.serviceOrders?.[t.id]?.status!=='served'&&!result?.served)throw Error('Servis tamamlanamadı.');if(record.done)return record.result;record.done=true;t.deliveryUncertain=false;return record.result={...result,served:true};};
+  const recover=async()=>{checkAccount();const result=await deadline(readStatus());checkAccount();if(result?.state?.serviceOrders?.[t.id]?.status==='served')return finish(result);return null;};
+  if(record){if(record.done)return Promise.resolve(record.result);if(t.deliveryUncertain&&readStatus)return recover().then(result=>result||transact('/api/service-batches/serve',{...context(t),preparations:t.items.map(i=>i.preparation),request_id:t.deliveryRequestId}).then(finish));return record.promise;}
+  const wasUncertain=!!t.deliveryUncertain;t.deliveryRequestId||=crypto.randomUUID();t.deliveryUncertain=true;persist();record={done:false,promise:null,result:null};deliveries.set(key,record);if(deliveries.size>128)for(const [old,r] of deliveries){if(r.done){deliveries.delete(old);break;}}
+  record.promise=(async()=>{try{checkAccount();if(readStatus&&(wasUncertain||getState()?.serviceOrders?.[t.id]?.status==='served')){const known=await recover();if(known)return known;}if(!getState()?.serviceOrders?.[t.id])await register(t,transact);checkAccount();const result=await transact('/api/service-batches/serve',{...context(t),preparations:t.items.map(i=>i.preparation),request_id:t.deliveryRequestId});return finish(result);}catch(error){if(!record.done)deliveries.delete(key);throw error;}})();return record.promise;
+ }
+ globalThis.CafeService=Object.freeze({valid,guestIds,presentation,reconcile,arrival,motion,destination,deliveryPoint,customers,stage,view,welcome,ready,context,register,deliver,deadline});
 })();

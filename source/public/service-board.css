@@ -13,3 +13,6 @@ dialog.service-reference:before{display:none}.service-reference-stage{position:r
 .service-reference-outfit{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 
 .service-dynamic-scene{display:block;width:100%;height:100%}.dynamic-table-art .service-reference-detail{max-height:20%;overflow:auto}.dynamic-table-art .service-reference-gems{font-size:clamp(12px,2vh,20px)}
+
+/* One-shot, 700ms handoff using existing product/bag artwork. */
+.service-handoff{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}.service-transfer{animation-duration:700ms;animation-timing-function:cubic-bezier(.2,.75,.3,1);animation-fill-mode:forwards;animation-iteration-count:1}.table-transfer{animation-name:service-table-handoff}.takeaway-transfer{animation-name:service-package-handoff}@keyframes service-table-handoff{from{transform:translate(0,0);opacity:1}to{transform:translate(240px,-230px);opacity:0}}@keyframes service-package-handoff{from{transform:translate(0,0);opacity:1}to{transform:translate(400px,-40px);opacity:0}}@media(prefers-reduced-motion:reduce){.service-transfer{animation-duration:1ms}}

@@ -7,7 +7,7 @@ assert.ok(iso.includes('openTicketService(t.id,{deliver:()=>serve(t)})'),'Live s
 let now=10000,board,dialog,created,callbackCount=0;
 const nodes=new Map();
 const state={coins:500,readyQueue:[]};
-const context={Date:class extends Date{static now(){return now}},state,ticketName:t=>t.mode==='table'?'Masa '+t.table:'Paket',serviceBoard:()=>board,recipes:[{name:'Strawberry'}],safe:String,saveBoard(){},clearTicketPreparation(){},render(){},celebrate(){},api:async()=>({preparations:[]}),document:{querySelector:()=>dialog?.open?dialog:null,createElement(){created++;dialog={open:false,frames:[],innerHTML:'',querySelector(sel){if(!nodes.has(sel))nodes.set(sel,{});return nodes.get(sel)},addEventListener(){},showModal(){this.open=true},close(){this.open=false},remove(){this.open=false}};Object.defineProperty(dialog,'innerHTML',{get(){return this.html},set(html){this.html=html;this.frames.push(html)}});return dialog},body:{appendChild(){}}}};
+const context={setTimeout,clearTimeout,crypto,Date:class extends Date{static now(){return now}},state,ticketName:t=>t.mode==='table'?'Masa '+t.table:'Paket',serviceBoard:()=>board,recipes:[{name:'Strawberry'}],safe:String,saveBoard(){},clearTicketPreparation(){},render(){},celebrate(){},api:async()=>({preparations:[]}),document:{querySelector:()=>dialog?.open?dialog:null,createElement(){created++;dialog={open:false,frames:[],innerHTML:'',querySelector(sel){if(!nodes.has(sel))nodes.set(sel,{});return nodes.get(sel)},addEventListener(){},showModal(){this.open=true},close(){this.open=false},remove(){this.open=false}};Object.defineProperty(dialog,'innerHTML',{get(){return this.html},set(html){this.html=html;this.frames.push(html)}});return dialog},body:{appendChild(){}}}};
 vm.createContext(context);vm.runInContext(fs.readFileSync(new URL('../source/public/service-state.js',import.meta.url),'utf8'),context);context.ticketReady=t=>context.CafeService.ready(t,now);
 vm.runInContext(source.slice(source.indexOf('function openTicketService('),source.indexOf('const beforeTicketQueue')),context);
 const ticket=(mode='table',table=1,count=4)=>({id:crypto.randomUUID(),mode,table,enteredAt:now-3000,items:Array.from({length:count},()=>({recipe:0,preparation:crypto.randomUUID(),readyAt:now-1}))});
@@ -20,14 +20,14 @@ for(const mode of ['table','takeaway']){
  const first=dialog.querySelector('.service-reference-action').onclick();await dialog.querySelector('.service-reference-action').onclick();await first;
  assert.equal(callbackCount,1);assert.equal(state.coins,before+t.items.length*35);assert.equal(board.tickets.length,0);
  assert.ok(dialog.innerHTML.includes(mode==='table'?'service-dynamic-scene':'takeaway-service.png'));
- assert.ok(dialog.innerHTML.includes('Devam Et'));assert.equal(dialog.open,true);dialog.querySelector('.service-reference-action').onclick();assert.equal(dialog.open,false);
+ await new Promise(r=>setTimeout(r,710));assert.ok(dialog.innerHTML.includes('Devam Et'));assert.equal(dialog.open,true);dialog.querySelector('.service-reference-action').onclick();assert.equal(dialog.open,false);
 }
 // Stale modal: a customer that left cannot receive service or grant a reward.
 dialog=null;nodes.clear();created=0;const stale=ticket();board={tickets:[stale]};const before=state.coins;
 context.openTicketService(stale.id,{deliver:async()=>{throw Error('Should never deliver stale order')}});board.tickets=[];await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,before);assert.ok(dialog.querySelector('[role=status]').textContent.includes('artık masada değil'));
 // A committed reward stays committed even if the presentation cache cannot save.
 dialog=null;nodes.clear();const cached=ticket();board={tickets:[cached]};context.saveBoard=()=>{throw Error('local cache full')};const cacheBefore=state.coins;
-context.openTicketService(cached.id,{deliver:async()=>{state.coins+=140;board.tickets=[];return {served:true}}});await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,cacheBefore+140);assert.ok(dialog.innerHTML.includes('Devam Et'));context.saveBoard=()=>{};
+context.openTicketService(cached.id,{deliver:async()=>{state.coins+=140;board.tickets=[];return {served:true}}});await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,cacheBefore+140);await new Promise(r=>setTimeout(r,710));assert.ok(dialog.innerHTML.includes('Devam Et'));context.saveBoard=()=>{};
 // Invalid and arriving orders never expose the service art/action.
 for(const t of [null,{...ticket(),enteredAt:now-1000},{...ticket(),items:[]}]){dialog=null;created=0;board={tickets:t?[t]:[]};context.openTicketService(t?.id||'missing');assert.equal(created,0)}
 const t=ticket(),packed=ticket('takeaway',null,1),b={admitted:8,tickets:[t,packed]},v=context.CafeService.view(b,{attracted:5},now);assert.equal(v.waiting,1);assert.equal(v.seated,4);assert.equal(v.takeaway,1);
