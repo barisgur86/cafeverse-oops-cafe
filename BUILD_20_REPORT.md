@@ -1,3 +1,5 @@
+Confirmed availability: **Cafeverse0.9.19 (20) is available to test on iOS.** Apple TestFlight email to barisgur@gmail.com received24 November2026 at05:52 Türkiye time (message1a20b77fe7f944e2). Upload, processing and tester access are confirmed; physical gameplay remains unrun.
+
 # Confirmed Build20 upload and recording
 
 24 November2026: normal-Mac uploader completed the full suite, actual browser UI recording, signed Release archive, codesign/version checks and Apple export/upload successfully. Archived identity0.9.19 /20; archived Web hash matches tested bundle (`e48513cbd7444a684787f4cbb0747d818bc70b07e90d0778f3feb496ead89cc9`). Apple accepted the upload; processing/availability is being checked.
