@@ -48,3 +48,9 @@ Supabase Sandbox function version 23 deployed and downloaded for byte verificati
 outputs/Cafeverse-0.9.19-Build23-TestFlight-Yukle.command runs full npm tests, native checks, Sandbox contract, real browser UI/375×667 recording (four-item preparation with table switching, three pickup deliveries, calls, decor, mute, character, worlds, recipe pages and quest claim), then Release archive, signature verification and exact Info.plist 0.9.19 /23 before upload. It stops on any failure. Browser output is a disposable fixture, not physical iPhone or Simulator.
 
 Evidence logs: outputs/release-0.9.19-23/. Full test log npm-test-final.log. Short focused tests build23-acceptance.log, secure-gifts-quests.log, delivery.log, native-bridges.log, audio-native.log. Browser expected video build23-seating-pickup-calls-decor-audio-browser.webm under video/ plus before/after PNGs.
+
+## Final status of this agent session
+
+Full final npm test completed successfully (npm-test-final.log, including Build 23 acceptance). Implementation commit: 3e8e5f2. Git push attempted and failed: HTTPS credential unavailable (`could not read Username`). PR/merge not performed.
+
+Full Build 23 Release archive attempted and failed in this execution sandbox: `sandbox-exec: sandbox_apply: Operation not permitted`, followed by SwiftUI StateMacro plugin launch/expansion errors (exit 65). Browser recording attempted and Chrome exited at launch. LaunchServices attempt to open normal Terminal failed with kLSNoExecutableErr. These are actual recorded failures; no successful signed Build 23 archive, archive CFBundleVersion verification, video or TestFlight upload is claimed yet. The normal-Mac runner performs and gates all remaining checks. No new TestFlight email has been verified for Build 23.
