@@ -29,7 +29,7 @@ export class Economy {
  }
  async me(id){return this.transaction(async c=>{const a=await this.account(c,id),d=gameEngine(id,a.save,this.clock).handle('/api/me');const cutover=this.legacyImport?(await c.query('select source_revision,source_version,checksum from cafe_account_cutovers where user_id=$1',[id])).rows[0]:undefined;return this.response(a,{preparations:d.preparations,preparation:d.preparation,...(cutover?{cutover}: {})});});}
  async game(id,path,body){
-  const allowed=['/api/service-orders/open','/api/service-orders/leave','/api/profile','/api/stock','/api/outfit','/api/decor','/api/upgrades','/api/npc-trade','/api/preparations','/api/service-batches/serve','/api/calls/start'];
+  const allowed=['/api/quests/claim','/api/world','/api/service-orders/open','/api/service-orders/leave','/api/profile','/api/stock','/api/outfit','/api/decor','/api/upgrades','/api/npc-trade','/api/preparations','/api/service-batches/serve','/api/calls/start'];
   if(!allowed.includes(path)&&!/^\/api\/(preparations\/[a-f0-9-]{36}\/serve|calls\/[a-f0-9-]{36}\/tap)$/.test(path))throw problem('Desteklenmeyen oyun işlemi.',404);
   return this.transaction(async c=>{
    const extra=await this.request(c,id,body.request_id,path,body,async()=>{

@@ -19,7 +19,7 @@ export function handler(economy,authenticate,{lifecycle}={}){
     const text=await req.text();if(text.length>65000)throw problem('İstek fazla büyük.',413);
     try{b=JSON.parse(text);}catch{throw problem('Geçersiz JSON.');}if(!b||Array.isArray(b)||typeof b!=='object')throw problem('Geçersiz istek.');
    }
-   if(path==='/health'&&req.method==='GET'){await economy.pool.query('select last_event_signed_at from cafe_apple_transactions limit 0');return Response.json({ready:true,serviceQueue:'independent-pickup-v1',decorPolicy:'owned-placement-v1',schema:'authoritative-economy-v1',environment:economy.apple.environment,features:economy.features,cutover:economy.legacyImport?'server-backup-v1':null,accountDeletion:!!lifecycle?.provider.adminKey,appleRevocation:!!lifecycle?.provider.appleSecret});}
+   if(path==='/health'&&req.method==='GET'){await economy.pool.query('select last_event_signed_at from cafe_apple_transactions limit 0');return Response.json({ready:true,serviceQueue:'independent-pickup-v1',decorPolicy:'owned-placement-v1',serviceBuild:'continuous-pickup-quests-v23',schema:'authoritative-economy-v1',environment:economy.apple.environment,features:economy.features,cutover:economy.legacyImport?'server-backup-v1':null,accountDeletion:!!lifecycle?.provider.adminKey,appleRevocation:!!lifecycle?.provider.appleSecret});}
    if(path==='/apple/notifications'&&req.method==='POST')return Response.json(await economy.notification(b.signedPayload));
    if(path==='/api/account/deletion/finish'&&req.method==='POST'){if(!lifecycle)throw problem('Hesap silme bağlantısı henüz hazır değil.',503);return Response.json(await lifecycle.finish(b.receipt),{headers:{'Cache-Control':'no-store'}});}
    const id=await authenticate(req.headers.get('authorization'));

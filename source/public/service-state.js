@@ -2,6 +2,8 @@
 (() => {
  function valid(t){return !!t&&(t.guestCount===undefined||Number.isInteger(t.guestCount)&&t.guestCount>=1&&t.guestCount<=(t.mode==='table'?4:1))&&typeof t.id==='string'&&['table','takeaway'].includes(t.mode)&&Array.isArray(t.items)&&t.items.length>0&&t.items.length<=4&&(t.mode==='table'?Number.isInteger(t.table)&&t.table>0:t.table===null&&t.items.length===1)&&!['served','left','cancelled','canceled'].includes(t.status);}
  function reconcile(board,state,now=Date.now()){
+  // Recover canonical active sessions after cloud restore; keep local visual-only fields.
+  for(const [key,raw] of Object.entries(state.serviceOrders||{})){const order={...raw,id:raw.id||key};if(!['arriving','seated'].includes(order.status)||!Array.isArray(order.items))continue;let t=board.tickets.find(t=>t.id===order.id);if(!t){t={id:order.id,mode:order.mode,table:order.table,guestCount:order.guestCount,number:(board.sequence=(board.sequence||0)+1),enteredAt:(order.arrives_at||now)-2200,registered:true,items:order.items.map(it=>({...it,preparation:it.preparation||null,readyAt:it.readyAt||0}))};board.tickets.push(t);}else {for(let i=0;i<order.items.length;i++){const item=order.items[i];if(item.preparation){t.items[i].preparation=item.preparation;t.items[i].readyAt=item.readyAt;}}}}
   board.packageAdmissions=Math.max(board.packageAdmissions||0,Object.values(state.serviceOrders||{}).filter(o=>o.mode==='takeaway').reduce((n,o)=>n+(o.guestCount||1),0)+(board.tickets||[]).filter(t=>t.mode==='takeaway'&&!state.serviceOrders?.[t.id]).length);
   board.departures=(board.departures||[]).filter(d=>valid(d.ticket)&&Number.isFinite(d.at)&&now<d.at+4300);
   const departing=new Set(board.departures.map(d=>d.ticket.id));

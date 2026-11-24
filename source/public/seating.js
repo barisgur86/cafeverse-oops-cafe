@@ -4,7 +4,7 @@
   let remaining=Math.max(0,waiting-reserve),sequence=board.sequence||0,admitted=board.admitted||0;
   const tickets=[...board.tickets],occupied=new Set([...blocked,...tickets.filter(t=>t.mode==='table').map(t=>t.table)]);
   if(!recipes.length||!remaining&&!independentTakeaway)return null;
-  let changed=false,packageAdmissions=board.packageAdmissions||0;
+  let pickupNext=board.pickupNext;let changed=false,packageAdmissions=board.packageAdmissions||0;
   if(tableService&&fullTables){for(let i=0;i<tickets.length&&remaining>0;i++){
    const t=tickets[i];if(t.mode!=='table'||t.registered||t.registering||t.items.length>=4||t.items.some(it=>it.preparation))continue;
    const count=Math.min(4-t.items.length,remaining);tickets[i]={...t,items:[...t.items,...Array.from({length:count},(_,i)=>({recipe:recipes[(served+admitted+i)%recipes.length],preparation:null,readyAt:0}))]};admitted+=count;remaining-=count;changed=true;
@@ -17,9 +17,10 @@
    admitted+=count;remaining-=count;occupied.add(table);
   }
   if(takeaway&&(remaining>0||independentTakeaway)&&!tickets.some(t=>t.mode==='takeaway')&&tickets.length<capacity+tables){
-   sequence++;tickets.push({id:id(),number:sequence,mode:'takeaway',table:null,enteredAt:now,items:[{recipe:recipes[(served+admitted)%recipes.length],preparation:null,readyAt:0}]});admitted++;packageAdmissions++;remaining=Math.max(0,remaining-1);
+   sequence++;tickets.push({id:independentTakeaway&&pickupNext?pickupNext.id:id(),number:sequence,mode:'takeaway',table:null,enteredAt:now,items:[{recipe:recipes[(served+admitted)%recipes.length],preparation:null,readyAt:0}]});admitted++;packageAdmissions++;if(!independentTakeaway)remaining=Math.max(0,remaining-1);if(independentTakeaway)pickupNext={id:id(),enteredAt:now};
   }
-  return !changed&&tickets.length===board.tickets.length?null:{tickets,sequence,admitted,packageAdmissions};
+  if(independentTakeaway&&tickets.some(t=>t.mode==='takeaway')&&!pickupNext){pickupNext={id:id(),enteredAt:now};changed=true;}
+  return !changed&&tickets.length===board.tickets.length&&pickupNext===board.pickupNext?null:{tickets,sequence,admitted,packageAdmissions,...(pickupNext?{pickupNext}:{})};
  }
  globalThis.CafeSeating=Object.freeze({plan});
 })();
