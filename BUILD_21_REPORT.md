@@ -1,3 +1,7 @@
+## Normal-Mac progress update
+
+The normal-Mac full automated suite and375×667 browser UI recording have passed. Recording: task outputs/release-0.9.19-21/video/build21-seating-pickup-calls-browser.webm. Actual Table2 triple and door pickup screenshots were visually inspected. This is browser fixture footage, not physical iPhone/Simulator. Native compilation reached CodeSign; built app CFBundleVersion21 verified. Signing is currently waiting for the Mac keychain authorization; no archive/upload success or TestFlight21 mail yet. Earlier execution-session blockers below are historical.
+
 # Cafeverse 0.9.19 — Build21
 
 24 November2026. Branch `fix/seating-pickup-door-build21`, based on verified shipped Build20. Marketing stays0.9.19; Debug/Release build21. No source raster artwork changed, no live saves reset, no direct wallet edits. Production App Store publication is not performed.
