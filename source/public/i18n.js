@@ -1,6 +1,8 @@
 /* TR/EN presentation only. Saved recipe IDs, inventories and accounts stay unchanged. */
 (() => {
  const en={
+ 'Teslim sonucu henüz alınamadı. Aynı siparişi yeniden kontrol et.':'The delivery result is not available yet. Check this order status.','Siparişi kontrol et':'Check order status','Sipariş kontrol ediliyor…':'Checking order…','Kayıtlı sipariş durumunu kontrol et.':'Check the recorded order status.','Servisi yeniden dene':'Retry delivery','Sipariş teslim edildi. Bakiye eşitlendi.':'Order delivered. Balance synced.','Sunucu yanıtı gecikti. Siparişin durumunu kontrol et.':'The server response was delayed. Check order status.',
+
  'Masa misafiri çağır':'Call table guests','Müşteri siparişi doğrulanamadı.':'The guest order could not be confirmed. Retry this table.','Kafe eşitlendi. Siparişi yeniden seç.':'The café was synced. Select the current order again.','Hazırlık tamamlanamadı; yeniden dene.':'Preparation was not confirmed. Retry this order.','Hesap değişti. İşlem başlatılmadı.':'Account changed. The action was not started.','Hesap değişti. Yanıt önceki hesaba ait.':'Account changed. The response belongs to the previous account.','İçecek hazırlanıyor…':'Preparing drink…','Ürün tepsiye taşınıyor…':'Moving the drink to the tray…','Sipariş teslim ediliyor…':'Delivering order…','Karakterinin adı':'Character name','İlerlemen bu cihazda saklanır.':'Your progress is saved on this device.','İlerlemen hesabında saklanır.':'Your progress is saved to your account.',
 
  'Apple ile bağlanıyor…':'Connecting to Apple…','Coinler eklendi. Apple işlemi arka planda tamamlanacak.':'Coins added. The Apple transaction will finish in the background.',

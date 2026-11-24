@@ -86,13 +86,13 @@ const game=(path,b)=>economy.game(guestCafe,path,{request_id:crypto.randomUUID()
 await game('/api/service-orders/open',{order:tableOrder});now+=2200;
 const tray=[];for(let i=0;i<4;i++){const d=await game('/api/preparations',{amounts:(await import('../source/server/secure/engine.mjs')).catalog.FORMULAS[0],order_id:tableOrder.id,customer_id:tableOrder.id+':'+i});tray.push(d.preparation.id)}
 now+=6000;const deliver={order_id:tableOrder.id,mode:'table',table:1,customers:tray.map((_,i)=>tableOrder.id+':'+i),preparations:tray};
-const beforeServe=await economy.me(guestCafe);await assert.rejects(game('/api/service-batches/serve',{...deliver,table:2}),/eşleşmiyor/);
+await db.query('update cafe_game_accounts set refund_debt=30 where user_id=$1',[guestCafe]);const beforeServe=await economy.me(guestCafe);await assert.rejects(game('/api/service-batches/serve',{...deliver,table:2}),/eşleşmiyor/);
 const saveBeforeService=economy.save;economy.save=async()=>{throw Error('injected service persistence failure')};
 await assert.rejects(game('/api/service-batches/serve',deliver),/injected service/);economy.save=saveBeforeService;
 assert.equal((await economy.me(guestCafe)).state.coins,beforeServe.state.coins);
 assert.equal((await economy.me(guestCafe)).save.serviceOrders[tableOrder.id].status,'seated');
 const deliveries=await Promise.allSettled([game('/api/service-batches/serve',deliver),game('/api/service-batches/serve',deliver)]);
-assert.equal(deliveries.filter(d=>d.status==='fulfilled').length,1);assert.equal((await economy.me(guestCafe)).state.served,4);
+assert.equal(deliveries.filter(d=>d.status==='fulfilled').length,1);assert.equal((await economy.me(guestCafe)).state.served,4);const winner=deliveries.find(d=>d.status==='fulfilled').value;assert.equal(winner.deliveryReceipt.coins,210);assert.equal(winner.deliveryReceipt.debtRepaid,30);assert.equal(winner.deliveryReceipt.orderId,tableOrder.id);assert.equal((await economy.me(guestCafe)).state.serviceOrders[tableOrder.id].deliveryReceipt.coins,210);console.log('PASS durable delivery receipt: 240 gross minus 30 refund debt, 210 actual credit stored for same order.');
 const emptyBefore=await economy.me(bob);await assert.rejects(economy.game(bob,'/api/service-batches/serve',{...deliver,request_id:crypto.randomUUID()}));assert.equal((await economy.me(bob)).state.coins,emptyBefore.state.coins);
 console.log('PASS PostgreSQL service: bound actor/table identity, wrong table/actor rejection, persistence rollback, concurrent delivery once. PGlite serializes requests; physical devices not tested.');
 await db.close();console.log('PASS secure economy: server validation, replay/restart, refund, escrow, atomic transfers/rollback, expiry, authorization, RLS. Crypto boundary uses fixtures; not a real Apple purchase.');

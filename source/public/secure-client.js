@@ -13,6 +13,7 @@
  const queue=fn=>{const task=sequence.then(fn);sequence=task.catch(()=>{});return task;};
  function apply(d,restoreBoard=false){
   if(globalThis.CafeAccountDeleted)throw Error('[410] Hesap silindi.');
+  if(initialized&&Number.isSafeInteger(d.revision)&&d.revision<revision)return;
   if(d.features){globalThis.CafeFeatures=d.features;globalThis.dispatchEvent?.(new Event('cafeverse-features'));}
   if(!d.save)return;
   if(d.cutover&&restoreBoard){
@@ -33,10 +34,11 @@
    if(d.cutover)localStorage.setItem('cafeverse-cutover-ack:'+(globalThis.CafeAccountID||'device'),'1');
   }finally{applying=false;}
  }
- async function invoke(path,body){if(globalThis.CafeAccountDeleted)throw Error('[410] Hesap silindi.');const d=await bridge.postMessage({action:'game',path,...(body?{body}:{})});apply(d,!initialized);initialized=true;return d;}
+ async function invoke(path,body){if(globalThis.CafeAccountDeleted)throw Error('[410] Hesap silindi.');let timer;try{const replyPromise=bridge.postMessage({action:'game',path,...(body?{body}:{})}),d=await Promise.race([replyPromise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('[503] Sunucu yanıtı gecikti. Siparişin durumunu kontrol et.')),16000)})]);if(d.state&&Number.isSafeInteger(d.revision))d.state.authoritativeRevision=d.revision;apply(d,!initialized);initialized=true;if(path==='/api/me'){let changed=false;for(const fingerprint of Object.keys(pending)){try{const [route,payload]=JSON.parse(fingerprint);if(route==='/api/service-batches/serve'&&d.state?.serviceOrders?.[payload.order_id]?.status==='served'){delete pending[fingerprint];changed=true;}}catch{}}if(changed)persistPending();}return d;}finally{clearTimeout(timer)}}
+
  globalThis.fetch=async(input,options={})=>{
   const path=String(input);if(!path.startsWith('/api/'))return originalFetch(input,options);
-  return queue(async()=>{
+  const execute=async()=>{
    let fingerprint;
    try{
     const body=options.body?JSON.parse(options.body):undefined;
@@ -50,7 +52,9 @@
     if(fingerprint&&code>=400&&code<500){delete pending[fingerprint];persistPending();}
     return Response.json({error:e.message||String(e)},{status:code});
    }
-  });
+  };
+  // A read must never wait behind the lost response it is trying to recover.
+  return path==='/api/me'&&!options.body?execute():queue(execute);
  };
  async function flushBoard(){
   if(!initialized||!boardDirty)return;
@@ -63,5 +67,5 @@
  }
  globalThis.addEventListener('cafeverse-board-save',()=>{if(applying)return;boardDirty=true;boardChanges++;clearTimeout(timer);timer=setTimeout(()=>flushBoard().catch(()=>{}),1500);});
  globalThis.addEventListener('online',()=>flushBoard().catch(()=>{}));
- globalThis.CafeCloudSync={getStatus:()=>({initialized,applying,ready:initialized,blocked:false}),pull:()=>queue(()=>invoke('/api/me')),push:flushBoard};
+ globalThis.CafeCloudSync={getStatus:()=>({initialized,applying,ready:initialized,blocked:false}),pull:()=>invoke('/api/me'),push:flushBoard};
 })();

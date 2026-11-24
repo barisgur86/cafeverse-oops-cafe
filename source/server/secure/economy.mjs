@@ -39,6 +39,7 @@ export class Economy {
     // Future earned coins first repay consumed/refunded purchase debt.
     const earned=Math.max(0,a.save.coins-before),repay=Math.min(earned,Number(a.refund_debt));a.save.coins-=repay;a.refund_debt=Number(a.refund_debt)-repay;
     if(this.features.coinGifts)a.giftable_coins=Number(a.giftable_coins||0)+earned-repay;
+    if(path==='/api/service-batches/serve'&&a.save.serviceOrders?.[body.order_id]?.deliveryReceipt){const receipt=a.save.serviceOrders[body.order_id].deliveryReceipt;receipt.coins=earned-repay;receipt.debtRepaid=repay;d.deliveryReceipt=receipt;}
     await this.save(c,a);const {status,state,...extra}=d;return extra;
    });return this.response(await this.account(c,id),extra);
   });

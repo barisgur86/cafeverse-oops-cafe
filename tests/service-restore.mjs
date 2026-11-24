@@ -3,7 +3,7 @@ const assetManifest=JSON.parse(fs.readFileSync(new URL('service-assets.json',imp
 for(const [file,hash] of Object.entries(assetManifest))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(new URL('../'+file,import.meta.url))).digest('hex'),hash,'Existing asset changed: '+file);
 const iso=fs.readFileSync(new URL('../source/public/iso-cafe.js',import.meta.url),'utf8'),source=fs.readFileSync(new URL('../source/public/service-board.js',import.meta.url),'utf8');
 for(const name of ['sim-table.png','cafe-customers-candy.png','characters.png','cafe-isometric-candy.png','table-service-ready.png','table-service-done.png','takeaway-service.png'])assert.ok((iso+source+fs.readFileSync(new URL('../source/public/appearance.js',import.meta.url),'utf8')+fs.readFileSync(new URL('../source/public/service-state.js',import.meta.url),'utf8')).includes(name),'Asset unlinked: '+name);
-assert.ok(iso.includes('openTicketService(t.id,{deliver:()=>serve(t)})'),'Live scene must open existing service artwork');
+assert.ok(iso.includes('openTicketService(t.id,{deliver:()=>serve(t),check:()=>checkOrder(t)})'),'Live scene must open existing service artwork');
 let now=10000,board,dialog,created,callbackCount=0;
 const nodes=new Map();
 const state={coins:500,readyQueue:[]};
@@ -24,9 +24,9 @@ for(const mode of ['table','takeaway']){
 }
 // Stale modal: a customer that left cannot receive service or grant a reward.
 dialog=null;nodes.clear();created=0;const stale=ticket();board={tickets:[stale]};const before=state.coins;
-context.openTicketService(stale.id,{deliver:async()=>{throw Error('Should never deliver stale order')}});board.tickets=[];await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,before);assert.ok(dialog.querySelector('[role=status]').textContent.includes('artık masada değil'));
+context.openTicketService(stale.id,{deliver:async()=>{throw Error('Should never deliver stale order')}});board.tickets=[];await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,before);assert.ok(dialog.innerHTML.includes('artık masada değil'));
 // A committed reward stays committed even if the presentation cache cannot save.
-dialog=null;nodes.clear();const cached=ticket();board={tickets:[cached]};context.saveBoard=()=>{throw Error('local cache full')};const cacheBefore=state.coins;
+dialog=null;nodes.clear();const cached=ticket();board={tickets:[cached]};let cacheWrites=0;context.saveBoard=()=>{if(++cacheWrites>1)throw Error('local cache full')};const cacheBefore=state.coins;
 context.openTicketService(cached.id,{deliver:async()=>{state.coins+=140;board.tickets=[];return {served:true}}});await dialog.querySelector('.service-reference-action').onclick();assert.equal(state.coins,cacheBefore+140);await new Promise(r=>setTimeout(r,710));assert.ok(dialog.innerHTML.includes('Devam Et'));context.saveBoard=()=>{};
 // Invalid and arriving orders never expose the service art/action.
 for(const t of [null,{...ticket(),enteredAt:now-1000},{...ticket(),items:[]}]){dialog=null;created=0;board={tickets:t?[t]:[]};context.openTicketService(t?.id||'missing');assert.equal(created,0)}
