@@ -3,12 +3,12 @@
  const defaults={master:.7,music:.35,effects:.5,muted:false},key='cafeverse.audio.v1';
  const clamp=(v,f)=>Number.isFinite(Number(v))?Math.max(0,Math.min(1,Number(v))):f;
  let raw;try{raw=JSON.parse(localStorage.getItem(key)||'null');}catch{}
- let settings={master:clamp(raw?.master,defaults.master),music:clamp(raw?.music,localStorage.getItem('cafeverse.music')==='off'?0:defaults.music),effects:clamp(raw?.effects,localStorage.getItem('cafeverse.callSound')==='off'?0:defaults.effects),muted:raw?.muted===true};
+ let settings={master:clamp(raw?.master,defaults.master),music:clamp(raw?.music,localStorage.getItem('cafeverse.music')==='off'?0:defaults.music),effects:clamp(raw?.effects,defaults.effects),muted:raw?.muted===true||!raw&&localStorage.getItem('cafeverse.callSound')==='off'};
  const native=globalThis.webkit?.messageHandlers?.cafeAudio;
  let unlocked=false,context,element,source,musicGain,effectsGain,masterGain,compressor,voices=[],revision=0;
- const listeners=new Set();
+ const listeners=new Set(),audioPage=globalThis.crypto?.randomUUID?.()||String(Date.now())+Math.random();
  const gain=type=>settings.muted?0:settings.master*settings[type];
- function send(body){try{return Promise.resolve(native?.postMessage(body)).catch(()=>null);}catch{return Promise.resolve(null);}}
+ function send(body){try{return Promise.resolve(native?.postMessage({audioPage,revision,...body})).catch(()=>null);}catch{return Promise.resolve(null);}}
  function graph(){if(context)return;const AudioContext=globalThis.AudioContext||globalThis.webkitAudioContext;if(!AudioContext)return;
   context=new AudioContext();masterGain=context.createGain();musicGain=context.createGain();effectsGain=context.createGain();compressor=context.createDynamicsCompressor();compressor.threshold.value=-12;compressor.ratio.value=8;
   musicGain.connect(masterGain);effectsGain.connect(masterGain);masterGain.connect(compressor);compressor.connect(context.destination);
@@ -16,7 +16,7 @@
  }
  function apply(persist=true,notifyNative=true){if(persist){localStorage.setItem(key,JSON.stringify(settings));revision++;}if(native&&notifyNative)send({action:'configure',...settings});
   if(context){masterGain.gain.value=settings.muted?0:settings.master;musicGain.gain.value=settings.music;effectsGain.gain.value=settings.effects;if(gain('music')===0)element.pause();}
-  globalThis.CafeCallVoice?.stop();listeners.forEach(fn=>fn({...settings}));
+  if(settings.muted){element?.pause();voices.forEach(v=>{try{v.stop()}catch{}});voices=[];}globalThis.CafeCallVoice?.stop();syncMuteButtons();listeners.forEach(fn=>fn({...settings}));
  }
  function play(){unlocked=true;if(native)return send({action:'play'});graph();if(context&&!document.hidden&&gain('music')>0){context.resume().catch(()=>{});element.play().catch(()=>{});}}
  function pause(){if(native)send({action:'pause'});element?.pause();voices.forEach(v=>{try{v.stop();}catch{}});voices=[];}
@@ -24,7 +24,7 @@
  function effect(kind){if(!unlocked||document.hidden||gain('effects')===0)return false;if(native){send({action:'effect',kind});return true;}graph();if(!context)return false;voices=voices.filter(v=>!v.finished);if(voices.length>=3)return false;const frequency=({prepare:523,coin:880,xp:659,trade:784,menu:440})[kind];if(!frequency)return false;
   context.resume().catch(()=>{});const oscillator=context.createOscillator(),envelope=context.createGain();oscillator.frequency.value=frequency;envelope.gain.setValueAtTime(.12,context.currentTime);envelope.gain.exponentialRampToValueAtTime(.001,context.currentTime+.12);oscillator.connect(envelope);envelope.connect(effectsGain);oscillator.onended=()=>{oscillator.finished=true;oscillator.disconnect();envelope.disconnect();};voices.push(oscillator);oscillator.start();oscillator.stop(context.currentTime+.14);return true;
  }
- globalThis.CafeAudio={set,effect,play,pause,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},get settings(){return {...settings};},get effectsGain(){return gain('effects');}};
+ globalThis.CafeAudio={set,effect,play,pause,toggleMute(){return set({muted:!settings.muted})},get commandStamp(){return {audioPage,revision}},subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},get settings(){return {...settings};},get effectsGain(){return gain('effects');}};
  globalThis.CafeMusic={get enabled(){return gain('music')>0;}};
  const modal=document.createElement('dialog');modal.className='audio-settings';modal.setAttribute('data-no-i18n','');document.body.append(modal);
  const t=(a,b)=>globalThis.CafeI18n?.language==='en'?b:a;
@@ -33,6 +33,9 @@
   modal.querySelector('#audio-mute').onclick=()=>{set({muted:!settings.muted});paint();};modal.querySelector('#audio-test').onclick=()=>effect('coin');modal.querySelector('#audio-close').onclick=()=>modal.close();
  }
  const button=document.createElement('button');button.className='secondary';const label=()=>button.textContent='🔊 '+t('Ses ayarları','Audio settings');label();button.onclick=()=>{play();paint();modal.showModal();};document.querySelector('#app-menu')?.append(button);
+ const masterButton=document.createElement('button');masterButton.className='cafe-master-mute';masterButton.dataset&&(masterButton.dataset.masterMute='');masterButton.setAttribute('data-master-mute','');document.body.append(masterButton);masterButton.onclick=()=>globalThis.CafeAudio.toggleMute();
+ function syncMuteButtons(){const muted=settings.muted;for(const b of document.querySelectorAll?.('[data-master-mute]')||[]){const label=muted?'🔇':'🔊';if(b.textContent!==label)b.textContent=label;b.setAttribute('aria-pressed',String(muted));b.setAttribute('aria-label',t(muted?'Sesi aç':'Sessize al',muted?'Unmute':'Mute'));b.onclick=()=>globalThis.CafeAudio.toggleMute();}for(const dialog of document.querySelectorAll?.('dialog[open]')||[]){if(dialog.classList.contains('audio-settings')||dialog.querySelector('[data-master-mute]'))continue;const b=document.createElement('button');b.className='dialog-master-mute';b.setAttribute('data-master-mute','');b.textContent=muted?'🔇':'🔊';b.setAttribute('aria-label',t(muted?'Sesi aç':'Sessize al',muted?'Unmute':'Mute'));b.onclick=()=>globalThis.CafeAudio.toggleMute();dialog.append(b);}}
+ if(typeof MutationObserver==='function')new MutationObserver(syncMuteButtons).observe(document.body,{childList:true,subtree:true});
  document.addEventListener('pointerdown',()=>{if(!unlocked)play();},{passive:true});document.addEventListener('keydown',()=>{if(!unlocked)play();});document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();else if(unlocked)play();});globalThis.addEventListener('pagehide',pause);globalThis.addEventListener('cafeverse-language',()=>{label();if(modal.open)paint();});
  if(typeof transact==='function'){const previous=transact;transact=async function(path,body){const before=state.served,level=state.progression?.level;const result=await previous(path,body);if(path==='/api/preparations')effect('prepare');if(path.includes('/serve')&&state.served>before)effect('coin');if(level&&state.progression?.level>level)effect('xp');if(path.includes('/trades/')||path==='/api/npc-trade')effect('trade');return result;};}
  document.addEventListener('click',e=>{if(e.target?.closest?.('button')&&!e.target?.closest?.('.audio-settings'))effect('menu');});

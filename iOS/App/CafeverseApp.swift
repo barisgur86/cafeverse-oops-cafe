@@ -39,6 +39,7 @@ private struct DeviceCafe: UIViewRepresentable {
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeStore")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeGame")
         configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeAudio")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "cafeClipboard")
         let serverEnabled = (Bundle.main.object(forInfoDictionaryKey: "CafeGameServerURL") as? String)?.hasPrefix("https://") == true
         configuration.userContentController.addUserScript(WKUserScript(source: "globalThis.CafeServerEnabled = \(serverEnabled ? "true" : "false");", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let encoded = String(data: try! JSONEncoder().encode(userID), encoding: .utf8)!
@@ -60,6 +61,13 @@ private struct DeviceCafe: UIViewRepresentable {
         return view
     }
     func updateUIView(_ view: WKWebView, context: Context) {}
+    static func dismantleUIView(_ view: WKWebView, coordinator: Coordinator) {
+        coordinator.audio.shutdown(); coordinator.speech.stopSpeaking(at: .immediate)
+        coordinator.store.onUpdate = nil
+        for name in ["cafeLogout", "cafeDelete", "cafeLanguage", "cafeSpeak", "cafeCloud", "cafeStore", "cafeGame", "cafeAudio", "cafeClipboard"] { view.configuration.userContentController.removeScriptMessageHandler(forName: name) }
+        view.stopLoading(); view.navigationDelegate = nil
+        if CafeActiveGame.view === view { CafeActiveGame.view = nil; CafeActiveGame.userID = nil }
+    }
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKScriptMessageHandlerWithReply {
         let onLogout: () -> Void
         let onDelete: () -> Void
@@ -69,6 +77,14 @@ private struct DeviceCafe: UIViewRepresentable {
         let cloud: CafeCloud
         init(userID: String, session: CafeSession, onLogout: @escaping () -> Void, onDelete: @escaping () -> Void) { self.onLogout = onLogout; self.onDelete = onDelete; self.store = CafeStore(userID: userID); self.cloud = CafeCloud(session: session) }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+            if message.name == "cafeClipboard" {
+                guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url, url.isFileURL, let root,
+                      url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"), let body = message.body as? [String: Any] else { replyHandler(nil, "Invalid clipboard request"); return }
+                if body["action"] as? String == "write", let value = body["value"] as? String, value.count <= 128 { UIPasteboard.general.string = value; replyHandler(["ok": true], nil) }
+                else if body["action"] as? String == "read" { replyHandler(["value": String((UIPasteboard.general.string ?? "").prefix(128))], nil) }
+                else { replyHandler(nil, "Invalid clipboard action") }
+                return
+            }
             if message.name == "cafeAudio" {
                 guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url, url.isFileURL, let root,
                       url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"), let body = message.body as? [String: Any] else { replyHandler(nil, "Geçersiz ses isteği."); return }
@@ -113,7 +129,7 @@ private struct DeviceCafe: UIViewRepresentable {
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard message.frameInfo.isMainFrame, let url = message.frameInfo.request.url,
                   url.isFileURL, let root, url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
-                  let value = message.body as? String else { return }
+                  let value = (message.body as? String) ?? ((message.body as? [String: Any])?["language"] as? String) else { return }
             if message.name == "cafeLogout" { onLogout(); return }
             if message.name == "cafeDelete", value == "delete" { onDelete(); return }
             if message.name == "cafeLanguage", ["tr", "en"].contains(value) {
@@ -121,7 +137,7 @@ private struct DeviceCafe: UIViewRepresentable {
             }
             if message.name == "cafeSpeak" {
                 speech.stopSpeaking(at: .immediate)
-                guard ["tr", "en"].contains(value), audio.settings.effectsGain > 0 else { return }
+                guard ["tr", "en"].contains(value), audio.settings.effectsGain > 0, audio.acceptsStamp((message.body as? [String: Any]) ?? [:]) else { return }
                 let utterance = AVSpeechUtterance(string: value == "en" ? "Come, come!" : "Gel, gel!")
                 utterance.voice = AVSpeechSynthesisVoice(language: value == "en" ? "en-US" : "tr-TR")
                 utterance.rate = 0.48; utterance.pitchMultiplier = 1.2; utterance.volume = audio.settings.effectsGain
@@ -784,6 +800,8 @@ private struct CafeAudioSettings {
     private var player: AVAudioPlayer?
     private var effects: [AVAudioPlayer] = []
     private var observers: [NSObjectProtocol] = []
+    private var activeAudioPage: String?
+    private var audioRevision = -1
     private var wantsMusic = false
     private var background = false
     private var interrupted = false
@@ -816,12 +834,22 @@ private struct CafeAudioSettings {
         try audio.setCategory(.ambient, mode: .default, options: [])
         try audio.setActive(true)
     }
+    func shutdown() { wantsMusic = false; pause() }
+    func acceptsStamp(_ body: [String: Any]) -> Bool {
+        guard let page = body["audioPage"] as? String, let revision = body["revision"] as? Int else { return true }
+        if body["action"] as? String == "get" { if page != activeAudioPage { activeAudioPage = page; audioRevision = -1 }; return true }
+        if activeAudioPage == nil { activeAudioPage = page }
+        guard page == activeAudioPage else { return false }
+        if body["action"] as? String == "configure" { guard revision >= audioRevision else { return false }; audioRevision = revision; return true }
+        return revision == audioRevision
+    }
     func handle(_ body: [String: Any]) throws -> [String: Any] {
+        guard acceptsStamp(body) else { return settings.payload }
         switch body["action"] as? String {
         case "get": return settings.payload.merging(["configured": configured]) { _, value in value }
         case "configure":
             settings.update(body); UserDefaults.standard.set(settings.payload, forKey: "cafeverse.audio.v1")
-            player?.setVolume(settings.musicGain, fadeDuration: 0.05)
+            player?.volume = settings.musicGain
             for effect in effects { effect.volume = settings.effectsGain * 0.3; if settings.effectsGain == 0 { effect.stop() } }
             if settings.musicGain == 0 { player?.pause() } else { resume() }
         case "play": wantsMusic = true; routePaused = false; resume()

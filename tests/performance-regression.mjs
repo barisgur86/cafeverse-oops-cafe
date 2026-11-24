@@ -5,7 +5,7 @@ let h=bootScene(),world=h.document.querySelector('.iso-world'),chef=h.document.q
 h.reset();for(let i=0;i<100;i++)h.ctx.render();assert.equal(h.metrics.rootReplacements,0);assert.equal(h.metrics.htmlWrites,0);assert.equal(h.document.querySelector('.iso-world'),world);
 h.ctx.state.coins++;h.ctx.render();assert.equal(h.document.querySelector('.iso-world'),world);assert.equal(h.document.querySelector('#sim-chef'),chef);assert.equal(h.metrics.rootReplacements,0);
 h.ctx.state.look.apron='blue';h.ctx.render();assert.equal(h.document.querySelector('.iso-world'),world);assert.equal(h.document.querySelector('#sim-chef'),chef);
-h.ctx.state.owned.push('flower');h.ctx.state.decor='flower';h.ctx.render();assert.equal(h.document.querySelector('.iso-world'),world);assert.ok(h.document.querySelector('#sim-decor-layer').innerHTML.includes('flower'));
+h.ctx.state.owned.push('flower');h.ctx.state.decor='flower';h.ctx.render();assert.equal(h.document.querySelector('.iso-world'),world);assert.ok(h.document.querySelector('#sim-decor-front').innerHTML.includes('flower'));
 h.visibility(true);h.reset();h.advance(60000);assert.equal(h.metrics.timerCallbacks,0);assert.equal(h.metrics.setAttribute,0);h.visibility(false);assert.ok(h.timers.size<=1);
 for(let i=0;i<100;i++){h.ctx.navigateGame('menu');h.ctx.navigateGame('cafe')}assert.ok(h.timers.size<=1,'one scene scheduler after repeated navigation');h.ctx.navigateGame('menu');h.reset();h.advance(60000);assert.equal(h.metrics.timerCallbacks,0);
 h=bootScene({moving:true});h.advance(2400);assert.equal(h.board.tickets.length,3);assert.equal(h.board.tickets.reduce((n,t)=>n+t.guestCount,0),12);assert.equal(h.document.querySelectorAll('[data-person]').length,12);

@@ -19,10 +19,10 @@ async function updateCafePhoto(show=false){
  if(!show&&(document.hidden||!$('scene')?.getClientRects().length))return;
  const account=state.cafeCode||globalThis.CafeAccountID||'device';
  if(account!==lastCafePhotoAccount){lastCafePhotoAccount=account;lastCafePhotoKey='';cafePreviewImages.clear();cafePhotoDialog.querySelector('#cafe-photo').removeAttribute('src');document.querySelector('#scene .saved-cafe-photo')?.remove();}
- const key=JSON.stringify([account,state.owned,state.decor,state.progression?.upgrades]);
+ const key=JSON.stringify([account,state.owned,state.placedDecor,state.decor,state.progression?.upgrades]);
  if(key===lastCafePhotoKey){if(show&&!cafePhotoDialog.open)cafePhotoDialog.showModal();return;}
  const revision=++cafePhotoRevision;
- const placed=['plant','flower','cat','mushroom','piranha','pineapple','sadcupcake','cherryjelly','bluechick'].filter(id=>(state.owned||['plant']).includes(id));
+ const placed=['plant','flower','cat','mushroom','piranha','pineapple','sadcupcake','cherryjelly','bluechick'].filter(id=>(state.owned||['plant']).includes(id)&&(state.placedDecor||state.owned||['plant']).includes(id));
  try{await loadCafeArtwork()}catch{return}
  if(revision!==cafePhotoRevision)return;
  const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=432;const ctx=canvas.getContext('2d');
