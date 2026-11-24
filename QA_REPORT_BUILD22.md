@@ -2,6 +2,10 @@
 
 Date: 24 November 2026 (Europe/Istanbul). Branch: fix/audio-upgrades-decor-gifts-build22.
 
+## Verified release update — 24 November 2026, 11:42 Istanbul
+
+Normal-Mac runner completed full npm test, native checks, browser acceptance recording, signed Release archive and App Store Connect upload. Actual archive Info.plist: 0.9.19 / 22. Upload log: EXPORT SUCCEEDED / Upload succeeded. Apple TestFlight email received at 11:42:26 Istanbul: “Cafeverse OOPS Cafe 0.9.19 (22) for iOS is now available to test.” Thus processing and tester availability are confirmed by Apple. Gmail message 1a20cb87c0e3935a. Browser video: outputs/release-0.9.19-22/video/build22-seating-pickup-calls-decor-audio-browser.webm; cafesign/flower before/preview/after PNGs in same folder. Earlier blocked archive/browser notes below document the sandbox attempt and are superseded by this successful normal-Mac run. Physical audible/keyboard/real-account/Sandbox payment tests remain NOT RUN. Git push remains blocked by missing credentials.
+
 ## Implemented
 
 - Global mute now controls the actual music/FX/speech engines rather than only the legacy call voice. Immediate gain/pause, persistent preferences, current-state icons, page/revision stamps rejecting stale native audio commands, native teardown. One music player; muted effects are discarded.
