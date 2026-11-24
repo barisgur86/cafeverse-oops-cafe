@@ -147,7 +147,7 @@
  if(!document.hidden&&(arriving||leaving||cooldown))doorTimer=setTimeout(()=>{if(doorOpen)paintDoor()},arriving?Math.max(100,Math.min(1000,CafeService.arrival(active,state.serviceOrders?.[active.id])-Date.now())):1000);
  }
 
- async function call(){if(busy||netBusy||callingBusy)return;callingBusy=true;globalThis.CafeCallVoice?.speak();try{if(!round){callResult=0;const d=await transact('/api/calls/start',{});round=d?.round;notice='Üç kez seslen; kafenin önüne yeni misafirler gelsin.';}else{const d=await transact('/api/calls/'+round.id+'/tap',{});if(!d)return;round=d.round;if(round.status==='finished'){callResult=1+round.hits;notice=callResult+' yeni misafir kapıya geldi!';round=null;}else notice='Gel gel! Taptaze kahve var!'}}catch(e){notice=e.message;callError=e.message;round=null;}finally{callingBusy=false;paint();}}
+ async function call(){if(busy||callingBusy)return;callingBusy=true;globalThis.CafeCallVoice?.speak();try{if(!round){callResult=0;const d=await transact('/api/calls/start',{});round=d?.round;notice='Üç kez seslen; kafenin önüne yeni misafirler gelsin.';}else{const d=await transact('/api/calls/'+round.id+'/tap',{});if(!d)return;round=d.round;if(round.status==='finished'){callResult=1+round.hits;notice=callResult+' yeni misafir kapıya geldi!';round=null;}else notice='Gel gel! Taptaze kahve var!'}}catch(e){notice=e.message;callError=e.message;round=null;}finally{callingBusy=false;paint();}}
 
  function grow(){
   const dialog=document.createElement('dialog');dialog.className='iso-grow';let buying=false,page=0;
