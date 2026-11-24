@@ -2,6 +2,12 @@
 
 24 November 2026, Europe/Istanbul. Branch: fix/continuous-service-and-collections-build23.
 
+## Verified normal-Mac release — 24 November 2026
+
+All automated tests and the completed browser checks passed. Separate recordings preserve service/calls/decor and resumed book/world/quest/profile/header checks. Signed Release archive completed; codesign --verify --deep --strict passed. Actual archive Info.plist: CFBundleShortVersionString 0.9.19, CFBundleVersion 23. App Store Connect upload succeeded at 22:46 Istanbul (EXPORT SUCCEEDED). Apple TestFlight availability email received and verified at 22:48:32 Istanbul: Cafeverse OOPS Cafe 0.9.19 (23) for iOS is now available to test (Gmail message 1a20f1a524fc7dca). Processing and tester availability confirmed. Earlier sandbox failures and intermediate test stops below are historical and superseded by the completed run. Real physical audio/keyboard, two authenticated test-account transfer and real StoreKit device payment/refund remain NOT RUN. Git push remains blocked by missing credentials.
+
+Recordings: outputs/release-0.9.19-23/video/build23-verified-service-calls-decor-browser.webm and build23-worlds-profile-browser.webm. Screenshots include Table1 zero/four ready, three continuous pickups, book four/last page, character selection and café, worlds, claimed quest reward, café sign and flower before/after.
+
 ## Root causes and changes
 
 - `transact` previously silently returned undefined when another request was active. Automatic pickup registration could collide with table registration/preparation and show “guest order not confirmed” for a valid table. Actions now serialize and return their own result. Account identity is checked both before sending and before hydration. Fetch timeout releases a failed request; no previous-account response hydrates a new account.
