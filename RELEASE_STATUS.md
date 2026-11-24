@@ -1,3 +1,7 @@
+# Confirmed:0.9.19 (20) uploaded
+
+Normal-Mac run completed full npm test, actual browser recording, signed archive and Apple upload. Exact0.9.19 /20 identity and byte-identical tested/archived Web confirmed. `upload-succeeded.txt` and `EXPORT SUCCEEDED` confirm upload; Apple processing/tester availability is pending verification. Video: task outputs/release-0.9.19-20/video/build20-service-delivery-browser.webm (browser fixture, not physical iPhone). Earlier blockers below are historical.
+
 # Cafeverse0.9.19 — Build20 candidate
 
 Prepared on24 November2026 from confirmed available TestFlight0.9.19 (19). Branch `fix/service-delivery-build20`. Build20 restores an immediate700ms tray/bag service animation and separates authoritative settlement from visual completion;8s timeout, status-first recovery and persistent request UUID prevent a stalled Delivering state and duplicate settlement. See BUILD_20_REPORT.md.

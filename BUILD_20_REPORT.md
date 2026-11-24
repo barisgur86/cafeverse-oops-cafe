@@ -1,3 +1,9 @@
+# Confirmed Build20 upload and recording
+
+24 November2026: normal-Mac uploader completed the full suite, actual browser UI recording, signed Release archive, codesign/version checks and Apple export/upload successfully. Archived identity0.9.19 /20; archived Web hash matches tested bundle (`e48513cbd7444a684787f4cbb0747d818bc70b07e90d0778f3feb496ead89cc9`). Apple accepted the upload; processing/availability is being checked.
+
+Recording: [actual browser service UI](../../outputs/release-0.9.19-20/video/build20-service-delivery-browser.webm), Table2 pairs/triples and takeaway; disposable browser fixtures, **not physical iPhone/Simulator**. Screenshots are in the same video folder. Earlier environment blockers below are historical and were resolved by the normal-Mac run plus project-local FFmpeg installation. Physical phone/Sandbox-on-build checks remain NOT RUN.
+
 # Cafeverse0.9.19 — Build20 service delivery
 
 24 November2026. Based on confirmed TestFlight0.9.19 (19), branch `fix/service-delivery-build20`. Marketing version stays0.9.19; both iOS build configurations use build20. Build19 is recorded in published history. No backend migration, live wallet mutation, save reset or artwork replacement.
