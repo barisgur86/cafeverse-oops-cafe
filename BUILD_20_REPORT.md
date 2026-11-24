@@ -12,7 +12,7 @@ Economic result and animation completion are tracked separately. The API begins 
 
 ## Automated evidence
 
-**PASS:** final full `npm test` exit0, including all new delivery cases. **PASS:** Build20 version guard and uploader shell syntax.
+**PASS:** full `npm test` exit0, including the delivery cases. After the final synchronous-save error cleanup, targeted service simulation and the expanded delivery suite were rerun successfully and the bundle regenerated. **PASS:** Build20 version guard and uploader shell syntax.
 
 Run `npm test` and `node tests/service-delivery.mjs`. Final full-suite log: task outputs/release-0.9.19-20/npm-test-final.log. Delivery-specific log: delivery-regression.log.
 
@@ -27,6 +27,7 @@ The new deterministic DOM + real engine tests exercise:
 - Request lost before server commit: status checked, same UUID resent, one atomic settlement.
 - Closing/reopening during animation: detached animation timer cleaned, committed delivery recovered once.
 - Status read never resolves: bounded wait, zero accidental delivery mutation.
+- Synchronous local save failure: catches the error and releases Melo busy state; no stuck action.
 
 Existing service restore/simulation,38 original artwork hashes, table/takeaway counters, appearance, economy/security/StoreKit fixtures and account/audio regressions remain in the full suite. These are automated fixtures, not physical iPhone gameplay or real payments.
 
@@ -41,3 +42,5 @@ Recording runner: `node tools/service-delivery-browser.mjs`. On a normal Mac it 
 Release archive attempted; exit65 at sandboxed Swift macro process (`sandbox_apply: Operation not permitted`, SwiftUIMacros.StateMacro malformed response). No successful Build20 native archive or TestFlight upload is claimed. Logs: archive-attempt.log. Last confirmed available TestFlight build remains19. Physical iPhone/Sandbox and actual device playback/latency: NOT RUN.
 
 Prepared uploader: task outputs/Cafeverse-0.9.19-Build20-TestFlight-Yukle.command. It runs the full suite and browser recording, then archives, verifies codesign and exact0.9.19 /20 before internal TestFlight upload. Production publishing is not performed.
+
+GitHub push attempted: failed because terminal credential is unavailable (`could not read Username`). No remote PR/merge created; PR_DESCRIPTION_BUILD20.md is prepared.
