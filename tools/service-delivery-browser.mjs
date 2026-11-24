@@ -1,5 +1,6 @@
 // Disposable browser fixture using the actual bundled service UI; never a live account.
 import fs from 'node:fs';import path from 'node:path';import http from 'node:http';import assert from 'node:assert/strict';
+process.env.PLAYWRIGHT_BROWSERS_PATH||=path.resolve('../../outputs/tooling/playwright-browsers');
 const {chromium}=await import('/Users/barisgur/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs');
 const out=path.resolve(process.env.CAFE_DELIVERY_VIDEO_OUT||'../../outputs/release-0.9.19-20/video'),web=path.resolve('iOS/App/Web');fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((q,r)=>{const f=path.resolve(web,'.'+new URL(q.url,'http://localhost').pathname.replace(/^\/$/,'/index.html'));if(!f.startsWith(web+path.sep))return r.writeHead(403).end();try{r.setHeader('Content-Type',f.endsWith('.html')?'text/html':f.endsWith('.png')?'image/png':f.endsWith('.svg')?'image/svg+xml':'application/octet-stream');r.end(fs.readFileSync(f))}catch{r.writeHead(404).end()}});await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;

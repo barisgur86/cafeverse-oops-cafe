@@ -44,3 +44,5 @@ Release archive attempted; exit65 at sandboxed Swift macro process (`sandbox_app
 Prepared uploader: task outputs/Cafeverse-0.9.19-Build20-TestFlight-Yukle.command. It runs the full suite and browser recording, then archives, verifies codesign and exact0.9.19 /20 before internal TestFlight upload. Production publishing is not performed.
 
 GitHub push attempted: failed because terminal credential is unavailable (`could not read Username`). No remote PR/merge created; PR_DESCRIPTION_BUILD20.md is prepared.
+
+Follow-up: normal-Mac uploader passed full npm test, then browser recording stopped because Playwright FFmpeg1011 was missing. Installed FFmpeg1011 into task outputs/tooling/playwright-browsers (no source binary committed), configured the runner/uploader to use that path and auto-install if missing. Native upload has not begun; rerun prepared uploader from normal Mac Terminal.
