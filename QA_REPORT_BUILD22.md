@@ -34,3 +34,5 @@ Date: 24 November 2026 (Europe/Istanbul). Branch: fix/audio-upgrades-decor-gifts
 Workspace outputs/release-0.9.19-22 contains npm-test-final.log, audio-native.log, native-bridges.log, gift-100.log, archive-attempt.log, browser-video.log and previous deployed-function backup. External script: outputs/Cafeverse-0.9.19-Build22-TestFlight-Yukle.command. It runs the tests, native checks, browser recording, actual Release archive and signed identity validation before upload. It stops on any error.
 
 TestFlight status and Git push result must be checked from actual outputs; this report does not assert completion of either.
+
+Implementation commit: d8a6e50. Push attempted and failed: could not read Username for https://github.com (Device not configured). PR/merge not performed. LaunchServices Terminal launch also failed (Unable to find application named Terminal). No TestFlight email was sent or triggered.
