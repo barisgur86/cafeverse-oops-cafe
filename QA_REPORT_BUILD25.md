@@ -25,16 +25,18 @@ Synthetic Node CPU fixture: 1,000 historical orders / 4,000 preparations, 20 rea
 - Real TestFlight/Sandbox purchase, cancellation, pending approval and interruption recovery. No real before/after purchase balances to report; automated fixtures cannot substitute for Apple testing.
 - Two actual account/device visits and trades. Ingredient trading remains disabled pending validation.
 - Same-iPhone Build 24 versus Build 25 performance comparison; Build 24 was not distributed.
-- TestFlight processing and availability remain unconfirmed. Full browser acceptance passed on the normal Mac runner; signed Release archive succeeded and codesign verification passed. Archived Info.plist independently confirms 0.9.19 / 25. Upload succeeded at 13:47 Istanbul (EXPORT SUCCEEDED); Apple processing/availability pending.
+- TestFlight availability confirmed by Apple tester email at 13:50:30 Istanbul on 25 November. Full browser acceptance passed on the normal Mac runner; signed Release archive succeeded and codesign verification passed. Archived Info.plist independently confirms 0.9.19 / 25. Upload succeeded at 13:47 Istanbul (EXPORT SUCCEEDED); Apple availability confirmed at 13:50:30 Istanbul.
 
 ## Delivery runner
 
-Prepared executable: outputs/Cafeverse-0.9.19-Build25-TestFlight-Yukle.command (task output directory, outside repository). It runs tests and browser recording, then archives Release, verifies signing and archived marketing version/CFBundleVersion 25, and uploads for internal TestFlight testing. It stops on failure. Upload confirmed; Apple processing and tester availability remain unconfirmed.
+Prepared executable: outputs/Cafeverse-0.9.19-Build25-TestFlight-Yukle.command (task output directory, outside repository). It runs tests and browser recording, then archives Release, verifies signing and archived marketing version/CFBundleVersion 25, and uploads for internal TestFlight testing. It stops on failure. Upload confirmed; Apple tester availability confirmed.
 
 Phone checklist after confirmed availability: verify Build 25; sign in and compare progress on second device; purchase one Sandbox pack and record balances; reconnect/relaunch without duplicate credit; Table 1 four-item delivery and lost-response recovery; three consecutive independent pickup deliveries; wardrobe/decor/mute and balloon regression.
 
 ## Normal Mac verification — 25 November
 
-Full browser fixture passed with recorded service, pickup, calls, decor, mute, recipes, world, quests/profile, migration disclosure, public visit preview and restart preservation. Video: outputs/release-0.9.19-25/video/build25-accounts-service-status-browser.webm (task output directory). This is browser QA, not physical iPhone or Simulator verification. Release archive succeeded; strict deep signature verification passed. Upload started 13:44 Istanbul; Apple availability pending.
+Full browser fixture passed with recorded service, pickup, calls, decor, mute, recipes, world, quests/profile, migration disclosure, public visit preview and restart preservation. Video: outputs/release-0.9.19-25/video/build25-accounts-service-status-browser.webm (task output directory). This is browser QA, not physical iPhone or Simulator verification. Release archive succeeded; strict deep signature verification passed. Upload started 13:44 Istanbul; Apple tester availability confirmed at 13:50:30 Istanbul.
 
 Upload evidence: outputs/release-0.9.19-25/upload.log and upload-succeeded.txt. No Build 24 ledger entry was added. Physical-device limitations above still apply.
+
+Apple TestFlight email evidence: Gmail message 1a21254198aece64, subject “Cafeverse OOPS Cafe 0.9.19 (25) for iOS is now available to test.” Received 2026-11-25 13:50:30 Europe/Istanbul, recipient barisgur@gmail.com. This confirms tester availability, not execution of phone acceptance tests.
