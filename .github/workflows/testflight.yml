@@ -24,6 +24,10 @@ jobs:
       - run: npm test
       - name: Require deployed secure backend
         run: npm run preflight
+      - name: Require physical service acceptance for Build 26
+        env:
+          CAFE_PHYSICAL_SERVICE_QA: ${{ vars.CAFE_PHYSICAL_SERVICE_QA }}
+        run: node tools/check-service-device-qa.mjs
       - name: Install signing assets
         env:
           P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}

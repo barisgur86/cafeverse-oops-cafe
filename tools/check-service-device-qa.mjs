@@ -1,0 +1,6 @@
+import fs from 'node:fs';import {pathToFileURL} from 'node:url';
+export function requireDeviceQA(release,record){
+ if(Number(release.build)!==26)return;
+ if(!record||record.version!==release.version||String(record.build)!==String(release.build)||record.platform!=='physical-iPhone'||!record.device?.trim()||!record.os?.trim()||!record.video?.trim()||!Number.isFinite(Date.parse(record.testedAt))||!Number.isInteger(record.tableDeliveries)||record.tableDeliveries<3||!Number.isInteger(record.pickupDeliveries)||record.pickupDeliveries<3||record.visibleAnimation!==true||record.fastResponse!==true||record.delayedResponse!==true||record.doubleTapSingleReward!==true)throw Error('Build 26 requires recorded physical iPhone service acceptance: three table and three pickup deliveries, visible handoff, fast/delayed response and one reward on double tap. Browser/Simulator results do not satisfy this gate.');
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){const release=JSON.parse(fs.readFileSync(new URL('../release.json',import.meta.url))),raw=process.env.CAFE_PHYSICAL_SERVICE_QA|| (process.argv[2]&&fs.readFileSync(process.argv[2],'utf8'));requireDeviceQA(release,raw?JSON.parse(raw):null);console.log('PASS physical service release gate');}

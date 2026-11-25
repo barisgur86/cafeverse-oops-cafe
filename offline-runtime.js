@@ -4,7 +4,7 @@
 const C=global.CafeTestCatalog;
 function createOfflineCafe(storage,clock=()=>Date.now()){
  const KEY='cafeverse-device-beta-v1'+(global.CafeAccountID?':'+global.CafeAccountID:'');
- const initial=()=>({code:global.CafeAccountID?'USER-'+global.CafeAccountID:'OFFLINETST',name:'Test Kafesi',character:0,coins:500,served:0,claimed:false,reputation:0,attracted:0,nextCall:0,version:0,pantry:{milk:4,coffee:4,berry:6,ice:0,vanilla:0,cream:0,cocoa:3,star:2,syrup:0},found:[],trades:{},owned:['plant'],decor:'plant',wardrobe:['chef','pink','none'],look:{head:'chef',face:'none',apron:'pink'},bought:[],preparations:[],receipts:{},calls:[],history:[]});
+ const initial=()=>({code:global.CafeAccountID?'USER-'+global.CafeAccountID:'OFFLINETST',name:'Test Kafesi',character:0,tutorial:{eligible:true,skipped:false},coins:500,served:0,claimed:false,reputation:0,attracted:0,nextCall:0,version:0,pantry:{milk:4,coffee:4,berry:6,ice:0,vanilla:0,cream:0,cocoa:3,star:2,syrup:0},found:[],trades:{},owned:['plant'],decor:'plant',wardrobe:['chef','pink','none'],look:{head:'chef',face:'none',apron:'pink'},bought:[],preparations:[],receipts:{},calls:[],history:[]});
  let s;try{s=JSON.parse(storage.getItem(KEY))}catch{}if(!s)s=initial();
  const persist=()=>{if(global.CafeAccountDeleted)throw Error('Hesap silindi.');storage.setItem(KEY,JSON.stringify(s));if(!global.__CAFE_TEST_NODE__)global.dispatchEvent?.(new Event('cafeverse-local-save'));};
  const exportSave=()=>structuredClone(s);
@@ -35,6 +35,7 @@ function createOfflineCafe(storage,clock=()=>Date.now()){
   if(s.receipts[rid]){if(s.receipts[rid].fingerprint!==fingerprint)failure('İşlem kimliği başka bir işlem için kullanılmış.',409);return stateResult(s.receipts[rid].extra)}
   let extra={};
   if(path==='/api/ios-store-credit')failure('Satın alma sunucusu gerekli. Coin teslimi cihazda yapılamaz.',503);
+  else if(path==='/api/tutorial/skip'){if(body.skip!==true)failure('Geçersiz eğitim işlemi.');if(s.tutorial?.eligible)s.tutorial.skipped=true;}
   else if(path==='/api/quests/claim'){const q=questCatalog.find(q=>q.id===body.quest);if(!q)failure('Görev bulunamadı.');s.quests??={};if(q.id==='first-three'?s.claimed:s.quests[q.id])extra.claimed=false;else {if(questProgress(q)<q.target||q.requires&&!s.quests[q.requires])failure('Görev henüz tamamlanmadı.',409);if(q.id==='first-three')s.claimed=true;else s.quests[q.id]=true;s.coins+=q.reward;extra.claimed=true;extra.reward=q.reward;}}
   else if(path==='/api/world'){if(!integer(body.world,0,2)||s.served<[0,3,6][body.world])failure('Dünya henüz açılmadı.',403);s.world=body.world;}
   else if(path==='/api/profile'){const name=String(body.name||'').trim();if(!name||name.length>24||!integer(body.character,0,5))failure('Geçerli bir ad ve karakter seç.');s.name=name;s.character=body.character}
