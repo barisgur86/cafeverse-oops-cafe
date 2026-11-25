@@ -19,7 +19,7 @@ export function handler(economy,authenticate,{lifecycle}={}){
     const text=await req.text();if(text.length>65000)throw problem('İstek fazla büyük.',413);
     try{b=JSON.parse(text);}catch{throw problem('Geçersiz JSON.');}if(!b||Array.isArray(b)||typeof b!=='object')throw problem('Geçersiz istek.');
    }
-   if(path==='/health'&&req.method==='GET'){await economy.pool.query('select last_event_signed_at from cafe_apple_transactions limit 0');return Response.json({ready:true,serviceQueue:'independent-pickup-v1',decorPolicy:'owned-placement-v1',serviceBuild:'continuous-pickup-quests-v23',schema:'authoritative-economy-v1',environment:economy.apple.environment,features:economy.features,cutover:economy.legacyImport?'server-backup-v1':null,accountDeletion:!!lifecycle?.provider.adminKey,appleRevocation:!!lifecycle?.provider.appleSecret});}
+   if(path==='/health'&&req.method==='GET'){await economy.pool.query('select last_event_signed_at from cafe_apple_transactions limit 0');return Response.json({ready:true,serviceQueue:'independent-pickup-v1',decorPolicy:'owned-placement-v1',serviceBuild:'accounts-delivery-recovery-v25',schema:'authoritative-economy-v1',environment:economy.apple.environment,features:economy.features,cutover:economy.legacyImport?'server-backup-v1':null,accountDeletion:!!lifecycle?.provider.adminKey,appleRevocation:!!lifecycle?.provider.appleSecret});}
    if(path==='/apple/notifications'&&req.method==='POST')return Response.json(await economy.notification(b.signedPayload));
    if(path==='/api/account/deletion/finish'&&req.method==='POST'){if(!lifecycle)throw problem('Hesap silme bağlantısı henüz hazır değil.',503);return Response.json(await lifecycle.finish(b.receipt),{headers:{'Cache-Control':'no-store'}});}
    const id=await authenticate(req.headers.get('authorization'));
@@ -35,6 +35,7 @@ export function handler(economy,authenticate,{lifecycle}={}){
    else if(path==='/api/ios-store-credit'&&req.method==='POST')value=await economy.credit(id,b.transaction?.signedTransaction);
    else if(path==='/api/board'&&req.method==='POST')value=await economy.board(id,b);
    else if(path==='/api/coin-shop'&&req.method==='GET')value=await economy.history(id);
+   else if(path==='/api/cafes/visit'&&req.method==='GET')value=await economy.visit(id,(url.searchParams.get('code')||'').trim().toUpperCase());
    else if(path==='/api/cafes'&&req.method==='GET')value=await economy.find(id,(url.searchParams.get('code')||'').trim().toUpperCase());
    else if(path==='/api/market')value=req.method==='GET'?await economy.market(id,url.searchParams):await economy.createListing(id,b);
    else if(/^\/api\/market\/[a-f0-9-]{36}\/(buy|cancel)$/.test(path)&&req.method==='POST'){const [,,,listing,action]=path.split('/');value=action==='buy'?await economy.buy(id,listing,b):await economy.cancelListing(id,listing,b);}

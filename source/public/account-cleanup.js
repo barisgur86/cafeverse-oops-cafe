@@ -8,7 +8,7 @@
   try{const save=JSON.parse(localStorage.getItem('cafeverse-device-beta-v1:'+id)||'null');if(save?.code)codes.add(save.code);}catch{}
   if(typeof state!=='undefined'&&state.cafeCode)codes.add(state.cafeCode);
   for(const code of codes)localStorage.removeItem('cafe-service-board:'+code);
-  for(const key of ['cafe-store-pending:','cafeverse-device-beta-v1:','cafeverse-secure-requests:','cafeverse-cutover-ack:','cafeverse-cutover-recovery:','cafe-cloud-base:'])localStorage.removeItem(key+id);
-  localStorage.removeItem('cafe-cloud-base:'+id+':recovery');
+  for(const key of ['cafe-store-pending:','cafeverse-device-beta-v1:','cafeverse-secure-requests:','cafeverse-cutover-ack:','cafeverse-cutover-recovery:','cafeverse-unscoped-recovery:','cafe-cloud-base:'])localStorage.removeItem(key+id);
+  localStorage.removeItem('cafe-cloud-base:'+id+':recovery');localStorage.removeItem('cafeverse-unscoped-recovery:'+id+':accepted');
  });
 })();

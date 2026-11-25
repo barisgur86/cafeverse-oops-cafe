@@ -297,18 +297,22 @@ private enum AccountKeychain {
         if let query = path.components(separatedBy: "?").dropFirst().first {
             var parts = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!; parts.percentEncodedQuery = query; request.url = parts.url
         }
+        request.timeoutInterval = 15
         request.httpMethod = method ?? (body == nil ? "GET" : "POST")
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue("Bearer " + token, forHTTPHeaderField: "Authorization") }
         if let body { request.httpBody = try JSONSerialization.data(withJSONObject: body) }
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data; let response: URLResponse
+        do { (data, response) = try await URLSession.shared.data(for: request) }
+        catch { throw NSError(domain: "CafeAuth", code: (error as NSError).code, userInfo: [NSLocalizedDescriptionKey: L("Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.")]) }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             let payload = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
             let reason = payload?["error_code"] as? String ?? payload?["code"] as? String ?? ""
             let text: String
             switch reason {
+            case "otp_expired", "flow_state_expired", "flow_state_not_found", "bad_code_verifier": text = L("Bağlantı geçersiz veya süresi dolmuş. Yeni bir bağlantı iste.")
             case "invalid_credentials": text = L("E-posta veya şifre doğru değil. Şifreni yenileyebilir ya da yeni hesap oluşturabilirsin.")
             case "email_not_confirmed": text = L("Önce e-postana gelen doğrulama bağlantısını aç, ardından giriş yap.")
             case "email_address_invalid", "validation_failed": text = L("Geçerli bir e-posta adresi gir.")
@@ -390,14 +394,25 @@ private enum AccountKeychain {
             awaitingNewPassword = false; recoveryAccessToken = nil; recoveryRequested = false
             session = nil; AccountKeychain.clear()
             message = L("Şifren değiştirildi. Yeni şifrenle giriş yap.")
-        } catch { message = error.localizedDescription }
+        } catch {
+            if [401,403].contains((error as NSError).code) { recoveryAccessToken = nil; awaitingNewPassword = false; recoveryRequested = false; message = L("Şifre yenileme bağlantısı geçersiz veya süresi dolmuş.") }
+            else { message = error.localizedDescription }
+        }
     }
     func cancelPasswordRecovery() {
-        recoveryAccessToken = nil; recoveryRequested = false; awaitingNewPassword = false; message = ""
+        recoveryAccessToken = nil; recoveryRequested = false; awaitingNewPassword = false; message = L("Şifre yenileme iptal edildi.")
     }
     func emailCallback(_ url: URL) async {
         guard url.scheme == "cafeverse", url.host == "auth-callback" else { return }
         if busy { deferredCallback = url; return }
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let fragment = URLComponents(string: "https://callback.invalid/?" + (url.fragment ?? ""))?.queryItems ?? []
+        let callbackError = (query + fragment).first(where: { $0.name == "error_code" })?.value ?? (query + fragment).first(where: { $0.name == "error" })?.value
+        if let callbackError {
+            recoveryAccessToken = nil; awaitingNewPassword = false; recoveryRequested = false
+            message = L(callbackError.contains("expired") ? "Bağlantı geçersiz veya süresi dolmuş. Yeni bir bağlantı iste." : "Doğrulama bağlantısı kullanılamadı. Yeni bağlantı iste veya giriş yap.")
+            return
+        }
         // Recovery redirects may return a fragment containing a short-lived access token.
         if let fragment = url.fragment,
            let parts = URLComponents(string: "https://callback.invalid/?" + fragment),
@@ -457,7 +472,7 @@ private enum AccountKeychain {
             // Supabase verifies Apple's signature, audience, expiry and nonce before issuing our session.
             try accept(try await request("token?grant_type=id_token", body: ["provider": "apple", "id_token": idToken, "nonce": nonce]))
         } catch {
-            if let apple = error as? ASAuthorizationError, apple.code == .canceled { return }
+            if let apple = error as? ASAuthorizationError, apple.code == .canceled { message = L("Apple ile giriş iptal edildi."); return }
             if (error as NSError).domain == "CafeAuth" { message = error.localizedDescription; return }
             #if targetEnvironment(simulator)
             message = L("Apple girişi tamamlanamadı. Simülatörün Ayarlar uygulamasında Apple hesabına giriş yap veya e-posta ile devam et.")
@@ -1006,6 +1021,11 @@ private struct CafeAudioSettings {
 
 
 private let cafeEnglish: [String: String] = [
+    "Bağlantı geçersiz veya süresi dolmuş. Yeni bir bağlantı iste.": "The link is invalid or expired. Request a new link.",
+    "Doğrulama bağlantısı kullanılamadı. Yeni bağlantı iste veya giriş yap.": "The verification link could not be used. Request a new link or sign in.",
+    "Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.": "Could not connect. Check your internet connection and try again.",
+    "Apple ile giriş iptal edildi.": "Sign in with Apple was cancelled.",
+    "Şifre yenileme iptal edildi.": "Password reset was cancelled.",
     "Coin gönder": "Send coins",
     "Hesap doğrulaması tamamlanamadı. Yeniden dene.": "Account verification failed. Try again.",
     "Hesap silme onayı gerekli.": "Confirm account deletion first.",
